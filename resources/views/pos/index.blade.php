@@ -34,31 +34,31 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <div>
             <h2 class="fw-bold text-dark mb-0">Punto de Venta</h2>
             <p class="text-muted mb-0">Selecciona una mesa para comenzar</p>
         </div>
-        <div class="d-flex gap-3">
-            <button type="button" class="btn btn-outline-dark fw-bold" data-bs-toggle="offcanvas" data-bs-target="#lastSalesOffcanvas">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-outline-dark btn-sm fw-bold" data-bs-toggle="offcanvas" data-bs-target="#lastSalesOffcanvas">
                 <i class="bi bi-clock-history me-1"></i> Últimas Ventas
             </button>
             <div class="d-flex align-items-center">
-                <span class="d-inline-block bg-success rounded-circle p-1 me-2" style="width: 12px; height: 12px;"></span>
-                <small class="fw-bold text-muted">Disponible</small>
+                <span class="d-inline-block bg-success rounded-circle p-1 me-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-muted small">Disponible</small>
             </div>
             <div class="d-flex align-items-center">
-                <span class="d-inline-block bg-danger rounded-circle p-1 me-2" style="width: 12px; height: 12px;"></span>
-                <small class="fw-bold text-muted">Ocupada</small>
+                <span class="d-inline-block bg-danger rounded-circle p-1 me-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-muted small">Ocupada</small>
             </div>
             <div class="d-flex align-items-center">
-                <span class="d-inline-block bg-warning rounded-circle p-1 me-2" style="width: 12px; height: 12px;"></span>
-                <small class="fw-bold text-muted">Reservada (Hoy)</small>
+                <span class="d-inline-block bg-warning rounded-circle p-1 me-1" style="width: 10px; height: 10px;"></span>
+                <small class="fw-bold text-muted small">Reservada</small>
             </div>
         </div>
     </div>
 
-    <ul class="nav nav-tabs nav-pills mb-3" id="posTabs" role="tablist">
+    <ul class="nav nav-tabs nav-pills mb-3 flex-nowrap overflow-auto pb-1" id="posTabs" role="tablist" style="-webkit-overflow-scrolling: touch;">
         @foreach($areas as $index => $area)
             <li class="nav-item me-2" role="presentation">
                 <button class="nav-link {{ $index == 0 ? 'active' : '' }} fw-bold px-4 border" 
@@ -154,7 +154,7 @@
 </div>
 
 {{-- Últimas Ventas: panel deslizante --}}
-<div class="offcanvas offcanvas-end" tabindex="-1" id="lastSalesOffcanvas" aria-labelledby="lastSalesLabel" style="width: 380px;">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="lastSalesOffcanvas" aria-labelledby="lastSalesLabel" style="width: min(380px, 100vw);">
     <div class="offcanvas-header border-bottom">
         <h6 class="offcanvas-title fw-bold" id="lastSalesLabel">
             <i class="bi bi-clock-history me-1"></i> Últimas Ventas
@@ -222,5 +222,9 @@
     /* MODO OSCURO: solo aplica con data-theme="dark", no altera el claro */
     [data-theme="dark"] .nav-pills .nav-link { color: var(--text-muted); background-color: #242539; }
     [data-theme="dark"] .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; box-shadow: 0 4px 6px rgba(13,110,253,0.3); }
+
+    @media (max-width: 575.98px) {
+        .nav-tabs .nav-link { padding: 8px 14px; font-size: 0.85rem; white-space: nowrap; }
+    }
 </style>
 @endsection
