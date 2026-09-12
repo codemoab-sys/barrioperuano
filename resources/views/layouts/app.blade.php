@@ -679,6 +679,14 @@
             .table-responsive { font-size: 0.85rem; }
             .btn { white-space: nowrap; }
             .fw-bold { font-weight: 600 !important; }
+            .top-navbar { flex-wrap: nowrap; gap: 8px; margin-bottom: 16px; }
+            .topbar-title { min-width: 0; flex: 1; overflow: hidden; }
+            .topbar-title h4 { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .topbar-title p { font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .topbar-right { flex-shrink: 0; gap: 6px; }
+            .topbar-user-btn { padding: 4px 8px; gap: 6px; }
+            .topbar-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+            .theme-toggle-btn { width: 30px; height: 30px; font-size: 0.8rem; }
         }
     </style>
 </head>
