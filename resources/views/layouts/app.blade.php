@@ -832,7 +832,7 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
             <div class="topbar-title">
-                <h4>Bienvenido de vuelta</h4>
+                <h4>{{ \App\Models\Setting::where('key', 'welcome_message')->value('value') ?? 'Bienvenido de vuelta' }}</h4>
                 <p>{{ \Carbon\Carbon::now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</p>
             </div>
         </div>

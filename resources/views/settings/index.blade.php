@@ -32,6 +32,11 @@
                                 <label class="form-label fw-bold">Dirección</label>
                                 <input type="text" name="company_address" class="form-control" value="{{ old('company_address', $settings['company_address'] ?? ($settings['sunat_direccion_fiscal'] ?? '')) }}" placeholder="Ej: Av. Principal 123, Ica">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mensaje de Bienvenida</label>
+                                <input type="text" name="welcome_message" class="form-control" value="{{ old('welcome_message', $settings['welcome_message'] ?? 'Bienvenido de vuelta') }}" placeholder="Ej: Bienvenido" maxlength="100">
+                                <small class="text-muted">Texto que aparece en la barra superior de todas las páginas.</small>
+                            </div>
                         </div>
 
                         <hr class="text-muted opacity-25">

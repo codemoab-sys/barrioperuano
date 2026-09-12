@@ -38,6 +38,7 @@ class SettingController extends Controller
             'company_name' => ['nullable', 'string', 'max:255'],
             'company_phone' => ['nullable', 'string', 'max:30'],
             'company_address' => ['nullable', 'string', 'max:255'],
+            'welcome_message' => ['nullable', 'string', 'max:100'],
             'currency_symbol' => ['nullable', 'in:S/,$,€'],
             'ticket_footer' => ['nullable', 'string', 'max:1000'],
             'color_primary' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -111,7 +112,7 @@ class SettingController extends Controller
         }
 
         $allowedSettings = [
-            'company_name', 'company_phone', 'company_address',
+            'company_name', 'company_phone', 'company_address', 'welcome_message',
             'currency_symbol', 'ticket_footer', 'color_primary', 'color_primary_hover',
             'color_primary_soft', 'color_sidebar_bg', 'color_sidebar_active', 'brand_text_color',
             'sunat_ruc', 'sunat_razon_social', 'sunat_nombre_comercial',

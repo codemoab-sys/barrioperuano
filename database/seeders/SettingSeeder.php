@@ -15,6 +15,7 @@ class SettingSeeder extends Seeder
             'company_address' => 'Av. Gastronómica 123, Lima',
             'company_phone' => '(01) 555-9999',
             'ticket_footer' => '¡Gracias por su preferencia! Vuelva pronto.',
+            'welcome_message' => 'Bienvenido de vuelta',
             'currency_symbol' => 'S/',
 
             // ── SUNAT / NubeFact ──────────────────────────────────────
