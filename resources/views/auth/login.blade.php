@@ -223,6 +223,7 @@
         /* Heading */
         .login-heading {
             margin-bottom: 36px;
+            text-align: center;
         }
 
         .login-heading h2 {
