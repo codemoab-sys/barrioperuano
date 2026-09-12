@@ -3,7 +3,7 @@
 @section('content')
 {{-- Alertas del POS (visible sobre el overlay fijo) --}}
 @if(session('error'))
-    <div style="position:fixed;top:12px;right:20px;left:235px;z-index:1500;">
+    <div class="pos-alert-fixed">
         <div class="alert alert-danger border-0 shadow rounded-3 d-flex align-items-center mb-0">
             <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-danger"></i>
             <div class="flex-grow-1"><strong>Error:</strong> {{ session('error') }}</div>
@@ -13,7 +13,7 @@
 @endif
 @if(session('success'))
     @php $printOrderId = session('last_order_id'); @endphp
-    <div style="position:fixed;top:12px;right:20px;left:235px;z-index:901;">
+    <div class="pos-alert-fixed" style="z-index:901;">
         <div class="alert alert-success border-dismiss shadow rounded-3 d-flex align-items-center mb-0">
             <i class="bi bi-check-circle-fill fs-4 me-2 text-success"></i>
             <div class="flex-1 flex-grow-1">{{ session('success') }}</div>
@@ -43,35 +43,26 @@
     z-index: 900;
 ">
     {{-- TOPBAR POS --}}
-    <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #fff;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 10px 20px;
-        flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(45,27,94,0.06);
-    ">
-        <div style="display:flex;align-items:center;gap:12px;">
-            <a href="{{ route('pos.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Volver
+    <div class="pos-topbar">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <a href="{{ route('pos.index') }}" class="btn btn-outline-secondary btn-sm flex-shrink-0">
+                <i class="bi bi-arrow-left"></i> <span class="d-none d-sm-inline">Volver</span>
             </a>
-            <div>
+            <div class="min-w-0">
                 <div class="fw-bold text-primary" style="font-size:.95rem;line-height:1.2;">Mesa: {{ $table->name }}</div>
                 <div class="text-muted" style="font-size:.75rem;">Zona: {{ $table->area->name }}</div>
             </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <button type="button" class="btn btn-outline-dark btn-sm fw-bold" data-bs-toggle="offcanvas" data-bs-target="#lastSalesOffcanvas">
-                <i class="bi bi-clock-history me-1"></i> Últimas Ventas
+                <i class="bi bi-clock-history"></i> <span class="d-none d-md-inline">Últimas Ventas</span>
             </button>
             @if($order)
-                <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#moveTableModal">
+                <button type="button" class="btn btn-outline-primary btn-sm fw-bold d-none d-sm-inline-flex" data-bs-toggle="modal" data-bs-target="#moveTableModal">
                     <i class="bi bi-arrow-left-right me-1"></i> Mover Mesa
                 </button>
             @endif
-            <span class="badge bg-light text-dark border px-2 py-1" style="font-size:.78rem;">
+            <span class="badge bg-light text-dark border px-2 py-1 d-none d-sm-inline-flex" style="font-size:.78rem;">
                 <i class="bi bi-person-fill me-1"></i> {{ auth()->user()->name }}
             </span>
         </div>
@@ -81,7 +72,7 @@
     <div style="display:flex; flex:1; min-height:0; overflow:hidden;">
 
         {{-- Categorías --}}
-        <div style="width:155px; flex-shrink:0; background:#f8f7ff; border-right:1px solid #e5e7eb; overflow-y:auto;">
+        <div class="pos-categories-col">
             <div class="list-group list-group-flush">
                 <button onclick="filterProducts('all')" class="list-group-item list-group-item-action active text-center py-3 category-btn" id="cat-btn-all">
                     <i class="bi bi-grid-fill d-block fs-4 mb-1"></i> Todo
@@ -177,19 +168,13 @@ foreach($categories as $cat) {
             </div>
         </div>
 
-        {{-- CARRITO: columna derecha con ancho fijo --}}
-        <div style="
-            width: 280px;
-            flex-shrink: 0;
-            background: #fff;
-            border-left: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            box-shadow: -4px 0 20px rgba(45,27,94,0.07);
-        ">
-            <div style="padding: 14px 16px; background: #f8f7ff; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+        {{-- CARRITO --}}
+        <div class="pos-cart-col">
+            <div style="padding: 14px 16px; background: #f8f7ff; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; display:flex; align-items:center; justify-content:space-between;">
                 <h6 class="fw-bold mb-0"><i class="bi bi-cart"></i> Cuenta Actual</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary d-md-none fw-bold" onclick="toggleMobileCart()">
+                    <i class="bi bi-eye-fill"></i> Ver
+                </button>
             </div>
             <div id="cart-container" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;">
                 @include('pos.partials.cart', ['order' => $order])
@@ -951,6 +936,48 @@ foreach($categories as $cat) {
 </script>
 
 <style>
+    /* ── POS Alerts ──────────────────────────────────────────────── */
+    .pos-alert-fixed {
+        position: fixed;
+        top: 12px;
+        right: 20px;
+        left: 240px;
+        z-index: 1500;
+    }
+
+    /* ── POS Topbar ──────────────────────────────────────────────── */
+    .pos-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px 20px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(45,27,94,0.06);
+    }
+
+    /* ── POS Categories Column ───────────────────────────────────── */
+    .pos-categories-col {
+        width: 155px;
+        flex-shrink: 0;
+        background: #f8f7ff;
+        border-right: 1px solid #e5e7eb;
+        overflow-y: auto;
+    }
+
+    /* ── POS Cart Column ─────────────────────────────────────────── */
+    .pos-cart-col {
+        width: 280px;
+        flex-shrink: 0;
+        background: #fff;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: -4px 0 20px rgba(45,27,94,0.07);
+    }
+
     /* ── POS Product Cards ─────────────────────────────────────── */
     .pos-product-card {
         position: relative;
@@ -1087,66 +1114,114 @@ foreach($categories as $cat) {
     .pos-add-overlay span { font-size: .8rem; font-weight: 700; letter-spacing: .06em; }
     .pos-product-card:hover .pos-add-overlay { opacity: 1; }
 
-    @media (max-width: 1200px) {
-        #pos-wrap {
-            left: 0 !important;
-            width: 100% !important;
-        }
-
-        #pos-wrap > div:nth-child(2) > div:first-child {
-            width: 140px !important;
-        }
-
-        #pos-wrap > div:nth-child(2) > div:last-child {
-            width: 240px !important;
-        }
-    }
-
+    /* ── MOBILE: ≤900px ──────────────────────────────────────────── */
     @media (max-width: 900px) {
+        .pos-alert-fixed {
+            left: 12px !important;
+            right: 12px !important;
+        }
+
         #pos-wrap {
             position: absolute !important;
             inset: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
             min-height: 100vh;
         }
 
-        #pos-wrap > div:first-child {
+        .pos-topbar {
             flex-wrap: wrap;
-            align-items: flex-start;
             gap: 8px;
-            padding: 10px 12px;
+            padding: 8px 12px;
         }
 
-        #pos-wrap > div:first-child > div:last-child {
-            width: 100%;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-        }
-
-        #pos-wrap > div:nth-child(2) {
-            flex-wrap: wrap;
-            overflow-y: auto !important;
-        }
-
-        #pos-wrap > div:nth-child(2) > div:first-child {
+        .pos-categories-col {
             width: 100% !important;
-            max-height: 120px;
+            max-height: 90px;
             border-right: 0 !important;
             border-bottom: 1px solid #e5e7eb;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .pos-categories-col .list-group {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+        .pos-categories-col .list-group-item {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            padding: 6px 14px !important;
+        }
+        .pos-categories-col .list-group-item i.d-block {
+            display: inline !important;
+        }
+        .pos-categories-col .list-group-item small,
+        .pos-categories-col .list-group-item span.d-block {
+            font-size: .7rem !important;
         }
 
         #products-container {
             width: 100%;
             flex: 1 1 100% !important;
-            min-height: 420px;
+            min-height: 300px;
+            padding: 8px 10px 80px !important;
         }
 
-        #pos-wrap > div:nth-child(2) > div:last-child {
+        .row-cols-2 .col {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+
+        .pos-product-img-wrap {
+            height: 90px;
+        }
+
+        .pos-cart-col {
+            position: fixed !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
             width: 100% !important;
-            min-height: 300px;
-            height: auto !important;
+            height: 55vh;
+            max-height: 55vh;
             border-left: 0 !important;
-            border-top: 1px solid #e5e7eb;
+            border-top: 2px solid #e5e7eb;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform .3s ease;
+        }
+        .pos-cart-col.mobile-open {
+            transform: translateY(0);
+        }
+
+        .pos-cart-col > div:first-child .btn {
+            display: inline-flex !important;
+        }
+    }
+
+    /* ── TABLET: 901–1200px ─────────────────────────────────────── */
+    @media (min-width: 901px) and (max-width: 1200px) {
+        #pos-wrap {
+            left: 0 !important;
+            width: 100% !important;
+        }
+
+        .pos-categories-col {
+            width: 130px !important;
+        }
+
+        .pos-cart-col {
+            width: 240px !important;
         }
     }
 </style>
+
+<script>
+    // ── Mobile cart toggle ──
+    window.toggleMobileCart = function() {
+        var cart = document.querySelector('.pos-cart-col');
+        if (cart) cart.classList.toggle('mobile-open');
+    };
+</script>
 @endsection
