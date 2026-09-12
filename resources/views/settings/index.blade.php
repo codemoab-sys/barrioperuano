@@ -317,7 +317,7 @@
                             <div class="card-body">
                                 <p class="small text-muted mb-3">
                                     Servidor: <code>mail.moabcode.com:465 (SSL)</code> ·
-                                    Usuario: <code>restaurantevillar@moabcode.com</code>
+                                    Usuario: <code>barrioperuano@moabcode.com</code>
                                 </p>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Contraseña SMTP <span class="text-danger">*</span></label>

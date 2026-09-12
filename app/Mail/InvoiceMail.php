@@ -25,7 +25,7 @@ class InvoiceMail extends Mailable
         $numero = $this->order->full_number;
 
         return new Envelope(
-            subject: "{$tipo} {$numero} - Restaurante Villar",
+            subject: "{$tipo} {$numero} - Restaurante Barrio Peruano",
         );
     }
 

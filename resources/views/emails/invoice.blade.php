@@ -16,7 +16,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Restaurante Villar</h1>
+            <h1>Restaurante Barrio Peruano</h1>
         </div>
         <div class="body">
             <p>Estimado/a <strong>{{ $order->client_name ?: 'Cliente' }}</strong>,</p>
@@ -39,7 +39,7 @@
 
             <p class="footer">
                 Este es un correo automático generado por el sistema de facturación electrónica.<br>
-                Restaurante Villar - RUC: {{ $order->client_document ?? '' }}
+                Restaurante Barrio Peruano - RUC: {{ $order->client_document ?? '' }}
             </p>
         </div>
     </div>

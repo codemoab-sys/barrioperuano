@@ -36,7 +36,7 @@ class SettingSeeder extends Seeder
             'nubefact_token' => '',              // TOKEN de autenticación
 
             // ── SMTP (envío de comprobantes) ─────────────────────────
-            'smtp_password' => '',               // Contraseña correo restaurantevillar@moabcode.com
+            'smtp_password' => '',               // Contraseña correo barrioperuano@moabcode.com
         ];
 
         foreach ($data as $key => $value) {

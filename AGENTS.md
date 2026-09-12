@@ -2,7 +2,7 @@
 
 ## What this is
 
-Laravel 12 restaurant POS system ("Restaurante Villar"). Handles orders, tables, kitchen display, billing (SUNAT/NubeFact electronic invoicing), delivery, reservations, and reporting. Backend: PHP 8.2+ / Laravel. Frontend: Vite + Tailwind CSS + Bootstrap 5 + Sass.
+Laravel 12 restaurant POS system ("Restaurante Barrio Peruano"). Handles orders, tables, kitchen display, billing (SUNAT/NubeFact electronic invoicing), delivery, reservations, and reporting. Backend: PHP 8.2+ / Laravel. Frontend: Vite + Tailwind CSS + Bootstrap 5 + Sass.
 
 ## Quick commands
 
@@ -17,6 +17,13 @@ Laravel 12 restaurant POS system ("Restaurante Villar"). Handles orders, tables,
 - 4 spaces, LF line endings, UTF-8 (see `.editorconfig`).
 - Laravel Pint available for PHP formatting (`vendor/bin/pint`).
 - No API routes — this is a web-only application (routes/web.php).
+
+## Agent conduct
+
+- Implement exactly what the user asks. Do not invent behavior or assume intent — if something is unclear, ask before coding.
+- Only touch files necessary for the requested change. Avoid unrelated refactors.
+- Apply good practices for both frontend and backend code at every step.
+- After each change, verify no unrelated files were affected. If everything is correct, commit and push.
 
 ## Database
 
@@ -40,11 +47,12 @@ Before any destructive operation: generate a backup and confirm the connection p
 
 ## Auth & roles
 
-- Four roles: `admin`, `cashier`, `waiter`, `kitchen`.
+- Five roles: `admin`, `cashier`, `cashier_waiter`, `waiter`, `kitchen`.
 - Middleware `role:admin,cashier` or `role:admin` guards route groups in `routes/web.php`.
 - Custom middleware in `app/Http/Middleware/`:
-  - **`CheckRole`** — enforces role-based access.
-  - **`RequireOpenCashRegister`** — admin/cashier users must open a cash register before accessing POS routes.
+  - **`CheckRole`** — enforces role-based access (variadic `...$roles`).
+  - **`RequireOpenCashRegister`** — `admin`, `cashier`, `cashier_waiter` users must open a cash register before accessing POS routes.
+  - **`SetTimezone`** — reads timezone from `rest_settings` and sets it at runtime.
 - `DatabaseSeeder` is intentionally empty — no users or data are created by default.
 - `DemoDataSeeder` is gated by `config('demo.allow_data')` which reads `ALLOW_DEMO_DATA` env var.
 
