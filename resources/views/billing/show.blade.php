@@ -12,11 +12,12 @@
                 {{ $order->document_type }} {{ $order->full_number }}
                 @php
                     $color = match($order->sunat_status) {
-                        'ACCEPTED' => 'success',
-                        'OBSERVED' => 'warning',
-                        'PENDING'  => 'secondary',
-                        'VOIDED'   => 'dark',
-                        default    => 'danger',
+                        'ACCEPTED'  => 'success',
+                        'OBSERVED'  => 'warning',
+                        'PENDING'   => 'secondary',
+                        'NO_ENVIADO'=> 'info',
+                        'VOIDED'    => 'dark',
+                        default     => 'danger',
                     };
                 @endphp
                 <span class="badge bg-{{ $color }} ms-2">{{ $order->sunat_status }}</span>
@@ -72,7 +73,7 @@
                     <i class="bi bi-archive"></i> CDR
                 </a>
             @endif
-            @if(in_array($order->sunat_status, ['PENDING','ERROR','REJECTED']))
+            @if(in_array($order->sunat_status, ['PENDING','ERROR','REJECTED','NO_ENVIADO']))
                 <form method="POST" action="{{ route('billing.retry', $order) }}" class="d-inline">
                     @csrf
                     <button class="btn btn-warning" onclick="return confirm('¿Reintentar envío a SUNAT?')">

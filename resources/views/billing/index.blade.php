@@ -21,11 +21,12 @@
     {{-- Stats por estado --}}
     <div class="row g-3 mb-4">
         @foreach([
-            'ACCEPTED' => ['Aceptados',  'success',   'check-circle-fill'],
-            'OBSERVED' => ['Observados', 'warning',   'exclamation-triangle-fill'],
-            'PENDING'  => ['Pendientes', 'secondary', 'hourglass-split'],
-            'ERROR'    => ['Con error',  'danger',    'x-circle-fill'],
-            'REJECTED' => ['Rechazados', 'danger',    'slash-circle-fill'],
+            'ACCEPTED'  => ['Aceptados',   'success',  'check-circle-fill'],
+            'OBSERVED'  => ['Observados',  'warning',  'exclamation-triangle-fill'],
+            'PENDING'   => ['Pendientes',  'secondary','hourglass-split'],
+            'NO_ENVIADO'=> ['Sin enviar',   'info',     'cloud-upload'],
+            'ERROR'     => ['Con error',   'danger',   'x-circle-fill'],
+            'REJECTED'  => ['Rechazados',  'danger',   'slash-circle-fill'],
         ] as $key => [$label, $color, $icon])
             <div class="col-6 col-md">
                 <div class="card border-0 shadow-sm border-start border-{{ $color }} border-3">
@@ -57,7 +58,7 @@
                     <label class="form-label small mb-1">Estado</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">Todos</option>
-                        @foreach(['PENDING','ACCEPTED','OBSERVED','REJECTED','ERROR','VOIDED'] as $st)
+                        @foreach(['PENDING','ACCEPTED','OBSERVED','REJECTED','ERROR','NO_ENVIADO','VOIDED'] as $st)
                             <option value="{{ $st }}" {{ request('status') === $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
                     </select>
@@ -114,11 +115,12 @@
                             <td>
                                 @php
                                     $color = match($o->sunat_status) {
-                                        'ACCEPTED' => 'success',
-                                        'OBSERVED' => 'warning',
-                                        'PENDING'  => 'secondary',
-                                        'VOIDED'   => 'dark',
-                                        default    => 'danger',
+                                        'ACCEPTED'  => 'success',
+                                        'OBSERVED'  => 'warning',
+                                        'PENDING'   => 'secondary',
+                                        'NO_ENVIADO'=> 'info',
+                                        'VOIDED'    => 'dark',
+                                        default     => 'danger',
                                     };
                                 @endphp
                                 <span class="badge bg-{{ $color }}">{{ $o->sunat_status }}</span>
@@ -177,7 +179,7 @@
                                             <i class="bi bi-archive"></i>
                                         </a>
                                     @endif
-                                    @if(in_array($o->sunat_status, ['ERROR','REJECTED']))
+                                    @if(in_array($o->sunat_status, ['ERROR','REJECTED','NO_ENVIADO']))
                                         <form method="POST" action="{{ route('billing.retry', $o) }}" class="d-inline">
                                             @csrf
                                             <button class="btn btn-outline-warning" title="Reintentar envío"

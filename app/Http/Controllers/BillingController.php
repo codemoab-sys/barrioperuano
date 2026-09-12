@@ -94,7 +94,7 @@ class BillingController extends Controller
         if ($order->sunat_code === '23' || str_contains((string) $order->sunat_description, 'Este documento ya existe')) {
             return back()->with('info', 'El documento ya fue registrado por el proveedor electrónico. Usa "Consultar estado"; no se volverá a enviar.');
         }
-        if ($order->sunat_status === 'PENDING') {
+        if ($order->sunat_status === 'PENDING' && $order->sent_at) {
             return back()->with('info', 'El comprobante está pendiente. Usa "Consultar estado"; no se volverá a enviar.');
         }
 

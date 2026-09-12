@@ -410,12 +410,6 @@ class PosController extends Controller
             $config = new SunatConfig();
             $seriesKey = $documentType === 'Factura' ? 'factura' : 'boleta';
 
-            if (!$config->isNubefactConfigured()) {
-                return $request->expectsJson()
-                    ? response()->json(['success' => false, 'message' => 'Completa RUC, razón social, ubigeo, RUTA y TOKEN del proveedor electrónico antes de emitir.'], 422)
-                    : redirect()->back()->with('error', 'Completa RUC, razón social, ubigeo, RUTA y TOKEN del proveedor electrónico antes de emitir.');
-            }
-
             if (!DocumentSeries::where('document_type', $seriesKey)->where('is_active', true)->exists()) {
                 return $request->expectsJson()
                     ? response()->json(['success' => false, 'message' => 'No hay una serie activa configurada para ' . $documentType . '.'], 422)
@@ -445,7 +439,10 @@ class PosController extends Controller
                 }
         }
 
-        DB::transaction(function() use ($order, $method, $received, $change, $request, $clientId, $clientName, $documentType, $clientDocument) {
+        // Track if NubeFact is configured for later use
+        $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
+
+        DB::transaction(function() use ($order, $method, $received, $change, $request, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             $order->load('details.product.ingredients');
 
@@ -489,7 +486,7 @@ class PosController extends Controller
                 'subtotal' => $totalGravada,
                 'igv' => $igv,
                 'total_gravada' => $totalGravada,
-                'sunat_status' => $isElectronic ? 'PENDING' : 'NA',
+                'sunat_status' => $isElectronic ? ($nubefactConfigured ? 'PENDING' : 'NO_ENVIADO') : 'NA',
             ]);
 
             $requirements = [];
@@ -546,7 +543,7 @@ class PosController extends Controller
         $order->refresh();
 
         // 3. Envío único al proveedor electrónico. Si queda pendiente, se consulta después.
-        if ($order->isElectronic()) {
+        if ($order->isElectronic() && $nubefactConfigured) {
             (new NubeFactService())->sendInvoice($order->fresh('details.product'));
         }
 
@@ -562,6 +559,8 @@ class PosController extends Controller
                 $msg .= ' Comprobante ' . $order->full_number . ' rechazado: ' . ($order->sunat_description ?? 'Error desconocido');
             } elseif ($order->sunat_status === 'PENDING') {
                 $msg .= ' Comprobante ' . $order->full_number . ' pendiente. Consulta su estado desde Comprobantes.';
+            } elseif ($order->sunat_status === 'NO_ENVIADO') {
+                $msg .= ' Comprobante ' . $order->full_number . ' registrado. Configure NubeFact y envíelo desde Comprobantes.';
             } else {
                 $msg .= ' Comprobante ' . $order->full_number . ' - ' . $order->sunat_status . '. Revisa el detalle desde Comprobantes.';
             }
