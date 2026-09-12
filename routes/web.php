@@ -226,9 +226,12 @@ Route::get('/debug/manual-send-ultima-factura', function () {
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 })->name('debug.manual.send.ultima.factura');
 
-// Web Informativa Pública (Landing) — página de inicio por defecto
-Route::get('/', [App\Http\Controllers\LandingController::class, 'index'])->name('landing.index');
+// Web Informativa Pública (Landing) — ocultada temporalmente
+// Route::get('/', [App\Http\Controllers\LandingController::class, 'index'])->name('landing.index');
 Route::get('/inicio', [App\Http\Controllers\LandingController::class, 'index'])->name('landing.home');
+
+// La raíz redirige al login
+Route::get('/', fn() => redirect()->route('login'));
 
 // --- 2. SISTEMA INTERNO ---
 Route::middleware(['auth'])->group(function () {

@@ -824,12 +824,14 @@
             <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                 <i class="bi bi-gear-fill"></i> Configuración
             </a>
+            {{-- Sitio Web (oculto temporalmente — conservar para futuro)
             <a href="{{ route('landing.settings') }}" class="nav-link {{ request()->routeIs('landing.*') ? 'active' : '' }}">
                 <i class="bi bi-globe2"></i> Sitio Web
             </a>
             <a href="{{ route('landing.index') }}" target="_blank" rel="noopener" class="nav-link text-warning">
                 <i class="bi bi-display"></i> Ver Sitio Web <i class="bi bi-box-arrow-up-right ms-auto" style="font-size: 0.75rem;"></i>
             </a>
+            --}}
             <a href="{{ route('system.index') }}" class="nav-link {{ request()->routeIs('system.*') ? 'active' : '' }} text-warning">
                 <i class="bi bi-tools"></i> Mantenimiento
             </a>
