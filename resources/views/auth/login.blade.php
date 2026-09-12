@@ -417,7 +417,7 @@
 
         <!-- Heading -->
         <div class="login-heading">
-            <h2>Bienvenido de<br>vuelta</h2>
+            <h2>{{ \App\Models\Setting::where('key','welcome_message')->value('value') ?? 'Bienvenido de vuelta' }}</h2>
             <p>Ingresa tus credenciales para continuar</p>
         </div>
 
