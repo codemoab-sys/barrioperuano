@@ -349,11 +349,11 @@
 
         /* --- User Profile Block --- */
         .sidebar-user {
-            padding: 22px 20px 18px;
+            padding: 8px 14px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             border-bottom: 1px solid rgba(255,255,255,0.07);
             flex-shrink: 0;
         }
@@ -361,34 +361,35 @@
         .sidebar-avatar-wrap {
             position: relative;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .sidebar-avatar {
-            width: 68px; height: 68px;
+            width: 32px; height: 32px;
             background: var(--primary);
             color: white;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
+            font-size: 13px;
             font-weight: 700;
-            box-shadow: 0 6px 20px rgba(255,140,0,0.40);
-            border: 3px solid rgba(255,255,255,0.15);
         }
 
         .sidebar-avatar-dot {
-            width: 14px; height: 14px;
+            width: 8px; height: 8px;
             background: var(--accent-pink);
             border-radius: 50%;
             border: 2px solid var(--sidebar-bg);
             position: absolute;
-            bottom: 2px; right: 2px;
+            bottom: 0; right: 0;
         }
 
         .sidebar-username {
             color: rgba(255,255,255,0.92);
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 500;
-            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* --- Navigation Menu --- */
@@ -712,7 +713,7 @@
             </div>
             <div class="sidebar-avatar-dot"></div>
         </div>
-        <div class="sidebar-username">{{ Auth::user()->name }}</div>
+        <span class="sidebar-username">{{ Auth::user()->name }}</span>
     </div>
 
     {{-- Navigation --}}
