@@ -8,14 +8,14 @@
             <p class="text-muted mb-0">Arrastra las mesas y guarda la distribución</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#areaModal">
-                <i class="bi bi-plus-circle me-2"></i> Nueva Zona
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#areaModal">
+                <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline">Nueva Zona</span><span class="d-sm-none">Zona</span>
             </button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tableModal">
-                <i class="bi bi-plus-lg me-2"></i> Nueva Mesa
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tableModal">
+                <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Nueva Mesa</span><span class="d-sm-none">Mesa</span>
             </button>
-            <button class="btn btn-success fw-bold px-4 shadow" onclick="savePositions()" id="btnSave">
-                <i class="bi bi-save me-2"></i> Guardar Diseño
+            <button class="btn btn-success btn-sm fw-bold shadow" onclick="savePositions()" id="btnSave">
+                <i class="bi bi-save me-1"></i><span class="d-none d-sm-inline">Guardar Diseño</span><span class="d-sm-none">Guardar</span>
             </button>
         </div>
     </div>
