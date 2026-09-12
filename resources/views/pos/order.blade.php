@@ -1129,6 +1129,11 @@ foreach($categories as $cat) {
             min-height: 100vh;
         }
 
+        #pos-wrap > div:nth-child(2) {
+            flex-direction: column !important;
+            overflow-y: auto !important;
+        }
+
         .pos-topbar {
             flex-wrap: wrap;
             gap: 8px;
@@ -1137,11 +1142,13 @@ foreach($categories as $cat) {
 
         .pos-categories-col {
             width: 100% !important;
+            max-width: 100% !important;
             max-height: 90px;
             border-right: 0 !important;
             border-bottom: 1px solid #e5e7eb;
             overflow-x: auto;
             overflow-y: hidden;
+            flex-shrink: 0;
         }
         .pos-categories-col .list-group {
             flex-direction: row !important;
@@ -1162,8 +1169,9 @@ foreach($categories as $cat) {
 
         #products-container {
             width: 100%;
-            flex: 1 1 100% !important;
-            min-height: 300px;
+            flex: 1 1 auto !important;
+            min-height: 0;
+            overflow-y: auto !important;
             padding: 8px 10px 80px !important;
         }
 
@@ -1198,6 +1206,10 @@ foreach($categories as $cat) {
         .pos-cart-col > div:first-child .btn {
             display: inline-flex !important;
         }
+
+        #mobileCartFab {
+            display: flex !important;
+        }
     }
 
     /* ── TABLET: 901–1200px ─────────────────────────────────────── */
@@ -1217,11 +1229,57 @@ foreach($categories as $cat) {
     }
 </style>
 
+{{-- Mobile FAB: Ver Carrito --}}
+<div id="mobileCartFab" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1100;">
+    <button type="button" class="btn btn-primary shadow-lg fw-bold d-flex align-items-center gap-2 rounded-pill px-4 py-3"
+            onclick="toggleMobileCart()" id="fabCartBtn" style="font-size:1rem;">
+        <i class="bi bi-cart3 fs-5"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fabCartCount" style="font-size:.7rem; display:none;">
+            0
+        </span>
+        Ver Carrito
+    </button>
+</div>
+
 <script>
     // ── Mobile cart toggle ──
     window.toggleMobileCart = function() {
         var cart = document.querySelector('.pos-cart-col');
-        if (cart) cart.classList.toggle('mobile-open');
+        if (!cart) return;
+        cart.classList.toggle('mobile-open');
+        var fab = document.getElementById('fabCartBtn');
+        if (fab) {
+            if (cart.classList.contains('mobile-open')) {
+                fab.innerHTML = '<i class="bi bi-x-lg fs-5"></i> Cerrar';
+                fab.classList.remove('btn-primary');
+                fab.classList.add('btn-danger');
+            } else {
+                fab.innerHTML = '<i class="bi bi-cart3 fs-5"></i> Ver Carrito <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fabCartCount" style="font-size:.7rem;"></span>';
+                fab.classList.remove('btn-danger');
+                fab.classList.add('btn-primary');
+                updateFabCount();
+            }
+        }
     };
+
+    function updateFabCount() {
+        var badge = document.getElementById('fabCartCount');
+        if (!badge) return;
+        var rows = document.querySelectorAll('#cart-container .table tbody tr');
+        var total = 0;
+        rows.forEach(function(r) {
+            var input = r.querySelector('input[type="number"]');
+            if (input) total += parseInt(input.value) || 0;
+        });
+        badge.textContent = total;
+        badge.style.display = total > 0 ? 'inline' : 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var observer = new MutationObserver(function() { updateFabCount(); });
+        var cartEl = document.getElementById('cart-container');
+        if (cartEl) observer.observe(cartEl, { childList: true, subtree: true });
+        updateFabCount();
+    });
 </script>
 @endsection
