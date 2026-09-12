@@ -30,17 +30,17 @@ class DemoDataSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         // 1. LIMPIAR BASE DE DATOS (MANTENER ADMIN Y SETTINGS)
-        DB::table('rest_inventory_logs')->truncate();
-        DB::table('rest_product_ingredients')->truncate();
-        DB::table('rest_order_details')->truncate();
-        DB::table('rest_orders')->truncate();
-        DB::table('rest_reservations')->truncate();
-        DB::table('rest_expenses')->truncate();
-        DB::table('rest_tables')->truncate();
-        DB::table('rest_areas')->truncate();
-        DB::table('rest_products')->truncate();
-        DB::table('rest_categories')->truncate();
-        DB::table('rest_clients')->truncate();
+        DB::table('bape_inventory_logs')->truncate();
+        DB::table('bape_product_ingredients')->truncate();
+        DB::table('bape_order_details')->truncate();
+        DB::table('bape_orders')->truncate();
+        DB::table('bape_reservations')->truncate();
+        DB::table('bape_expenses')->truncate();
+        DB::table('bape_tables')->truncate();
+        DB::table('bape_areas')->truncate();
+        DB::table('bape_products')->truncate();
+        DB::table('bape_categories')->truncate();
+        DB::table('bape_clients')->truncate();
 
         // Limpiar usuarios excepto el administrador (asumiendo que el admin es ID 1 o tiene rol admin)
         User::where('role', '!=', 'admin')->delete();

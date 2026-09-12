@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             $table->decimal('discount', 10, 2)->default(0)->after('total'); // Descuento en dinero
             $table->decimal('tip', 10, 2)->default(0)->after('discount');    // Propina / Servicio
         });
@@ -16,7 +16,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             $table->dropColumn(['discount', 'tip']);
         });
     }

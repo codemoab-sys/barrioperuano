@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:rest_users,email',
+            'email' => 'required|email|unique:bape_users,email',
             'password' => 'required|min:6',
             'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen'
         ]);
@@ -39,7 +39,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:rest_users,email,'.$user->id,
+            'email' => 'required|email|unique:bape_users,email,'.$user->id,
             'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen'
         ]);
 

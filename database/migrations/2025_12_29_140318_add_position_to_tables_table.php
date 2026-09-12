@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_tables', function (Blueprint $table) {
+        Schema::table('bape_tables', function (Blueprint $table) {
             // Coordenadas X e Y (en pÃ­xeles o porcentaje)
             $table->integer('x_pos')->default(0)->after('status');
             $table->integer('y_pos')->default(0)->after('x_pos');
@@ -17,7 +17,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_tables', function (Blueprint $table) {
+        Schema::table('bape_tables', function (Blueprint $table) {
             $table->dropColumn(['x_pos', 'y_pos']);
         });
     }

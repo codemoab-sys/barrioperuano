@@ -19,27 +19,27 @@ class ReportController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
         // 1. VENTAS POR CATEGORÍA (Gráfico de Dona)
-        $salesByCategory = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->join('rest_categories', 'rest_products.category_id', '=', 'rest_categories.id')
-            ->select('rest_categories.name', DB::raw('SUM(rest_order_details.quantity * rest_order_details.price) as total'))
-            ->where('rest_orders.status', 'completed')
-            ->whereDate('rest_orders.created_at', '>=', $startDate)
-            ->whereDate('rest_orders.created_at', '<=', $endDate)
-            ->groupBy('rest_categories.name')
+        $salesByCategory = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->join('bape_categories', 'bape_products.category_id', '=', 'bape_categories.id')
+            ->select('bape_categories.name', DB::raw('SUM(bape_order_details.quantity * bape_order_details.price) as total'))
+            ->where('bape_orders.status', 'completed')
+            ->whereDate('bape_orders.created_at', '>=', $startDate)
+            ->whereDate('bape_orders.created_at', '<=', $endDate)
+            ->groupBy('bape_categories.name')
             ->get();
 
         $catLabels = $salesByCategory->pluck('name');
         $catValues = $salesByCategory->pluck('total');
 
         // 2. RENDIMIENTO DE PERSONAL (Gráfico de Barras)
-        $salesByWaiter = Order::select('rest_users.name', DB::raw('SUM(rest_orders.total) as total_sales'), DB::raw('COUNT(rest_orders.id) as orders_count'))
-            ->join('rest_users', 'rest_orders.user_id', '=', 'rest_users.id')
-            ->where('rest_orders.status', 'completed')
-            ->whereDate('rest_orders.created_at', '>=', $startDate)
-            ->whereDate('rest_orders.created_at', '<=', $endDate)
-            ->groupBy('rest_users.name')
+        $salesByWaiter = Order::select('bape_users.name', DB::raw('SUM(bape_orders.total) as total_sales'), DB::raw('COUNT(bape_orders.id) as orders_count'))
+            ->join('bape_users', 'bape_orders.user_id', '=', 'bape_users.id')
+            ->where('bape_orders.status', 'completed')
+            ->whereDate('bape_orders.created_at', '>=', $startDate)
+            ->whereDate('bape_orders.created_at', '<=', $endDate)
+            ->groupBy('bape_users.name')
             ->orderByDesc('total_sales')
             ->get();
 
@@ -47,27 +47,27 @@ class ReportController extends Controller
         $waiterValues = $salesByWaiter->pluck('total_sales');
 
         // 3. TOP 5 PLATOS MÁS VENDIDOS
-        $topProducts = DB::table('rest_order_details')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->select('rest_products.name', DB::raw('SUM(rest_order_details.quantity) as qty'), DB::raw('SUM(rest_order_details.quantity * rest_order_details.price) as revenue'))
-            ->where('rest_orders.status', 'completed')
-            ->whereDate('rest_orders.created_at', '>=', $startDate)
-            ->whereDate('rest_orders.created_at', '<=', $endDate)
-            ->groupBy('rest_products.name')
+        $topProducts = DB::table('bape_order_details')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->select('bape_products.name', DB::raw('SUM(bape_order_details.quantity) as qty'), DB::raw('SUM(bape_order_details.quantity * bape_order_details.price) as revenue'))
+            ->where('bape_orders.status', 'completed')
+            ->whereDate('bape_orders.created_at', '>=', $startDate)
+            ->whereDate('bape_orders.created_at', '<=', $endDate)
+            ->groupBy('bape_products.name')
             ->orderByDesc('qty')
             ->limit(5)
             ->get();
 
         // 4. TOP 5 PLATOS MENOS VENDIDOS (Para tomar acción)
-        $worstProducts = DB::table('rest_order_details')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->select('rest_products.name', DB::raw('SUM(rest_order_details.quantity) as qty'))
-            ->where('rest_orders.status', 'completed')
-            ->whereDate('rest_orders.created_at', '>=', $startDate)
-            ->whereDate('rest_orders.created_at', '<=', $endDate)
-            ->groupBy('rest_products.name')
+        $worstProducts = DB::table('bape_order_details')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->select('bape_products.name', DB::raw('SUM(bape_order_details.quantity) as qty'))
+            ->where('bape_orders.status', 'completed')
+            ->whereDate('bape_orders.created_at', '>=', $startDate)
+            ->whereDate('bape_orders.created_at', '<=', $endDate)
+            ->groupBy('bape_products.name')
             ->orderBy('qty', 'asc')
             ->limit(5)
             ->get();

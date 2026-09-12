@@ -81,13 +81,13 @@ class DashboardController extends Controller
         }
 
         // ─── Datos para el Radar Chart (por categoría) ────────────────────────
-        $categoryStats = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->join('rest_categories', 'rest_products.category_id', '=', 'rest_categories.id')
-            ->where('rest_orders.status', 'completed')
-            ->select('rest_categories.name', DB::raw('SUM(rest_order_details.quantity) as total_qty'))
-            ->groupBy('rest_categories.id', 'rest_categories.name')
+        $categoryStats = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->join('bape_categories', 'bape_products.category_id', '=', 'bape_categories.id')
+            ->where('bape_orders.status', 'completed')
+            ->select('bape_categories.name', DB::raw('SUM(bape_order_details.quantity) as total_qty'))
+            ->groupBy('bape_categories.id', 'bape_categories.name')
             ->orderByDesc('total_qty')
             ->limit(6)
             ->get();
@@ -109,12 +109,12 @@ class DashboardController extends Controller
         }])->get();
 
         // ─── Top Productos ────────────────────────────────────────────────────
-        $topProducts = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->where('rest_orders.status', 'completed')
-            ->select('rest_products.name', 'rest_products.image', DB::raw('SUM(rest_order_details.quantity) as total_qty'))
-            ->groupBy('rest_products.id', 'rest_products.name', 'rest_products.image')
+        $topProducts = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->where('bape_orders.status', 'completed')
+            ->select('bape_products.name', 'bape_products.image', DB::raw('SUM(bape_order_details.quantity) as total_qty'))
+            ->groupBy('bape_products.id', 'bape_products.name', 'bape_products.image')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();

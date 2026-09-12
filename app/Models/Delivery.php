@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Delivery extends Model
 {
-    protected $table = 'rest_deliveries';
+    protected $table = 'bape_deliveries';
 protected $fillable = [
         'order_id', 'client_id', 'client_name', 'client_phone',
         'address', 'reference', 'driver_id', 'user_id', 'cash_register_id',

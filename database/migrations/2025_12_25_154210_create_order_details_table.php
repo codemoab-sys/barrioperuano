@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_order_details', function (Blueprint $table) {
+        Schema::create('bape_order_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('rest_orders')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('rest_products');
+            $table->foreignId('order_id')->constrained('bape_orders')->onDelete('cascade');
+            $table->foreignId('product_id')->constrained('bape_products');
             $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2);
             $table->enum('status', ['pending', 'cooking', 'served'])->default('pending');
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_order_details');
+        Schema::dropIfExists('bape_order_details');
     }
 };

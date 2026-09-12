@@ -41,17 +41,17 @@ class SystemController extends Controller
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
             // 1. Borrar Ventas y Detalles
-            DB::table('rest_order_details')->truncate();
-            DB::table('rest_orders')->truncate();
+            DB::table('bape_order_details')->truncate();
+            DB::table('bape_orders')->truncate();
 
             // 2. Borrar Reservas y Finanzas
-            DB::table('rest_reservations')->truncate();
-            DB::table('rest_expenses')->truncate();
-            DB::table('rest_cash_registers')->truncate();
+            DB::table('bape_reservations')->truncate();
+            DB::table('bape_expenses')->truncate();
+            DB::table('bape_cash_registers')->truncate();
 
             // 3. Borrar Kardex
-            DB::table('rest_inventory_logs')->truncate();
-            DB::table('rest_products')->update(['stock' => 0]);
+            DB::table('bape_inventory_logs')->truncate();
+            DB::table('bape_products')->update(['stock' => 0]);
 
             Setting::updateOrCreate(
                 ['key' => 'production_prepared'],

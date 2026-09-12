@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rest_products', function (Blueprint $table) {
+        Schema::table('bape_products', function (Blueprint $table) {
             // Agregamos la columna 'is_saleable' (Es vendible)
             // default(true) significa que por defecto TODOS se venden, salvo que digas lo contrario
             $table->boolean('is_saleable')->default(true)->after('stock');
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rest_products', function (Blueprint $table) {
+        Schema::table('bape_products', function (Blueprint $table) {
             $table->dropColumn('is_saleable');
         });
     }

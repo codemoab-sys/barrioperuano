@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_categories', function (Blueprint $table) {
+        Schema::create('bape_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // Ej: Bebidas
             $table->string('image')->nullable(); // Foto de la categorÃ­a
@@ -19,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_categories');
+        Schema::dropIfExists('bape_categories');
     }
 };

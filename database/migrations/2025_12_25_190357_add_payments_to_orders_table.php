@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             // Agregamos columnas para el detalle del pago
             $table->string('payment_method')->default('cash')->after('total'); // cash, card
             $table->decimal('received_amount', 10, 2)->nullable()->after('payment_method'); // CuÃ¡nto entregÃ³ el cliente
@@ -18,7 +18,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             $table->dropColumn(['payment_method', 'received_amount', 'change_amount']);
         });
     }

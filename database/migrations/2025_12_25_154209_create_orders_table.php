@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_orders', function (Blueprint $table) {
+        Schema::create('bape_orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('table_id')->constrained('rest_tables');
-            $table->foreignId('user_id')->constrained('rest_users');
+            $table->foreignId('table_id')->constrained('bape_tables');
+            $table->foreignId('user_id')->constrained('bape_users');
             $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
             $table->decimal('total', 10, 2)->default(0);
             $table->text('notes')->nullable();
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_orders');
+        Schema::dropIfExists('bape_orders');
     }
 };

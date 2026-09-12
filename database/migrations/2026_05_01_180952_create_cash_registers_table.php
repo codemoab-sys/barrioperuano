@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rest_cash_registers', function (Blueprint $table) {
+        Schema::create('bape_cash_registers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('rest_users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('bape_users')->onDelete('cascade');
             $table->dateTime('opening_time');
             $table->dateTime('closing_time')->nullable();
             $table->decimal('opening_amount', 10, 2);
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rest_cash_registers');
+        Schema::dropIfExists('bape_cash_registers');
     }
 };

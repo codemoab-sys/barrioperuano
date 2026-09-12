@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CreditNote extends Model
 {
-    protected $table = 'rest_credit_notes';
+    protected $table = 'bape_credit_notes';
 use HasFactory;
 
     protected $fillable = [

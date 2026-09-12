@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LoginAudit extends Model
 {
-    protected $table = 'rest_auditoria_login';
+    protected $table = 'bape_auditoria_login';
 
     protected $fillable = [
         'user_id',

@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_tables', function (Blueprint $table) {
+        Schema::create('bape_tables', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('area_id')->constrained('rest_areas')->onDelete('cascade');
+            $table->foreignId('area_id')->constrained('bape_areas')->onDelete('cascade');
             $table->string('name'); // Ej: Mesa 1, M-04
             $table->integer('seats')->default(4); // Cantidad de personas
             // Estado actual: disponible, ocupada, reservada
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_tables');
+        Schema::dropIfExists('bape_tables');
     }
 };

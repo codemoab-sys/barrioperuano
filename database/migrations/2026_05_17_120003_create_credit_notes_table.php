@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_credit_notes', function (Blueprint $table) {
+        Schema::create('bape_credit_notes', function (Blueprint $table) {
             $table->id();
 
             // Documento afectado
-            $table->foreignId('order_id')->constrained('rest_orders')->cascadeOnDelete();
+            $table->foreignId('order_id')->constrained('bape_orders')->cascadeOnDelete();
 
             // NumeraciÃ³n de la nota
             $table->string('serie', 4);                             // FC01 / BC01
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('hash', 100)->nullable();
             $table->timestamp('sent_at')->nullable();
 
-            $table->foreignId('user_id')->nullable()->constrained('rest_users')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('bape_users')->nullOnDelete();
             $table->timestamps();
 
             $table->unique(['serie', 'correlativo'], 'credit_notes_serie_corr_unique');
@@ -53,6 +53,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_credit_notes');
+        Schema::dropIfExists('bape_credit_notes');
     }
 };

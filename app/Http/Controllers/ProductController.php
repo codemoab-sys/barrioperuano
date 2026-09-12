@@ -31,11 +31,11 @@ class ProductController extends Controller
         // 1. Validación (Incluye el barcode único)
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:rest_categories,id',
+            'category_id' => 'required|exists:bape_categories,id',
             'price' => 'required|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'promotional_price' => 'nullable|numeric|min:0',
-            'barcode' => 'nullable|string|max:50|unique:rest_products,barcode', // <--- NUEVO
+            'barcode' => 'nullable|string|max:50|unique:bape_products,barcode', // <--- NUEVO
             'image' => 'nullable|image|max:2048',
             'stock' => 'nullable|integer|min:0',
             'ingredients' => 'sometimes|array',
@@ -95,11 +95,11 @@ class ProductController extends Controller
         // 1. Validación (Barcode único excepto para este producto)
         $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:rest_categories,id',
+            'category_id' => 'required|exists:bape_categories,id',
             'price' => 'required|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'promotional_price' => 'nullable|numeric|min:0',
-            'barcode' => 'nullable|string|max:50|unique:rest_products,barcode,' . $product->id, // <--- NUEVO
+            'barcode' => 'nullable|string|max:50|unique:bape_products,barcode,' . $product->id, // <--- NUEVO
             'image' => 'nullable|image|max:2048',
             'ingredients' => 'sometimes|array',
             'ingredients.*' => 'nullable|numeric|min:0.01',

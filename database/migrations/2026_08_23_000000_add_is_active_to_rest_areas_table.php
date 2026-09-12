@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_areas', function (Blueprint $table) {
+        Schema::table('bape_areas', function (Blueprint $table) {
             $table->boolean('is_active')->default(true)->after('name');
         });
     }
 
     public function down(): void
     {
-        Schema::table('rest_areas', function (Blueprint $table) {
+        Schema::table('bape_areas', function (Blueprint $table) {
             $table->dropColumn('is_active');
         });
     }

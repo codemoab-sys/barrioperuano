@@ -58,7 +58,7 @@ class ProductRecipeTest extends TestCase
 
         $product = Product::where('name', 'Hamburguesa especial')->firstOrFail();
 
-        $this->assertDatabaseHas('rest_product_ingredients', [
+        $this->assertDatabaseHas('bape_product_ingredients', [
             'product_id' => $product->id,
             'ingredient_id' => $ingredient->id,
             'quantity' => '0.50',
@@ -134,13 +134,13 @@ class ProductRecipeTest extends TestCase
                 ],
             ]);
 
-        $this->assertDatabaseHas('rest_product_ingredients', [
+        $this->assertDatabaseHas('bape_product_ingredients', [
             'product_id' => $product->id,
             'ingredient_id' => $ingredientB->id,
             'quantity' => '0.75',
         ]);
 
-        $this->assertDatabaseMissing('rest_product_ingredients', [
+        $this->assertDatabaseMissing('bape_product_ingredients', [
             'product_id' => $product->id,
             'ingredient_id' => $ingredientA->id,
         ]);
@@ -267,7 +267,7 @@ class ProductRecipeTest extends TestCase
             ]);
 
         $response->assertRedirect('/pos');
-        $this->assertDatabaseHas('rest_orders', [
+        $this->assertDatabaseHas('bape_orders', [
             'id' => $order->id,
             'status' => 'completed',
         ]);

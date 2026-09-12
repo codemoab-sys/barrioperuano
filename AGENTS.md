@@ -27,9 +27,9 @@ Laravel 12 restaurant POS system ("Restaurante Barrio Peruano"). Handles orders,
 
 ## Database
 
-- **All domain tables use `rest_` prefix** (e.g. `rest_users`, `rest_orders`, `rest_products`).
+- **All domain tables use `bape_` prefix** (e.g. `bape_users`, `bape_orders`, `bape_products`).
 - Standard Laravel tables (`sessions`, `cache`, `jobs`) do NOT have the prefix.
-- Default connection is **SQLite** (`database/database.sqlite`).
+- Default connection is **MySQL** (remote shared hosting). `.env` points to `avicola1_bdsistema`.
 - Migrations are the source of truth. See `database/migrations/`.
 
 ### Migration rules (CRITICAL)
@@ -52,16 +52,16 @@ Before any destructive operation: generate a backup and confirm the connection p
 - Custom middleware in `app/Http/Middleware/`:
   - **`CheckRole`** — enforces role-based access (variadic `...$roles`).
   - **`RequireOpenCashRegister`** — `admin`, `cashier`, `cashier_waiter` users must open a cash register before accessing POS routes.
-  - **`SetTimezone`** — reads timezone from `rest_settings` and sets it at runtime.
+  - **`SetTimezone`** — reads timezone from `bape_settings` and sets it at runtime.
 - `DatabaseSeeder` is intentionally empty — no users or data are created by default.
 - `DemoDataSeeder` is gated by `config('demo.allow_data')` which reads `ALLOW_DEMO_DATA` env var.
 
 ## Architecture
 
-- **Models** use `rest_` table prefix explicitly via `$table` property on every model.
+- **Models** use `bape_` table prefix explicitly via `$table` property on every model.
 - **Electronic billing:** `app/Services/Sunat/` — NubeFact API integration (REST JSON), not SOAP/XML. Config via `SunatConfig` class. Documentation: `GUIA-FACTURACION-ELECTRONICA-NUBEFACT-DOC-API JSON V1.txt`.
 - **POS flow:** Tables → Order → OrderDetails → Checkout. Cash register must be open first.
-- **Product recipes:** Products can have ingredient dependencies (via `rest_product_ingredients`). Stock validation happens at add-to-order and checkout.
+- **Product recipes:** Products can have ingredient dependencies (via `bape_product_ingredients`). Stock validation happens at add-to-order and checkout.
 
 ## Testing
 

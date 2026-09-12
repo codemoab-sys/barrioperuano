@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Table extends Model
 {
-    protected $table = 'rest_tables';
+    protected $table = 'bape_tables';
 use HasFactory;
 
     protected $fillable = ['name', 'area_id', 'x_pos', 'y_pos', 'width', 'height', 'status'];

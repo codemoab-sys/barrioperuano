@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_users', function (Blueprint $table) {
+        Schema::table('bape_users', function (Blueprint $table) {
             $table->unsignedTinyInteger('failed_login_attempts')->default(0);
             $table->timestamp('locked_at')->nullable();
         });
@@ -16,7 +16,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_users', function (Blueprint $table) {
+        Schema::table('bape_users', function (Blueprint $table) {
             $table->dropColumn(['failed_login_attempts', 'locked_at']);
         });
     }

@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_product_ingredients', function (Blueprint $table) {
+        Schema::create('bape_product_ingredients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('rest_products')->onDelete('cascade'); // El Plato (Hamburguesa)
-            $table->foreignId('ingredient_id')->constrained('rest_products')->onDelete('cascade'); // El Insumo (Pan)
+            $table->foreignId('product_id')->constrained('bape_products')->onDelete('cascade'); // El Plato (Hamburguesa)
+            $table->foreignId('ingredient_id')->constrained('bape_products')->onDelete('cascade'); // El Insumo (Pan)
             $table->decimal('quantity', 10, 2); // CuÃ¡nto usa (Ej: 0.200 kg o 1 unidad)
             $table->timestamps();
         });
@@ -19,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_product_ingredients');
+        Schema::dropIfExists('bape_product_ingredients');
     }
 };

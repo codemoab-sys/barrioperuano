@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_inventory_logs', function (Blueprint $table) {
+        Schema::create('bape_inventory_logs', function (Blueprint $table) {
             $table->id();
             // Estas son las columnas que faltaban en tu archivo:
-            $table->foreignId('product_id')->constrained('rest_products')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('rest_users');
+            $table->foreignId('product_id')->constrained('bape_products')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('bape_users');
             $table->string('type'); // 'sale', 'purchase', 'adjustment'
             $table->integer('quantity');
             $table->integer('old_stock')->nullable();
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_inventory_logs');
+        Schema::dropIfExists('bape_inventory_logs');
     }
 };

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_document_series', function (Blueprint $table) {
+        Schema::create('bape_document_series', function (Blueprint $table) {
             $table->id();
             // CÃ³digos SUNAT: 01 Factura, 03 Boleta, 07 Nota CrÃ©dito, 08 Nota DÃ©bito
             $table->string('document_code', 2);                     // 01 / 03 / 07 / 08
@@ -22,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_document_series');
+        Schema::dropIfExists('bape_document_series');
     }
 };

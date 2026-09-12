@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_expenses', function (Blueprint $table) {
+        Schema::create('bape_expenses', function (Blueprint $table) {
             $table->id();
             $table->string('description'); // Ej: Pago de hielo
             $table->decimal('amount', 10, 2); // Ej: 15.00
-            $table->foreignId('user_id')->constrained('rest_users'); // QuiÃ©n registrÃ³ el gasto
+            $table->foreignId('user_id')->constrained('bape_users'); // QuiÃ©n registrÃ³ el gasto
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_expenses');
+        Schema::dropIfExists('bape_expenses');
     }
 };

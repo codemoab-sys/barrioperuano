@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
         // Compartir el símbolo de moneda con TODAS las vistas
         // Usamos un try-catch para evitar errores si la tabla settings aún no existe (durante migraciones)
         try {
-            if (Schema::hasTable('rest_settings')) {
+            if (Schema::hasTable('bape_settings')) {
                 $currency = Setting::where('key', 'currency_symbol')->value('value') ?? '$';
                 
                 // Ahora la variable $currency estará disponible en cualquier archivo .blade.php

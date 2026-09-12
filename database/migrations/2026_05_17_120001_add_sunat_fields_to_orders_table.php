@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             // NumeraciÃ³n SUNAT
             $table->string('serie', 4)->nullable()->after('document_type');             // B001 / F001
             $table->unsignedInteger('correlativo')->nullable()->after('serie');         // 1, 2, 3 ...
@@ -38,7 +38,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             $table->dropUnique('orders_doc_serie_corr_unique');
             $table->dropColumn([
                 'serie', 'correlativo',

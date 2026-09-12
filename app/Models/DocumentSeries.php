@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class DocumentSeries extends Model
 {
-    protected $table = 'rest_document_series';
+    protected $table = 'bape_document_series';
 use HasFactory;
 
     protected $fillable = [

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::table('rest_products', function (Blueprint $table) {
+    Schema::table('bape_products', function (Blueprint $table) {
         // Agregamos el campo barcode despuÃ©s del nombre, puede ser nulo
         $table->string('barcode')->nullable()->unique()->after('name');
     });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rest_products', function (Blueprint $table) {
+        Schema::table('bape_products', function (Blueprint $table) {
             //
         });
     }

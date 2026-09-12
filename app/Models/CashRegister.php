@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CashRegister extends Model
 {
-    protected $table = 'rest_cash_registers';
+    protected $table = 'bape_cash_registers';
 protected $fillable = [
         'user_id',
         'opening_time',

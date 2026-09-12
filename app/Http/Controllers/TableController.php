@@ -27,7 +27,7 @@ class TableController extends Controller
     public function updateArea(Request $request, Area $area)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:rest_areas,name,' . $area->id,
+            'name' => 'required|string|max:100|unique:bape_areas,name,' . $area->id,
         ]);
 
         $area->update(['name' => trim($request->name)]);
@@ -57,7 +57,7 @@ class TableController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'area_id' => 'required|exists:rest_areas,id,is_active,1'
+            'area_id' => 'required|exists:bape_areas,id,is_active,1'
         ]);
 
         Table::create([

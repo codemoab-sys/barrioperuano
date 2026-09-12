@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_deliveries', function (Blueprint $table) {
+        Schema::create('bape_deliveries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('rest_orders')->cascadeOnDelete();
-            $table->foreignId('client_id')->nullable()->constrained('rest_clients')->nullOnDelete();
+            $table->foreignId('order_id')->constrained('bape_orders')->cascadeOnDelete();
+            $table->foreignId('client_id')->nullable()->constrained('bape_clients')->nullOnDelete();
             $table->string('client_name');
             $table->string('client_phone');
             $table->text('address');
             $table->string('reference')->nullable();
-            $table->foreignId('driver_id')->nullable()->constrained('rest_delivery_drivers')->nullOnDelete();
-            $table->foreignId('user_id')->constrained('rest_users');
-            $table->foreignId('cash_register_id')->nullable()->constrained('rest_cash_registers')->nullOnDelete();
+            $table->foreignId('driver_id')->nullable()->constrained('bape_delivery_drivers')->nullOnDelete();
+            $table->foreignId('user_id')->constrained('bape_users');
+            $table->foreignId('cash_register_id')->nullable()->constrained('bape_cash_registers')->nullOnDelete();
             $table->enum('status', ['pending', 'preparing', 'on_way', 'delivered', 'cancelled'])->default('pending');
             $table->enum('payment_method', ['cash', 'card', 'transfer'])->default('cash');
             $table->decimal('delivery_fee', 8, 2)->default(0);
@@ -31,6 +31,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_deliveries');
+        Schema::dropIfExists('bape_deliveries');
     }
 };

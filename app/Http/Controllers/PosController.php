@@ -51,12 +51,12 @@ class PosController extends Controller
     public function order(Table $table)
     {
         // Stock reservado en órdenes pendientes de MESAS (no delivery)
-        $reservedMap = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_orders.id', '=', 'rest_order_details.order_id')
-            ->where('rest_orders.status', 'pending')
-            ->whereNotNull('rest_orders.table_id')
-            ->select('rest_order_details.product_id', DB::raw('SUM(rest_order_details.quantity) as reserved'))
-            ->groupBy('rest_order_details.product_id')
+        $reservedMap = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
+            ->where('bape_orders.status', 'pending')
+            ->whereNotNull('bape_orders.table_id')
+            ->select('bape_order_details.product_id', DB::raw('SUM(bape_order_details.quantity) as reserved'))
+            ->groupBy('bape_order_details.product_id')
             ->pluck('reserved', 'product_id');
 
         // Filtro: Solo productos activos y vendibles con stock base
@@ -179,12 +179,12 @@ class PosController extends Controller
             }
 
             // Stock reservado en órdenes pendientes de MESAS (no delivery)
-            $reserved = DB::table('rest_order_details')
-                ->join('rest_orders', 'rest_orders.id', '=', 'rest_order_details.order_id')
-                ->where('rest_orders.status', 'pending')
-                ->whereNotNull('rest_orders.table_id')
-                ->where('rest_order_details.product_id', $product->id)
-                ->sum('rest_order_details.quantity');
+            $reserved = DB::table('bape_order_details')
+                ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
+                ->where('bape_orders.status', 'pending')
+                ->whereNotNull('bape_orders.table_id')
+                ->where('bape_order_details.product_id', $product->id)
+                ->sum('bape_order_details.quantity');
 
             $available = $product->stock - $reserved;
 
@@ -219,12 +219,12 @@ class PosController extends Controller
 
             $requiredQty = (float) $ingredient->pivot->quantity * $requestedQty;
 
-            $reservedIngredient = DB::table('rest_order_details')
-                ->join('rest_orders', 'rest_orders.id', '=', 'rest_order_details.order_id')
-                ->join('rest_product_ingredients', 'rest_product_ingredients.product_id', '=', 'rest_order_details.product_id')
-                ->where('rest_orders.status', 'pending')
-                ->where('rest_product_ingredients.ingredient_id', $ingredient->id)
-                ->selectRaw('SUM(rest_order_details.quantity * rest_product_ingredients.quantity) as reserved')
+            $reservedIngredient = DB::table('bape_order_details')
+                ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
+                ->join('bape_product_ingredients', 'bape_product_ingredients.product_id', '=', 'bape_order_details.product_id')
+                ->where('bape_orders.status', 'pending')
+                ->where('bape_product_ingredients.ingredient_id', $ingredient->id)
+                ->selectRaw('SUM(bape_order_details.quantity * bape_product_ingredients.quantity) as reserved')
                 ->value('reserved');
 
             $availableIngredient = $ingredient->stock - ((float) ($reservedIngredient ?? 0));
@@ -278,12 +278,12 @@ class PosController extends Controller
         } else {
             $product = $detail->product;
             if (!is_null($product->stock)) {
-                $reserved = DB::table('rest_order_details')
-                    ->join('rest_orders', 'rest_orders.id', '=', 'rest_order_details.order_id')
-                    ->where('rest_orders.status', 'pending')
-                    ->whereNotNull('rest_orders.table_id')
-                    ->where('rest_order_details.product_id', $product->id)
-                    ->sum('rest_order_details.quantity');
+                $reserved = DB::table('bape_order_details')
+                    ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
+                    ->where('bape_orders.status', 'pending')
+                    ->whereNotNull('bape_orders.table_id')
+                    ->where('bape_order_details.product_id', $product->id)
+                    ->sum('bape_order_details.quantity');
 
                 $available = $product->stock - $reserved + $detail->quantity;
                 if ($newQty > $available) {
@@ -353,7 +353,7 @@ class PosController extends Controller
 
     public function moveTable(Request $request, Order $order) {
         $this->authorizePendingOrder($order);
-        $request->validate(['target_table_id' => 'required|exists:rest_tables,id']);
+        $request->validate(['target_table_id' => 'required|exists:bape_tables,id']);
         if (Order::where('table_id', $request->target_table_id)->where('status', 'pending')->exists()) return redirect()->back()->with('error', 'Ocupada.');
         $order->table_id = $request->target_table_id; $order->save();
         return redirect()->route('pos.order', $request->target_table_id);
@@ -388,7 +388,7 @@ class PosController extends Controller
         $request->validate([
             'payment_method' => ['required', 'in:cash,card,transfer'],
             'received_amount' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
-            'client_id' => ['nullable', 'integer', 'exists:rest_clients,id'],
+            'client_id' => ['nullable', 'integer', 'exists:bape_clients,id'],
             'client_name' => ['nullable', 'string', 'max:255'],
             'client_document' => ['nullable', 'string', 'max:20'],
             'document_type' => ['required', 'in:Ticket,Boleta,Factura'],

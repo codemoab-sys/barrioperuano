@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_auditoria_login', function (Blueprint $table) {
+        Schema::create('bape_auditoria_login', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('rest_users')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('bape_users')->nullOnDelete();
             $table->string('email');
             $table->ipAddress('ip_address');
             $table->boolean('success')->default(false);
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_auditoria_login');
+        Schema::dropIfExists('bape_auditoria_login');
     }
 };

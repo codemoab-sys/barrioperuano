@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Area extends Model
 {
-    protected $table = 'rest_areas';
+    protected $table = 'bape_areas';
 use HasFactory;
 
     protected $fillable = ['name', 'is_active'];

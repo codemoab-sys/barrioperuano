@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
 {
-    protected $table = 'rest_settings';
+    protected $table = 'bape_settings';
 // Permitimos que se puedan guardar estas columnas masivamente
     protected $fillable = ['key', 'value'];
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderDetail extends Model
 {
-    protected $table = 'rest_order_details';
+    protected $table = 'bape_order_details';
 use HasFactory;
 
     // AQUI ESTABA EL PROBLEMA: Faltaba 'note'

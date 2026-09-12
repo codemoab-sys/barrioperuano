@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_reservations', function (Blueprint $table) {
+        Schema::create('bape_reservations', function (Blueprint $table) {
             $table->id();
             $table->string('client_name'); // Nombre de quien reserva
             $table->string('phone')->nullable(); // Para confirmar
             $table->dateTime('reservation_time'); // Fecha y Hora
             $table->integer('people'); // Cantidad de personas
-            $table->foreignId('table_id')->nullable()->constrained('rest_tables')->onDelete('set null'); // Mesa asignada
+            $table->foreignId('table_id')->nullable()->constrained('bape_tables')->onDelete('set null'); // Mesa asignada
             $table->text('note')->nullable(); // Ej: "CumpleaÃ±os, AlÃ©rgico a nueces"
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
             $table->timestamps();
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_reservations');
+        Schema::dropIfExists('bape_reservations');
     }
 };

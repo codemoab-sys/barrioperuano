@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryDriver extends Model
 {
-    protected $table = 'rest_delivery_drivers';
+    protected $table = 'bape_delivery_drivers';
 protected $fillable = ['name', 'phone', 'is_active'];
 
     public function deliveries()

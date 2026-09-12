@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_products', function (Blueprint $table) {
+        Schema::create('bape_products', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained('rest_categories')->onDelete('cascade');
+            $table->foreignId('category_id')->constrained('bape_categories')->onDelete('cascade');
             $table->string('name');
             $table->string('code')->nullable(); // CÃ³digo de barras o interno
             $table->decimal('price', 10, 2); // Precio de venta
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_products');
+        Schema::dropIfExists('bape_products');
     }
 };

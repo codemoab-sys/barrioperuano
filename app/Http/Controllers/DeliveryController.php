@@ -74,7 +74,7 @@ class DeliveryController extends Controller
             'address'        => 'required|string',
             'payment_method' => 'required|in:cash,card,transfer',
             'products'       => 'required|array|min:1',
-            'products.*.id'  => 'required|exists:rest_products,id',
+            'products.*.id'  => 'required|exists:bape_products,id',
             'products.*.qty' => 'required|integer|min:1',
         ]);
 

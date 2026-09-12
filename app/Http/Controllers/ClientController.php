@@ -75,7 +75,7 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required', 'document_number' => 'nullable|unique:rest_clients']);
+        $request->validate(['name' => 'required', 'document_number' => 'nullable|unique:bape_clients']);
         $client = Client::create($request->all());
 
         if ($request->expectsJson()) {
@@ -113,12 +113,12 @@ class ClientController extends Controller
         elseif ($totalSpent > 100) { $rank = 'Bronce'; $badgeColor = 'danger'; }
 
         // 4. Plato Favorito (Query avanzada)
-        $favoriteDish = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->join('rest_products', 'rest_order_details.product_id', '=', 'rest_products.id')
-            ->select('rest_products.name', DB::raw('SUM(rest_order_details.quantity) as total_qty'))
-            ->where('rest_orders.client_id', $client->id)
-            ->groupBy('rest_products.name')
+        $favoriteDish = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->join('bape_products', 'bape_order_details.product_id', '=', 'bape_products.id')
+            ->select('bape_products.name', DB::raw('SUM(bape_order_details.quantity) as total_qty'))
+            ->where('bape_orders.client_id', $client->id)
+            ->groupBy('bape_products.name')
             ->orderByDesc('total_qty')
             ->first();
 
@@ -134,7 +134,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-        $request->validate(['name' => 'required', 'document_number' => 'nullable|unique:rest_clients,document_number,'.$client->id]);
+        $request->validate(['name' => 'required', 'document_number' => 'nullable|unique:bape_clients,document_number,'.$client->id]);
         $client->update($request->all());
         return redirect()->route('clients.index')->with('success', 'Datos actualizados.');
     }

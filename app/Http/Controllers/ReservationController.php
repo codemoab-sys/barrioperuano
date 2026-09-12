@@ -37,7 +37,7 @@ class ReservationController extends Controller
             // CORRECCIÓN: Quitamos 'after:now' para evitar problemas de zona horaria
             'reservation_time' => 'required|date',
             'people' => 'required|integer|min:1',
-            'table_id' => 'nullable|exists:rest_tables,id'
+            'table_id' => 'nullable|exists:bape_tables,id'
         ]);
 
         if ($request->filled('table_id') && Reservation::where('table_id', $request->table_id)

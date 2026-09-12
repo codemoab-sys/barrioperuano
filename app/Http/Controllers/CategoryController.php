@@ -21,7 +21,7 @@ class CategoryController extends Controller
     {
         // 1. Validar datos (Profesional)
         $request->validate([
-            'name' => 'required|string|unique:rest_categories,name|max:50',
+            'name' => 'required|string|unique:bape_categories,name|max:50',
             'image' => 'nullable|image|max:2048' // Max 2MB
         ]);
 
@@ -45,7 +45,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:50|unique:rest_categories,name,' . $category->id,
+            'name' => 'required|string|max:50|unique:bape_categories,name,' . $category->id,
             'image' => 'nullable|image|max:2048'
         ]);
 

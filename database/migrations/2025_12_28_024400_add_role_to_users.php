@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         // SOLO crea la columna si NO existe
-        if (!Schema::hasColumn('rest_users', 'role')) {
-            Schema::table('rest_users', function (Blueprint $table) {
+        if (!Schema::hasColumn('bape_users', 'role')) {
+            Schema::table('bape_users', function (Blueprint $table) {
                 $table->string('role')->default('waiter')->after('email');
             });
         }
@@ -18,8 +18,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('rest_users', 'role')) {
-            Schema::table('rest_users', function (Blueprint $table) {
+        if (Schema::hasColumn('bape_users', 'role')) {
+            Schema::table('bape_users', function (Blueprint $table) {
                 $table->dropColumn('role');
             });
         }

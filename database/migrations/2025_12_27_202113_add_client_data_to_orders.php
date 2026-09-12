@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             // Nuevos campos para facturaciÃ³n
             $table->string('document_type')->default('Ticket')->after('status'); // Ticket, Boleta, Factura
             $table->string('client_name')->default('PÃºblico General')->after('document_type');
@@ -18,7 +18,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('rest_orders', function (Blueprint $table) {
+        Schema::table('bape_orders', function (Blueprint $table) {
             $table->dropColumn(['document_type', 'client_name', 'client_document']);
         });
     }

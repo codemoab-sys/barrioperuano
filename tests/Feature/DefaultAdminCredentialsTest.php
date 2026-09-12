@@ -13,8 +13,8 @@ class DefaultAdminCredentialsTest extends TestCase
     {
         $this->seed();
 
-        $this->assertDatabaseCount('rest_users', 0);
-        $this->assertDatabaseCount('rest_categories', 0);
-        $this->assertDatabaseCount('rest_products', 0);
+        $this->assertDatabaseCount('bape_users', 0);
+        $this->assertDatabaseCount('bape_categories', 0);
+        $this->assertDatabaseCount('bape_products', 0);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $table = 'rest_products';
+    protected $table = 'bape_products';
 use HasFactory;
 
     protected $fillable = [
@@ -35,7 +35,7 @@ use HasFactory;
     // RelaciÃƒÂ³n con Ingredientes (Para el descuento de inventario)
     public function ingredients()
     {
-        return $this->belongsToMany(Product::class, 'rest_product_ingredients', 'product_id', 'ingredient_id')
+        return $this->belongsToMany(Product::class, 'bape_product_ingredients', 'product_id', 'ingredient_id')
                     ->withPivot('quantity');
     }
 

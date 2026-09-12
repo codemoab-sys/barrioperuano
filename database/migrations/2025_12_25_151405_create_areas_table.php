@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_areas', function (Blueprint $table) {
+        Schema::create('bape_areas', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // Ej: Terraza, SalÃ³n Principal
             $table->timestamps();
@@ -17,6 +17,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_areas');
+        Schema::dropIfExists('bape_areas');
     }
 };

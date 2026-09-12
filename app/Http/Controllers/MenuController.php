@@ -33,11 +33,11 @@ class MenuController extends Controller
         $newProducts = (clone $baseQuery)->where('is_new', true)->get();
 
         // Calcular lo más pedido
-        $topProductsIds = DB::table('rest_order_details')
-            ->join('rest_orders', 'rest_order_details.order_id', '=', 'rest_orders.id')
-            ->where('rest_orders.status', 'completed')
-            ->select('rest_order_details.product_id', DB::raw('SUM(rest_order_details.quantity) as total_qty'))
-            ->groupBy('rest_order_details.product_id')
+        $topProductsIds = DB::table('bape_order_details')
+            ->join('bape_orders', 'bape_order_details.order_id', '=', 'bape_orders.id')
+            ->where('bape_orders.status', 'completed')
+            ->select('bape_order_details.product_id', DB::raw('SUM(bape_order_details.quantity) as total_qty'))
+            ->groupBy('bape_order_details.product_id')
             ->orderByDesc('total_qty')
             ->limit(6)
             ->pluck('product_id')

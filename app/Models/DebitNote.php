@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DebitNote extends Model
 {
-    protected $table = 'rest_debit_notes';
+    protected $table = 'bape_debit_notes';
     use HasFactory;
 
     protected $fillable = [

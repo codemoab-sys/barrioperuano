@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_clients', function (Blueprint $table) {
+        Schema::create('bape_clients', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // Nombre o RazÃ³n Social
             $table->string('document_type')->default('DNI'); // DNI, RUC
@@ -22,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_clients');
+        Schema::dropIfExists('bape_clients');
     }
 };

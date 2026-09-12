@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rest_settings', function (Blueprint $table) {
+        Schema::create('bape_settings', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique(); // Ej: 'company_name'
             $table->text('value')->nullable(); // Ej: 'Mi Restaurante VIP'
@@ -18,6 +18,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('rest_settings');
+        Schema::dropIfExists('bape_settings');
     }
 };
