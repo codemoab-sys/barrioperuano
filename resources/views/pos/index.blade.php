@@ -222,6 +222,12 @@
     /* MODO OSCURO: solo aplica con data-theme="dark", no altera el claro */
     [data-theme="dark"] .nav-pills .nav-link { color: var(--text-muted); background-color: #242539; }
     [data-theme="dark"] .nav-pills .nav-link.active { background-color: #0d6efd; color: #fff; box-shadow: 0 4px 6px rgba(13,110,253,0.3); }
+    [data-theme="dark"] .pos-table-card { background-color: var(--card-bg) !important; border-color: #33344d !important; }
+    [data-theme="dark"] .pos-table-card.bg-white { background-color: var(--card-bg) !important; }
+    [data-theme="dark"] .pos-table-card.border-success { border-color: #22c55e !important; }
+    [data-theme="dark"] .pos-table-card.border-danger { border-color: #ef4444 !important; }
+    [data-theme="dark"] .pos-table-card.border-warning { border-color: #f59e0b !important; }
+    [data-theme="dark"] .fw-bold.text-dark { color: var(--text-main) !important; }
 
     @media (max-width: 575.98px) {
         .nav-tabs .nav-link { padding: 8px 14px; font-size: 0.85rem; white-space: nowrap; }
