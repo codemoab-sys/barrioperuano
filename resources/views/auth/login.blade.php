@@ -476,7 +476,7 @@
 
         <!-- Footer -->
         <div class="login-footer">
-            &copy; {{ date('Y') }} Sistema de Restaurante · Desarrollado con Laravel
+            &copy; {{ date('Y') }} · <a href="https://moabcode.com" target="_blank" rel="noopener" style="color: rgba(255,255,255,0.5); text-decoration: none; font-weight: 600;">Desarrollado por MoabCode</a>
         </div>
     </div>
 
