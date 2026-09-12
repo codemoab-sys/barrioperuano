@@ -168,6 +168,9 @@
                             <button type="button" id="resetColors" class="btn btn-outline-secondary fw-bold">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i> Colores por defecto
                             </button>
+                            <button type="button" id="applySuggested" class="btn fw-bold" style="background:#F4B41A;color:#171717;border:1px solid #D99A00;">
+                                <i class="bi bi-stars me-1"></i> Sugerido (Barrio Peruano)
+                            </button>
                         </div>
 
                         <hr class="text-muted opacity-25">
@@ -479,6 +482,29 @@
                         input.value = def;
                         const hex = input.closest('.input-group')?.querySelector('.color-hex');
                         if (hex) hex.textContent = def.toUpperCase();
+                    }
+                });
+            });
+        }
+
+        // ── "Sugerido (Barrio Peruano)": aplica la paleta profesional sugerida ──
+        const suggestedBtn = document.getElementById('applySuggested');
+        if (suggestedBtn) {
+            suggestedBtn.addEventListener('click', function () {
+                const suggested = {
+                    'color_primary':        '#F4B41A',
+                    'color_primary_hover':  '#D99A00',
+                    'color_primary_soft':   '#FEF9E7',
+                    'color_sidebar_bg':     '#171717',
+                    'color_sidebar_active': '#F4B41A',
+                    'brand_text_color':     '#FFFFFF',
+                };
+                document.querySelectorAll('.color-input').forEach(function (input) {
+                    const name = input.getAttribute('name');
+                    if (suggested[name]) {
+                        input.value = suggested[name];
+                        const hex = input.closest('.input-group')?.querySelector('.color-hex');
+                        if (hex) hex.textContent = suggested[name].toUpperCase();
                     }
                 });
             });
