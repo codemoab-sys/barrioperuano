@@ -671,6 +671,15 @@
             .sidebar.show { transform: translateX(0); }
             .main-content { margin-left: 0; padding: 16px; }
         }
+
+        /* ── Global mobile overrides ── */
+        @media (max-width: 575.98px) {
+            .modal-content { margin: 8px; }
+            .modal-fullscreen-sm-down .modal-body { padding: 12px; overflow-y: auto; max-height: 70vh; }
+            .table-responsive { font-size: 0.85rem; }
+            .btn { white-space: nowrap; }
+            .fw-bold { font-weight: 600 !important; }
+        }
     </style>
 </head>
 <body class="{{ request()->routeIs('pos.order') ? 'pos-page' : '' }}">

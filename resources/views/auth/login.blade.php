@@ -26,10 +26,14 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             background: #dcdcf0;
-            overflow: hidden;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 899px) {
+            body { overflow-y: auto; }
         }
 
         /* ── LEFT PANEL: Image ── */

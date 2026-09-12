@@ -38,7 +38,7 @@
 
     <div class="row">
         {{-- Detalles del Cliente y Estado --}}
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-2"></i>Datos del Cliente</h6>
@@ -113,7 +113,7 @@
         </div>
 
         {{-- Detalles de la Orden y Cobro --}}
-        <div class="col-md-8">
+        <div class="col-12 col-md-8">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0"><i class="bi bi-receipt me-2"></i>Detalle de la Orden</h6>

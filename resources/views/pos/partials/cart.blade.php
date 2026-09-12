@@ -1,12 +1,12 @@
 <div class="p-2" data-order-id="{{ $order?->id }}">
     @if($order && $order->details->count() > 0)
         <div class="table-responsive" style="overflow-x: hidden;">
-            <table class="table table-borderless align-middle mb-0" style="width: 100%; table-layout: fixed;">
+            <table class="table table-borderless align-middle mb-0" style="width: 100%;">
                 <thead class="text-muted small border-bottom">
                     <tr>
                         <th style="width: 30px;"></th> <th>PROD.</th>
-                        <th class="text-center" style="width: 85px;">CANT.</th>
-                        <th class="text-end" style="width: 65px;">TOT.</th>
+                        <th class="text-center" style="min-width: 85px;">CANT.</th>
+                        <th class="text-end" style="min-width: 65px;">TOT.</th>
                     </tr>
                 </thead>
                 <tbody>

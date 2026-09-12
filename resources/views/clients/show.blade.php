@@ -13,7 +13,7 @@
 
     <div class="row g-4">
         
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm h-100 text-center">
                 <div class="card-body">
                     <div class="mb-3 mt-2 position-relative d-inline-block">
@@ -41,9 +41,9 @@
             </div>
         </div>
 
-        <div class="col-md-8">
+        <div class="col-12 col-md-8">
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div class="card border-0 shadow-sm bg-primary text-white h-100">
                         <div class="card-body">
                             <small class="opacity-75 fw-bold text-uppercase">Total Gastado</small>
@@ -51,7 +51,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div class="card border-0 shadow-sm bg-success text-white h-100">
                         <div class="card-body">
                             <small class="opacity-75 fw-bold text-uppercase">Visitas</small>
@@ -59,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div class="card border-0 shadow-sm bg-warning text-dark h-100">
                         <div class="card-body">
                             <small class="opacity-75 fw-bold text-uppercase">Plato Favorito</small>

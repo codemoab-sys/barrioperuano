@@ -20,7 +20,7 @@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-3">
             <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
                     <label class="form-label small mb-1">Estado SUNAT</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">Todos</option>
@@ -29,12 +29,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label small mb-1">Buscar</label>
                     <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm"
                            placeholder="Serie o número">
                 </div>
-                <div class="col-md-1">
+                <div class="col-12 col-md-auto">
                     <button class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel"></i></button>
                 </div>
             </form>

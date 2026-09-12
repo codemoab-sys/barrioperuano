@@ -15,7 +15,7 @@
         @csrf
         
         {{-- PANEL IZQUIERDO: Datos del Cliente --}}
-        <div class="col-md-4 h-100 d-flex flex-column">
+        <div class="col-12 col-md-4 h-100 d-flex flex-column">
             <div class="card shadow-sm border-0 h-100 flex-column d-flex">
                 <div class="card-header bg-white border-bottom py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-2"></i>Datos de Entrega</h6>
@@ -85,7 +85,7 @@
         </div>
 
         {{-- PANEL DERECHO: Productos y Carrito --}}
-        <div class="col-md-8 h-100 d-flex flex-column">
+        <div class="col-12 col-md-8 h-100 d-flex flex-column">
             <div class="card shadow-sm border-0 h-100 flex-column d-flex">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Productos</h6>

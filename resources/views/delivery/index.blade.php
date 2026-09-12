@@ -27,7 +27,7 @@
     {{-- KANBAN BOARD --}}
     <div class="row g-3">
         {{-- Pendiente --}}
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 bg-light">
                 <div class="card-header border-0 bg-transparent pt-3 pb-2">
                     <h6 class="fw-bold mb-0" style="color: {{ $statuses['pending'] ?? '#f59e0b' }}">
@@ -44,7 +44,7 @@
         </div>
 
         {{-- Preparando --}}
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 bg-light">
                 <div class="card-header border-0 bg-transparent pt-3 pb-2">
                     <h6 class="fw-bold mb-0" style="color: {{ $statuses['preparing'] ?? '#3b82f6' }}">
@@ -61,7 +61,7 @@
         </div>
 
         {{-- En Camino --}}
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 bg-light">
                 <div class="card-header border-0 bg-transparent pt-3 pb-2">
                     <h6 class="fw-bold mb-0" style="color: {{ $statuses['on_way'] ?? '#f97316' }}">
@@ -78,7 +78,7 @@
         </div>
 
         {{-- Entregado --}}
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100 bg-light">
                 <div class="card-header border-0 bg-transparent pt-3 pb-2">
                     <h6 class="fw-bold mb-0" style="color: {{ $statuses['delivered'] ?? '#22c55e' }}">

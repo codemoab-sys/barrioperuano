@@ -2,12 +2,12 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <div>
             <h2 class="fw-bold text-dark mb-0"><i class="bi bi-grid-3x3-gap-fill me-2"></i> Diseño de Salón</h2>
             <p class="text-muted mb-0">Arrastra las mesas y guarda la distribución</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#areaModal">
                 <i class="bi bi-plus-circle me-2"></i> Nueva Zona
             </button>
@@ -64,7 +64,7 @@
                     </div>
                 </div>
 
-                <div class="salon-canvas bg-white border rounded shadow-sm position-relative" style="height: 600px; background-image: radial-gradient(#dee2e6 1px, transparent 1px); background-size: 20px 20px; overflow: hidden;">
+                <div class="salon-canvas bg-white border rounded shadow-sm position-relative" style="height: 600px; background-image: radial-gradient(#dee2e6 1px, transparent 1px); background-size: 20px 20px; overflow: auto; max-width: 100%;">
                     @foreach($area->tables as $table)
                         <div class="draggable-table position-absolute d-flex flex-column align-items-center justify-content-center bg-white border shadow-sm rounded-3"
                              id="table-{{ $table->id }}"

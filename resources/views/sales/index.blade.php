@@ -3,26 +3,35 @@
 @section('content')
 <div class="container-fluid">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-cash-coin me-2"></i>Caja y Movimientos</h2>
-            <p class="text-muted mb-0">Control de Ingresos y Egresos</p>
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="fw-bold text-dark mb-0"><i class="bi bi-cash-coin me-2"></i>Caja y Movimientos</h2>
+                <p class="text-muted mb-0">Control de Ingresos y Egresos</p>
+            </div>
         </div>
-        
-        <div class="d-flex gap-2">
-            <form action="{{ route('sales.index') }}" method="GET" class="d-flex align-items-center gap-2 bg-white p-2 rounded shadow-sm border">
-                <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $startDate }}">
-                <span class="text-muted">-</span>
-                <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $endDate }}">
-                <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold"><i class="bi bi-search"></i></button>
-            </form>
-            
-            <a href="{{ route('sales.daily.report', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn btn-dark fw-bold d-flex align-items-center">
-                <i class="bi bi-printer me-2"></i> Corte Z
-            </a>
-            
-            <button class="btn btn-danger fw-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#expenseModal">
-                <i class="bi bi-dash-circle me-2"></i> Registrar Salida
+
+        <div class="bg-white p-2 rounded shadow-sm border mb-3">
+            <form action="{{ route('sales.index') }}" method="GET" class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold mb-1">Desde</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $startDate }}">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold mb-1">Hasta</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $endDate }}">
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold w-100"><i class="bi bi-search me-1"></i> Buscar</button>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <a href="{{ route('sales.daily.report', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank" class="btn btn-dark fw-bold d-flex align-items-center justify-content-center">
+                        <i class="bi bi-printer me-2"></i> Corte Z
+                    </a>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <button class="btn btn-danger fw-bold d-flex align-items-center justify-content-center w-100" data-bs-toggle="modal" data-bs-target="#expenseModal">
+                        <i class="bi bi-dash-circle me-2"></i> Salida
             </button>
         </div>
     </div>

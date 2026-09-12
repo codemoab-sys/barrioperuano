@@ -20,11 +20,11 @@
 
                         <h5 class="fw-bold text-primary mb-3">Datos de la Empresa</h5>
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label fw-bold">Nombre del Restaurante</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $settings['company_name'] ?? ($settings['sunat_nombre_comercial'] ?? $settings['sunat_razon_social'] ?? '')) }}" placeholder="Ej: Restaurante Vito">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label fw-bold">Teléfono / Pedidos</label>
                                 <input type="text" name="company_phone" class="form-control" value="{{ old('company_phone', $settings['company_phone'] ?? '') }}" placeholder="Ej: 999-888-777">
                             </div>
@@ -32,7 +32,7 @@
                                 <label class="form-label fw-bold">Dirección</label>
                                 <input type="text" name="company_address" class="form-control" value="{{ old('company_address', $settings['company_address'] ?? ($settings['sunat_direccion_fiscal'] ?? '')) }}" placeholder="Ej: Av. Principal 123, Ica">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label fw-bold">Mensaje de Bienvenida</label>
                                 <input type="text" name="welcome_message" class="form-control" value="{{ old('welcome_message', $settings['welcome_message'] ?? 'Bienvenido de vuelta') }}" placeholder="Ej: Bienvenido" maxlength="100">
                                 <small class="text-muted">Texto que aparece en la barra superior de todas las páginas.</small>
@@ -43,7 +43,7 @@
 
                         <h5 class="fw-bold text-primary mb-3">Región y Sistema</h5>
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label fw-bold">Moneda</label>
                                 <select name="currency_symbol" class="form-select">
                                     <option value="S/" {{ ($settings['currency_symbol'] ?? '') == 'S/' ? 'selected' : '' }}>S/ (Soles)</option>

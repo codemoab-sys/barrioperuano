@@ -3,24 +3,30 @@
 @section('content')
 <div class="container-fluid">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Reportes Gerenciales</h2>
-            <p class="text-muted mb-0">Análisis detallado de rendimiento</p>
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="fw-bold text-dark mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Reportes Gerenciales</h2>
+                <p class="text-muted mb-0">Análisis detallado de rendimiento</p>
+            </div>
         </div>
-        
-        <form action="{{ route('reports.index') }}" method="GET" class="d-flex gap-2 bg-white p-2 rounded shadow-sm border">
-            <div>
-                <label class="small text-muted fw-bold">Desde</label>
-                <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $startDate }}">
+
+        <form action="{{ route('reports.index') }}" method="GET" class="bg-white p-2 rounded shadow-sm border">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="small text-muted fw-bold">Desde</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $startDate }}">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="small text-muted fw-bold">Hasta</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $endDate }}">
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button class="btn btn-primary btn-sm fw-bold px-3 w-100">
+                        <i class="bi bi-filter"></i> Analizar
+                    </button>
+                </div>
             </div>
-            <div>
-                <label class="small text-muted fw-bold">Hasta</label>
-                <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $endDate }}">
-            </div>
-            <button class="btn btn-primary btn-sm fw-bold align-self-end px-3">
-                <i class="bi bi-filter"></i> Analizar
-            </button>
         </form>
     </div>
 

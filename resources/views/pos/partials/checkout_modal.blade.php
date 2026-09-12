@@ -1,5 +1,5 @@
 <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
         <form action="{{ route('pos.checkout', $order->id) }}" method="POST" id="checkoutForm" class="modal-content border-0 shadow-lg">
             @csrf
             <div class="modal-header bg-success text-white py-2">
