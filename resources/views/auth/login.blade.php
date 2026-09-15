@@ -442,7 +442,7 @@
                         type="email"
                         id="email"
                         name="email"
-                        value="{{ old('email', 'admin@admin.com') }}"
+                        value="{{ old('email') }}"
                         placeholder="correo@restaurante.com"
                         required
                         autofocus
@@ -461,7 +461,6 @@
                         type="password"
                         id="password"
                         name="password"
-                        value="admin123"
                         placeholder="••••••••"
                         required
                     >
