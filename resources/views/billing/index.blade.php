@@ -133,7 +133,7 @@
                                     <a href="{{ route('billing.show', $o) }}" class="btn btn-outline-secondary" title="Ver">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if($o->pdf_path)
+                                    @if($o->sunat_status !== 'VOIDED' && $o->pdf_path)
                                         @php
                                             $clientPhone = $o->client?->phone ?? '';
                                             $whatsappBase = "📄 {$o->document_type} {$o->full_number}\n💰 Total: S/ " . number_format($o->total, 2) . "\n🔗 {$o->pdf_path}";
@@ -162,12 +162,16 @@
                                                     </button>
                                                 </li>
                                                 <li>
-                                                    <a href="{{ route('billing.pdf.ticket', $o) }}" target="_blank" class="dropdown-item">
-                                                        <i class="bi bi-printer me-2"></i>Imprimir
+                                                    <a href="{{ route('billing.pdf', $o) }}" target="_blank" rel="noopener" class="dropdown-item">
+                                                        <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial NubeFact
                                                     </a>
                                                 </li>
                                             </ul>
                                         </div>
+                                    @elseif($o->sunat_status !== 'VOIDED')
+                                        <a href="{{ route('billing.pdf', $o) }}" target="_blank" rel="noopener" class="btn btn-outline-dark" title="Abrir PDF oficial de NubeFact">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
                                     @endif
                                     @if($o->xml_path || $o->sunat_status === 'ACCEPTED')
                                         <a href="{{ route('billing.xml', $o) }}" class="btn btn-outline-info" title="XML">

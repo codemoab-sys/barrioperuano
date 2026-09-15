@@ -24,8 +24,8 @@
             </h2>
         </div>
         <div class="btn-group">
-            <a href="{{ route('billing.pdf.ticket', $order) }}" target="_blank" class="btn btn-danger">
-                <i class="bi bi-receipt"></i> Ticket 80mm
+            <a href="{{ route('billing.pdf', $order) }}" target="_blank" rel="noopener" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf"></i> PDF oficial NubeFact
             </a>
             @if($order->pdf_path)
                 @php
@@ -56,8 +56,8 @@
                             </button>
                         </li>
                         <li>
-                            <a href="{{ route('billing.pdf.ticket', $order) }}" target="_blank" class="dropdown-item">
-                                <i class="bi bi-printer me-2"></i>Imprimir Ticket
+                            <a href="{{ route('billing.pdf', $order) }}" target="_blank" rel="noopener" class="dropdown-item">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial NubeFact
                             </a>
                         </li>
                     </ul>

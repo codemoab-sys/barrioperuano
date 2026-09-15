@@ -31,8 +31,16 @@ class BillingController extends Controller
      */
     public function index(Request $request)
     {
-        $from = $request->input('from') ?: Carbon::now()->startOfMonth()->format('Y-m-d');
-        $to = $request->input('to') ?: Carbon::now()->endOfMonth()->format('Y-m-d');
+        $validated = $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
+            'status' => ['nullable', 'in:PENDING,ACCEPTED,OBSERVED,REJECTED,ERROR,NO_ENVIADO,VOIDED'],
+            'type' => ['nullable', 'in:Boleta,Factura'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $from = $validated['from'] ?? Carbon::now()->startOfMonth()->format('Y-m-d');
+        $to = $validated['to'] ?? Carbon::now()->endOfMonth()->format('Y-m-d');
 
         $query = Order::with('user')
             ->whereIn('document_type', ['Boleta', 'Factura'])
@@ -117,6 +125,10 @@ class BillingController extends Controller
     public function syncStatus(Request $request, Order $order)
     {
         abort_unless(in_array($order->document_type, ['Boleta', 'Factura']), 404);
+
+        if (!$order->serie || !$order->correlativo) {
+            return back()->with('error', 'El comprobante no tiene serie y correlativo válidos para consultar.');
+        }
 
         try {
             $service = new NubeFactService();
@@ -244,6 +256,8 @@ class BillingController extends Controller
      */
     public function downloadXml(Order $order)
     {
+        abort_unless(in_array($order->document_type, ['Boleta', 'Factura']), 404);
+
         if (!$order->xml_path) {
             $this->refreshDocumentLinks($order);
         }
@@ -256,6 +270,8 @@ class BillingController extends Controller
      */
     public function downloadCdr(Order $order)
     {
+        abort_unless(in_array($order->document_type, ['Boleta', 'Factura']), 404);
+
         if (!$order->cdr_path) {
             $this->refreshDocumentLinks($order);
         }

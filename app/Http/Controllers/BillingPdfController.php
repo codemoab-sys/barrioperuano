@@ -32,13 +32,8 @@ class BillingPdfController extends Controller
             return redirect($order->pdf_path);
         }
 
-        // Fallback si no hay enlace de NubeFact
-        $order->load('details.product');
-        return view('billing.pdf.a4', [
-            'order'   => $order,
-            'config'  => new SunatConfig(),
-            'company' => $this->companyData(),
-        ]);
+        return redirect()->route('billing.show', $order)
+            ->with('error', 'NubeFact todavía no ha devuelto la URL oficial del PDF. Consulta el estado e inténtalo nuevamente.');
     }
 
     private function refreshDocumentLinks(Order $order): void
@@ -79,7 +74,7 @@ class BillingPdfController extends Controller
     }
 
     /**
-     * Ticket 80mm - Nota de venta (diseño personalizado, NubeFact no lo genera).
+    * URL oficial del PDF electrónico de NubeFact.
      */
     public function ticket(Order $order)
     {
@@ -93,13 +88,8 @@ class BillingPdfController extends Controller
             return redirect($order->pdf_path);
         }
 
-        $order->load('details.product');
-
-        return view('billing.pdf.ticket', [
-            'order'   => $order,
-            'config'  => new SunatConfig(),
-            'company' => $this->companyData(),
-        ]);
+        return redirect()->route('billing.show', $order)
+            ->with('error', 'NubeFact todavía no ha devuelto la URL oficial del PDF. Consulta el estado e inténtalo nuevamente.');
     }
 
     private function companyData(): array
