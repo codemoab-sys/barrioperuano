@@ -32,34 +32,57 @@ class ReservationController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'client_name' => 'required',
-            // CORRECCIÓN: Quitamos 'after:now' para evitar problemas de zona horaria
-            'reservation_time' => 'required|date',
+        $validated = $request->validate([
+            'client_name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:30',
+            'reservation_time' => 'required|date|after:now',
             'people' => 'required|integer|min:1',
-            'table_id' => 'nullable|exists:bape_tables,id'
+            'table_id' => 'nullable|exists:bape_tables,id',
+            'note' => 'nullable|string|max:1000',
         ]);
 
-        if ($request->filled('table_id') && Reservation::where('table_id', $request->table_id)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where('reservation_time', Carbon::parse($request->reservation_time))
-            ->exists()) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'La mesa ya tiene una reserva activa para ese horario.');
+        $reservationTime = Carbon::parse($validated['reservation_time']);
+
+        if (!empty($validated['table_id'])) {
+            $table = Table::findOrFail($validated['table_id']);
+            if ($validated['people'] > $table->seats) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'La mesa seleccionada solo tiene capacidad para ' . $table->seats . ' personas.');
+            }
+
+            $conflict = Reservation::where('table_id', $table->id)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereBetween('reservation_time', [
+                    $reservationTime->copy()->subHours(2),
+                    $reservationTime->copy()->addHours(2),
+                ])
+                ->exists();
+
+            if ($conflict) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'La mesa ya tiene una reserva activa dentro de ese horario.');
+            }
         }
 
-        Reservation::create($request->all());
+        Reservation::create($validated);
 
         return redirect()->back()->with('success', 'Reserva agendada correctamente.');
     }
 
     public function updateStatus(Request $request, Reservation $reservation)
     {
-        $request->validate(['status' => 'required|in:confirmed,cancelled']);
-        $reservation->update(['status' => $request->status]);
+        $validated = $request->validate(['status' => 'required|in:confirmed,cancelled']);
 
-        $msg = $request->status == 'confirmed' ? 'Reserva confirmada.' : 'Reserva cancelada.';
+        if ($reservation->status === 'cancelled') {
+            return redirect()->back()
+                ->with('error', 'Una reserva cancelada no puede volver a confirmarse.');
+        }
+
+        $reservation->update(['status' => $validated['status']]);
+
+        $msg = $validated['status'] === 'confirmed' ? 'Reserva confirmada.' : 'Reserva cancelada.';
         return redirect()->back()->with('success', $msg);
     }
 

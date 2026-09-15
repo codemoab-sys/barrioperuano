@@ -149,7 +149,7 @@
 {{-- Registro rápido de nuevo cliente --}}
 <div class="modal fade" id="resNewClientModal" tabindex="-1">
     <div class="modal-dialog">
-        <form id="resNewClientForm" method="POST" class="modal-content">
+        <form id="resNewClientForm" action="{{ route('clients.store') }}" method="POST" class="modal-content">
             @csrf
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold">Registrar Cliente</h5>

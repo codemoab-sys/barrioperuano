@@ -10,7 +10,7 @@ class Table extends Model
     protected $table = 'bape_tables';
 use HasFactory;
 
-    protected $fillable = ['name', 'area_id', 'x_pos', 'y_pos', 'width', 'height', 'status'];
+    protected $fillable = ['name', 'area_id', 'seats', 'x_pos', 'y_pos', 'width', 'height', 'status'];
 
     public function area()
     {
