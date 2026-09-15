@@ -105,7 +105,7 @@
                                     <th>Mesa</th>
                                     <th>Método</th>
                                     <th class="text-end">Total</th>
-                                    <th class="text-center">Ticket</th>
+                                    <th class="text-center">Comprobante</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,10 +122,19 @@
                                     </td>
                                     <td class="text-end fw-bold">{{ number_format($order->total, 2) }}</td>
                                     <td class="text-center">
-                                        @if(in_array($order->document_type, ['Boleta', 'Factura']))
-                                            <a href="{{ route('billing.pdf', $order) }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="bi bi-printer"></i></a>
+                                        @if($order->isElectronic())
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Acciones del comprobante electrónico">
+                                                <a href="{{ route('billing.show', $order) }}" class="btn btn-outline-secondary" title="Ver {{ $order->document_type }}">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ route('billing.pdf', $order) }}" target="_blank" rel="noopener" class="btn btn-outline-dark" title="Abrir URL PDF de {{ $order->document_type }}">
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </a>
+                                            </div>
                                         @else
-                                            <a href="{{ route('sales.ticket', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-dark"><i class="bi bi-printer"></i></a>
+                                            <a href="{{ route('sales.ticket', $order) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark" title="Imprimir ticket">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
                                         @endif
                                     </td>
                                 </tr>
