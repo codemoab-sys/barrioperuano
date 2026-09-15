@@ -85,4 +85,44 @@ class ReservationTest extends TestCase
             ->assertSessionHas('error');
         $this->assertDatabaseCount('bape_reservations', 1);
     }
+
+    public function test_does_not_confirm_a_past_reservation(): void
+    {
+        $reservation = Reservation::create([
+            'client_name' => 'Cliente antiguo',
+            'reservation_time' => Carbon::now()->subHour(),
+            'people' => 2,
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->authenticatedUser())->from(route('reservations.index'))
+            ->put(route('reservations.status', $reservation), ['status' => 'confirmed']);
+
+        $response->assertRedirect(route('reservations.index'))
+            ->assertSessionHas('error');
+        $this->assertDatabaseHas('bape_reservations', [
+            'id' => $reservation->id,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_cancelled_reservation_cannot_change_status(): void
+    {
+        $reservation = Reservation::create([
+            'client_name' => 'Cliente cancelado',
+            'reservation_time' => Carbon::now()->addDay(),
+            'people' => 2,
+            'status' => 'cancelled',
+        ]);
+
+        $response = $this->actingAs($this->authenticatedUser())->from(route('reservations.index'))
+            ->put(route('reservations.status', $reservation), ['status' => 'confirmed']);
+
+        $response->assertRedirect(route('reservations.index'))
+            ->assertSessionHas('error');
+        $this->assertDatabaseHas('bape_reservations', [
+            'id' => $reservation->id,
+            'status' => 'cancelled',
+        ]);
+    }
 }

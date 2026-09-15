@@ -92,7 +92,12 @@ class ReservationController extends Controller
 
         if ($reservation->status === 'cancelled') {
             return redirect()->back()
-                ->with('error', 'Una reserva cancelada no puede volver a confirmarse.');
+                ->with('error', 'Una reserva cancelada no puede cambiar de estado.');
+        }
+
+        if ($validated['status'] === 'confirmed' && $reservation->reservation_time->isPast()) {
+            return redirect()->back()
+                ->with('error', 'No se puede confirmar una reserva cuya fecha ya pasó.');
         }
 
         $reservation->update(['status' => $validated['status']]);
