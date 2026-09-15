@@ -26,7 +26,7 @@
                             <tr>
                                 <td>
                                     @if($category->image)
-                                        <img src="{{ asset('storage/' . $category->image) }}" class="rounded" width="50" height="50" style="object-fit: cover;">
+                                        <img src="{{ route('uploaded-assets.show', ['path' => $category->image]) }}" class="rounded" width="50" height="50" style="object-fit: cover;">
                                     @else
                                         <div class="bg-secondary text-white d-flex justify-content-center align-items-center rounded" style="width: 50px; height: 50px;">
                                             <i class="bi bi-image"></i>

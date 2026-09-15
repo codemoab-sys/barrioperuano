@@ -130,7 +130,7 @@
             <div class="modal-header bg-light"><h5 class="modal-title fw-bold">Nueva Mesa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <div class="mb-3"><label>Nombre</label><input type="text" name="name" class="form-control" placeholder="Mesa 1" required></div>
-                <div class="mb-3"><label>Zona</label><select name="area_id" class="form-select">@foreach($areas->where('is_active', true) as $area) <option value="{{ $area->id }}">{{ $area->name }}</option> @endforeach</select></div>
+                <div class="mb-3"><label>Zona</label><select name="area_id" class="form-select js-searchable-select">@foreach($areas->where('is_active', true) as $area) <option value="{{ $area->id }}">{{ $area->name }}</option> @endforeach</select></div>
             </div>
             <div class="modal-footer"><button class="btn btn-primary w-100">Crear</button></div>
         </form>

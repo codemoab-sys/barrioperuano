@@ -102,7 +102,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-bold">Rol / Permisos</label>
-                        <select name="role" class="form-select">
+                        <select name="role" class="form-select js-searchable-select">
                             <option value="waiter">Mozo (Solo Pedidos)</option>
                             <option value="cashier">Cajero (Cobros y Gastos)</option>
                             <option value="cashier_waiter">Cajero / Mozo (Pedidos y Cobros)</option>
@@ -144,7 +144,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-bold">Rol</label>
-                        <select name="role" id="edit_role" class="form-select">
+                        <select name="role" id="edit_role" class="form-select js-searchable-select">
                             <option value="waiter">Mozo</option>
                             <option value="cashier">Cajero</option>
                             <option value="cashier_waiter">Cajero / Mozo</option>

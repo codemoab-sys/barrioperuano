@@ -26,7 +26,7 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold small text-muted">Categoría</label>
-                        <select name="category_id" class="form-select" required>
+                        <select name="category_id" class="form-select js-searchable-select" required>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}" {{ $product->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
@@ -126,7 +126,7 @@
                     <label class="form-label fw-bold small text-muted">Imagen</label>
                     <div class="d-flex align-items-center gap-3">
                         @if($product->image)
-                            <img src="{{ asset('storage/'.$product->image) }}" class="rounded border" width="60" height="60" style="object-fit: cover;">
+                            <img src="{{ route('uploaded-assets.show', ['path' => $product->image]) }}" class="rounded border" width="60" height="60" style="object-fit: cover;">
                         @endif
                         <input type="file" name="image" class="form-control" accept="image/*">
                     </div>

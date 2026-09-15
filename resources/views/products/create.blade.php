@@ -24,7 +24,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Categoría <span class="text-danger">*</span></label>
-                                <select name="category_id" class="form-select" required>
+                                <select name="category_id" class="form-select js-searchable-select" required>
                                     <option value="" selected disabled>-- Seleccionar --</option>
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>

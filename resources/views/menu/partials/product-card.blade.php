@@ -1,7 +1,7 @@
 <div class="product-card" data-name="{{ strtolower($product->name) }}" data-desc="{{ strtolower($product->description ?? '') }}">
     <div class="product-media">
         @if($product->image)
-            <img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}" loading="lazy">
+            <img src="{{ route('uploaded-assets.show', ['path' => $product->image]) }}" alt="{{ $product->name }}" loading="lazy">
         @else
             <div class="product-placeholder"><i class="bi bi-image"></i></div>
         @endif

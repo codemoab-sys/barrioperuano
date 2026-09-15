@@ -37,7 +37,7 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     @if($product->image)
-                                        <img src="{{ asset('storage/'.$product->image) }}" class="rounded me-3 border" width="48" height="48" style="object-fit: cover;">
+                                        <img src="{{ route('uploaded-assets.show', ['path' => $product->image]) }}" class="rounded me-3 border" width="48" height="48" style="object-fit: cover;">
                                     @else
                                         <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center border text-muted" style="width: 48px; height: 48px;">
                                             <i class="bi bi-image"></i>

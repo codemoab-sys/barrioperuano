@@ -336,7 +336,7 @@
     <header class="hero text-center" id="menuHero">
         <div class="container">
             @if($companyLogo)
-                <img src="{{ asset('storage/'.$companyLogo) }}" id="heroLogo" class="hero-logo" alt="{{ $companyName }}">
+                <img src="{{ route('uploaded-assets.show', ['path' => $companyLogo]) }}" id="heroLogo" class="hero-logo" alt="{{ $companyName }}">
             @else
                 <div class="hero-icon d-inline-flex align-items-center justify-content-center">
                     <i class="bi bi-shop"></i>

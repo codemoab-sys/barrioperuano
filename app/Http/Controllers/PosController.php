@@ -12,6 +12,8 @@ use App\Models\InventoryLog;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Models\DocumentSeries;
+use App\Services\PosCheckoutService;
+use App\Services\StockValidationService;
 use App\Services\Sunat\SunatConfig;
 use App\Services\Sunat\NubeFactService;
 use Illuminate\Http\Request;
@@ -23,6 +25,11 @@ use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
 {
+    public function __construct(
+        protected PosCheckoutService $posCheckoutService,
+        protected StockValidationService $stockValidationService
+    ) {}
+
     public function index()
     {
         $areas = Area::with(['tables' => function($q) {
@@ -442,109 +449,20 @@ class PosController extends Controller
         // Track if NubeFact is configured for later use
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        DB::transaction(function() use ($order, $method, $received, $change, $request, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured) {
-            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $order->load('details.product.ingredients');
-
-            // 1. Calcular IGV (Perú 18%) si es comprobante electrónico
-            $config = new SunatConfig();
-            $igvFactor = $config->igvFactor();
-            $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
-
-            $totalGravada = 0;
-            $igv = 0;
-            if ($isElectronic) {
-                $totalGravada = round((float) $order->total / (1 + $igvFactor), 2);
-                $igv = round((float) $order->total - $totalGravada, 2);
-            }
-
-            // 2. Asignar serie y correlativo si es electrónico
-            $serie = null;
-            $correlativo = null;
-            if ($isElectronic) {
-                $tipo = $documentType === 'Factura' ? 'factura' : 'boleta';
-                $next = DocumentSeries::next($tipo);
-                $serie = $next['serie'];
-                $correlativo = $next['correlativo'];
-            }
-
-            $order->update([
-                'status' => 'completed',
-                'issued_at' => now(),
-                'payment_method' => $method,
-                'received_amount' => $received,
-                'change_amount' => $change,
-                'document_type' => $documentType,
-                'client_id' => $clientId,
-                'client_name' => $clientName,
-                'client_document' => $clientDocument,
-                'cash_register_id' => Auth::user()->activeCashRegister->id ?? null,
-
-                // SUNAT
-                'serie' => $serie,
-                'correlativo' => $correlativo,
-                'subtotal' => $totalGravada,
-                'igv' => $igv,
-                'total_gravada' => $totalGravada,
-                'sunat_status' => $isElectronic ? ($nubefactConfigured ? 'PENDING' : 'NO_ENVIADO') : 'NA',
-            ]);
-
-            $requirements = [];
-            foreach ($order->details as $detail) {
-                $product = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
-                $ingredients = $product->ingredients;
-
-                if ($ingredients->isEmpty()) {
-                    $requirements[$product->id] = ($requirements[$product->id] ?? 0) + $detail->quantity;
-                    continue;
-                }
-
-                foreach ($ingredients as $ingredient) {
-                    $requirements[$ingredient->id] = ($requirements[$ingredient->id] ?? 0)
-                        + ($ingredient->pivot->quantity * $detail->quantity);
-                }
-            }
-
-            foreach ($requirements as $productId => $requiredQuantity) {
-                $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
-                if (!is_null($product->stock) && $product->stock < $requiredQuantity) {
-                    throw ValidationException::withMessages([
-                        'stock' => "Stock insuficiente para {$product->name}.",
-                    ]);
-                }
-            }
-
-            foreach ($requirements as $productId => $requiredQuantity) {
-                $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
-                if (is_null($product->stock)) {
-                    continue;
-                }
-
-                $oldStock = $product->stock;
-                $newStock = $oldStock - $requiredQuantity;
-                $product->update(['stock' => $newStock]);
-                InventoryLog::create([
-                    'product_id' => $product->id,
-                    'user_id' => Auth::id(),
-                    'type' => 'sale',
-                    'quantity' => -$requiredQuantity,
-                    'old_stock' => $oldStock,
-                    'new_stock' => $newStock,
-                    'note' => 'Venta POS #' . $order->id,
-                ]);
-
-                if ($newStock <= 0) {
-                    $product->update(['is_saleable' => false]);
-                }
-            }
-
-        });
+        $order = $this->posCheckoutService->completeCheckout($order, [
+            'payment_method' => $method,
+            'received' => $received,
+            'change' => $change,
+            'client_id' => $clientId,
+            'client_name' => $clientName,
+            'client_document' => $clientDocument,
+            'document_type' => $documentType,
+        ]);
 
         $order->refresh();
 
-        // 3. Envío único al proveedor electrónico. Si queda pendiente, se consulta después.
-        if ($order->isElectronic() && $nubefactConfigured) {
-            (new NubeFactService())->sendInvoice($order->fresh('details.product'));
+        if ($order->isElectronic() && (new SunatConfig())->isNubefactConfigured()) {
+            $this->posCheckoutService->sendElectronicInvoiceIfNeeded($order);
         }
 
         $order->refresh();

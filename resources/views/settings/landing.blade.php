@@ -103,7 +103,7 @@
                                                 <input type="file" name="web_slider_{{ $i }}" class="form-control form-control-sm" accept="image/*">
                                                 <div class="mt-2 text-center">
                                                     @if($img)
-                                                        <img src="{{ asset('storage/web/'.$img) }}" class="img-thumbnail shadow-sm" style="max-height:70px; object-fit:cover;">
+                                                        <img src="{{ route('uploaded-assets.show', ['path' => 'web/'.$img]) }}" class="img-thumbnail shadow-sm" style="max-height:70px; object-fit:cover;">
                                                     @else
                                                         <span class="text-muted small">Sin imagen</span>
                                                     @endif
@@ -151,7 +151,7 @@
                             </div>
                             <div class="col-md-4 d-flex align-items-center justify-content-center">
                                 @if(!empty($settings['web_about_image']))
-                                    <img src="{{ asset('storage/web/'.$settings['web_about_image']) }}" class="img-thumbnail shadow-sm" style="max-height:90px; object-fit:cover;">
+                                    <img src="{{ route('uploaded-assets.show', ['path' => 'web/'.$settings['web_about_image']]) }}" class="img-thumbnail shadow-sm" style="max-height:90px; object-fit:cover;">
                                 @endif
                             </div>
                             <div class="col-12 d-flex align-items-center gap-2">

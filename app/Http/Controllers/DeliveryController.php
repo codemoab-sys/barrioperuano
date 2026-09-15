@@ -12,6 +12,9 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Services\DeliveryService;
+use App\Services\SalesService;
+use App\Services\StockValidationService;
 use App\Services\Sunat\SunatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +24,12 @@ use Illuminate\Validation\ValidationException;
 
 class DeliveryController extends Controller
 {
+    public function __construct(
+        protected DeliveryService $deliveryService,
+        protected StockValidationService $stockValidationService,
+        protected SalesService $salesService
+    ) {}
+
     /* ══════════════════════════════════════════════
        INDEX — Panel Kanban
     ══════════════════════════════════════════════ */
@@ -68,6 +77,8 @@ class DeliveryController extends Controller
     ══════════════════════════════════════════════ */
     public function store(Request $request)
     {
+        $this->deliveryService->ensureCashRegisterIsOpen();
+
         $request->validate([
             'client_name'    => 'required|string|max:255',
             'client_phone'   => 'required|string|max:30',
@@ -78,33 +89,7 @@ class DeliveryController extends Controller
             'products.*.qty' => 'required|integer|min:1',
         ]);
 
-        foreach ($request->products as $item) {
-            $product = Product::with('ingredients')->find($item['id']);
-            if (!$product) {
-                continue;
-            }
-
-            $qty = (int) $item['qty'];
-
-            if (!is_null($product->stock) && $product->stock < $qty) {
-                throw ValidationException::withMessages([
-                    'products' => ['Stock insuficiente para ' . $product->name . '.'],
-                ]);
-            }
-
-            foreach ($product->ingredients as $ingredient) {
-                if (is_null($ingredient->stock)) {
-                    continue;
-                }
-
-                $required = (float) $ingredient->pivot->quantity * $qty;
-                if ($ingredient->stock < $required) {
-                    throw ValidationException::withMessages([
-                        'products' => ['Stock insuficiente para el ingrediente: ' . $ingredient->name],
-                    ]);
-                }
-            }
-        }
+        $this->stockValidationService->validateItems($request->products);
 
         DB::transaction(function () use ($request) {
             // 1. Crear la Orden (sin mesa — delivery)
@@ -115,7 +100,7 @@ class DeliveryController extends Controller
                 'client_name'    => $request->client_name,
                 'status'         => 'pending',
                 'total'          => 0,
-                'cash_register_id' => Auth::user()->activeCashRegister->id ?? null,
+                'cash_register_id' => $this->deliveryService->getCashRegisterId(),
             ]);
 
             // 2. Agregar productos a la orden
@@ -148,7 +133,7 @@ class DeliveryController extends Controller
                 'reference'       => $request->reference,
                 'driver_id'       => $request->driver_id ?: null,
                 'user_id'         => Auth::id(),
-                'cash_register_id'=> Auth::user()->activeCashRegister->id ?? null,
+                'cash_register_id'=> $this->deliveryService->getCashRegisterId(),
                 'status'          => 'pending',
                 'payment_method'  => $request->payment_method,
                 'delivery_fee'    => $deliveryFee,
@@ -212,6 +197,8 @@ class DeliveryController extends Controller
     ══════════════════════════════════════════════ */
     public function checkout(Request $request, Delivery $delivery)
     {
+        $this->deliveryService->ensureCashRegisterIsOpen();
+
         if ($delivery->status === 'delivered' || $delivery->status === 'cancelled') {
             return redirect()->route('delivery.show', $delivery)->with('error', 'Este pedido ya fue cerrado.');
         }
@@ -247,54 +234,13 @@ class DeliveryController extends Controller
                 'client_id'       => $client?->id,
                 'client_name'     => $client?->name ?: $delivery->client_name,
                 'client_document' => $client?->document_number,
-                'cash_register_id'=> Auth::user()->activeCashRegister->id ?? null,
+                'cash_register_id'=> $this->deliveryService->getCashRegisterId(),
                 'serie'           => $series['serie'] ?? null,
                 'correlativo'     => $series['correlativo'] ?? null,
                 'sunat_status'    => $isElectronic ? 'PENDING' : 'NA',
             ]);
 
-            // Descontar stock
-            foreach ($order->details as $detail) {
-                $product     = $detail->product;
-                $ingredients = $product->ingredients;
-
-                if ($ingredients->count() > 0) {
-                    foreach ($ingredients as $ingredient) {
-                        $qty      = $ingredient->pivot->quantity * $detail->quantity;
-                        $oldStock = $ingredient->stock;
-                        $ingredient->decrement('stock', $qty);
-                        InventoryLog::create([
-                            'product_id' => $ingredient->id,
-                            'user_id'    => Auth::id(),
-                            'type'       => 'sale',
-                            'quantity'   => -$qty,
-                            'old_stock'  => $oldStock,
-                            'new_stock'  => $oldStock - $qty,
-                            'note'       => 'Delivery #' . $delivery->id,
-                        ]);
-                    }
-                } elseif (!is_null($product->stock)) {
-                    $oldStock = $product->stock;
-                    $product->decrement('stock', $detail->quantity);
-                    InventoryLog::create([
-                        'product_id' => $product->id,
-                        'user_id'    => Auth::id(),
-                        'type'       => 'sale',
-                        'quantity'   => -($detail->quantity),
-                        'old_stock'  => $oldStock,
-                        'new_stock'  => $oldStock - $detail->quantity,
-                        'note'       => 'Delivery #' . $delivery->id,
-                    ]);
-                }
-            }
-
-            // Desactivar automáticamente productos sin stock
-            foreach ($order->details as $detail) {
-                $product = $detail->product;
-                if (!is_null($product->stock) && $product->stock <= 0) {
-                    $product->update(['is_saleable' => false]);
-                }
-            }
+            $this->salesService->applyStockReductionForOrder($order, 'Delivery');
 
             // Marcar delivery como entregado
             $delivery->update([
@@ -332,8 +278,13 @@ class DeliveryController extends Controller
             return redirect()->back()->with('error', 'No se puede cancelar este pedido.');
         }
 
-        $delivery->update(['status' => 'cancelled']);
-        $delivery->order->update(['status' => 'cancelled']);
+        $order = $delivery->order()->with('details.product.ingredients')->first();
+
+        DB::transaction(function () use ($delivery, $order) {
+            $this->deliveryService->restoreInventoryForOrder($order);
+            $delivery->update(['status' => 'cancelled']);
+            $order->update(['status' => 'cancelled']);
+        });
 
         return redirect()->route('delivery.index')->with('success', 'Pedido cancelado.');
     }

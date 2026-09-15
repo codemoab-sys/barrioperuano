@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="list-group-item border-0 d-flex align-items-center px-4 py-2 top-product-item">
                                 <div class="me-3 position-relative flex-shrink-0">
                                     @if($product->image)
-                                        <img src="{{ asset('storage/'.$product->image) }}" class="rounded-3 shadow-sm"
+                                        <img src="{{ route('uploaded-assets.show', ['path' => $product->image]) }}" class="rounded-3 shadow-sm"
                                              width="48" height="48" style="object-fit:cover;">
                                     @else
                                         <div class="rounded-3 d-flex align-items-center justify-content-center"

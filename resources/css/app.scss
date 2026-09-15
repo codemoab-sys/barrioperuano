@@ -1,6 +1,39 @@
 // Importar Bootstrap (Ya lo teníamos)
 @import 'bootstrap/scss/bootstrap';
 
+.ts-wrapper {
+    width: 100%;
+}
+
+.ts-wrapper .ts-control {
+    min-height: 38px;
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    padding: 0.4rem 0.75rem;
+    background-color: #fff;
+    box-shadow: none;
+}
+
+.ts-wrapper.focus .ts-control,
+.ts-wrapper .ts-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.ts-dropdown {
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.ts-dropdown .option {
+    padding: 0.55rem 0.75rem;
+}
+
+.ts-dropdown .option.active {
+    background-color: #eef5ff;
+    color: #0d6efd;
+}
+
 // Estilos personalizados para el Dashboard
 body {
     font-size: 0.9rem;

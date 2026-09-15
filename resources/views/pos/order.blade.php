@@ -80,7 +80,7 @@
                 @foreach($categories as $category)
                     <button onclick="filterProducts('cat-{{ $category->id }}')" class="list-group-item list-group-item-action text-center py-3 category-btn" id="cat-btn-{{ $category->id }}">
                         @if($category->image)
-                            <img src="{{ asset('storage/'.$category->image) }}" class="rounded mb-1" width="40" height="40" style="object-fit:cover;">
+                            <img src="{{ route('uploaded-assets.show', ['path' => $category->image]) }}" class="rounded mb-1" width="40" height="40" style="object-fit:cover;">
                         @else
                             <i class="bi bi-tag d-block fs-4 mb-1"></i>
                         @endif
@@ -129,7 +129,7 @@ foreach($categories as $cat) {
                                 {{-- Imagen o bloque de color con ícono --}}
                                 <div class="pos-product-img-wrap">
                                     @if($product->image)
-                                        <img src="{{ asset('storage/'.$product->image) }}" class="pos-product-img" alt="{{ $product->name }}">
+                                        <img src="{{ route('uploaded-assets.show', ['path' => $product->image]) }}" class="pos-product-img" alt="{{ $product->name }}">
                                     @else
                                         <div class="pos-product-icon-block">
                                             <i class="bi {{ $pal['iconClass'] }} pos-product-icon"></i>

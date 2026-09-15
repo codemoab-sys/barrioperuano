@@ -52,7 +52,7 @@
 
     <div class="header text-center">
         @if(isset($settings['company_logo']))
-            <img src="{{ asset('storage/'.$settings['company_logo']) }}" style="max-width: 50px; filter: grayscale(100%); margin-bottom: 5px;">
+            <img src="{{ route('uploaded-assets.show', ['path' => $settings['company_logo']]) }}" style="max-width: 50px; filter: grayscale(100%); margin-bottom: 5px;">
             <br>
         @endif
 

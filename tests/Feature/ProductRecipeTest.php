@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Area;
+use App\Models\CashRegister;
 use App\Models\Category;
+use App\Models\Delivery;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Table;
 use App\Models\User;
@@ -276,11 +279,125 @@ class ProductRecipeTest extends TestCase
         $this->assertSame(8, $ingredient->stock);
     }
 
+    public function test_delivery_cannot_be_created_without_open_cash_register(): void
+    {
+        /** @var User $user */
+        $user = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $category = Category::create([
+            'name' => 'Platos principales',
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'name' => 'Hamburguesa especial',
+            'category_id' => $category->id,
+            'price' => 24.90,
+            'cost' => 12.00,
+            'stock' => 10,
+            'is_active' => true,
+            'is_saleable' => true,
+            'is_new' => false,
+            'is_chef_recommendation' => false,
+        ]);
+
+        $response = $this->actingAs($user)->from('/delivery/create')->post('/delivery', [
+            'client_name' => 'Cliente test',
+            'client_phone' => '987654321',
+            'address' => 'Av. Principal 123',
+            'payment_method' => 'cash',
+            'products' => [[
+                'id' => $product->id,
+                'qty' => 1,
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors(['general']);
+    }
+
+    public function test_delivery_cancellation_reverts_product_stock(): void
+    {
+        /** @var User $user */
+        $user = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        CashRegister::create([
+            'user_id' => $user->id,
+            'opening_time' => now(),
+            'opening_amount' => 0,
+            'status' => 'open',
+        ]);
+
+        $category = Category::create([
+            'name' => 'Platos principales',
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'name' => 'Ceviche',
+            'category_id' => $category->id,
+            'price' => 35.00,
+            'cost' => 15.00,
+            'stock' => 5,
+            'is_active' => true,
+            'is_saleable' => true,
+            'is_new' => false,
+            'is_chef_recommendation' => false,
+        ]);
+
+        $order = Order::create([
+            'table_id' => null,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'total' => 70.00,
+            'payment_method' => 'cash',
+            'cash_register_id' => $user->activeCashRegister->id,
+            'client_name' => 'Cliente test',
+        ]);
+
+        $order->details()->create([
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'price' => $product->price,
+            'status' => 'pending',
+        ]);
+
+        $delivery = Delivery::create([
+            'order_id' => $order->id,
+            'client_name' => 'Cliente test',
+            'client_phone' => '987654321',
+            'address' => 'Av. Principal 123',
+            'driver_id' => null,
+            'user_id' => $user->id,
+            'cash_register_id' => $user->activeCashRegister->id,
+            'status' => 'pending',
+            'payment_method' => 'cash',
+            'delivery_fee' => 0,
+        ]);
+
+        $product->decrement('stock', 2);
+
+        $this->actingAs($user)->post('/delivery/' . $delivery->id . '/cancel');
+
+        $product->refresh();
+        $this->assertSame(5, $product->stock);
+    }
+
     public function test_delivery_cannot_be_created_when_recipe_ingredient_stock_is_insufficient(): void
     {
         /** @var User $user */
         $user = User::factory()->create([
             'role' => 'admin',
+        ]);
+
+        CashRegister::create([
+            'user_id' => $user->id,
+            'opening_time' => now(),
+            'opening_amount' => 0,
+            'status' => 'open',
         ]);
 
         $category = Category::create([
@@ -328,5 +445,66 @@ class ProductRecipeTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['products']);
+    }
+
+    public function test_sales_service_reduces_stock_for_order_details(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $category = Category::create([
+            'name' => 'Platos principales',
+            'is_active' => true,
+        ]);
+
+        $ingredient = Product::create([
+            'name' => 'Pan de hamburguesa',
+            'category_id' => $category->id,
+            'price' => 1.50,
+            'cost' => 0.80,
+            'stock' => 10,
+            'is_active' => true,
+            'is_saleable' => false,
+            'is_new' => false,
+            'is_chef_recommendation' => false,
+        ]);
+
+        $product = Product::create([
+            'name' => 'Hamburguesa especial',
+            'category_id' => $category->id,
+            'price' => 24.90,
+            'cost' => 12.00,
+            'stock' => 50,
+            'is_active' => true,
+            'is_saleable' => true,
+            'is_new' => false,
+            'is_chef_recommendation' => false,
+        ]);
+
+        $product->ingredients()->sync([
+            $ingredient->id => ['quantity' => 2],
+        ]);
+
+        $order = Order::create([
+            'table_id' => null,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'total' => 24.90,
+            'payment_method' => 'cash',
+            'client_name' => 'Cliente test',
+        ]);
+
+        $order->details()->create([
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'price' => $product->price,
+            'status' => 'pending',
+        ]);
+
+        app(\App\Services\SalesService::class)->applyStockReductionForOrder($order, 'TEST');
+
+        $ingredient->refresh();
+        $this->assertSame(6, $ingredient->stock);
     }
 }

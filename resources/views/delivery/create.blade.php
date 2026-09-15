@@ -23,7 +23,7 @@
                 <div class="card-body overflow-auto">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Cliente</label>
-                        <select name="client_id" id="client_id" class="form-select">
+                        <select name="client_id" id="client_id" class="form-select searchable-select">
                             <option value="">Consumidor Final / Nuevo</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}" data-name="{{ $client->name }}" data-phone="{{ $client->phone }}" data-address="{{ $client->address }}">{{ $client->name }}</option>
@@ -68,7 +68,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Repartidor (Opcional)</label>
-                        <select name="driver_id" class="form-select">
+                        <select name="driver_id" class="form-select searchable-select-driver">
                             <option value="">Sin asignar por ahora</option>
                             @foreach($drivers as $driver)
                                 <option value="{{ $driver->id }}">{{ $driver->name }}</option>
@@ -147,6 +147,33 @@
 
 <script>
     let deliveryCart = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof TomSelect !== 'undefined') {
+            new TomSelect('#client_id', {
+                plugins: ['clear_button'],
+                persist: false,
+                create: false,
+                sortField: { field: 'text', direction: 'asc' },
+                placeholder: 'Buscar cliente...',
+                hideSelected: false,
+                closeAfterSelect: true,
+                onInitialize: function() {
+                    this.wrapper.classList.add('searchable-select-wrapper');
+                }
+            });
+
+            new TomSelect('.searchable-select-driver', {
+                plugins: ['clear_button'],
+                persist: false,
+                create: false,
+                sortField: { field: 'text', direction: 'asc' },
+                placeholder: 'Buscar repartidor...',
+                hideSelected: false,
+                closeAfterSelect: true,
+            });
+        }
+    });
     
     document.getElementById('client_id').addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
