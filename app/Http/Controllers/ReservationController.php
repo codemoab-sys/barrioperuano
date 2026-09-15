@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\Table;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ReservationController extends Controller
@@ -44,29 +45,43 @@ class ReservationController extends Controller
         $reservationTime = Carbon::parse($validated['reservation_time']);
 
         if (!empty($validated['table_id'])) {
-            $table = Table::findOrFail($validated['table_id']);
-            if ($validated['people'] > $table->seats) {
+            $conflict = DB::transaction(function () use ($validated, $reservationTime) {
+                $table = Table::whereKey($validated['table_id'])->lockForUpdate()->firstOrFail();
+
+                if ($validated['people'] > $table->seats) {
+                    return 'capacity';
+                }
+
+                $conflict = Reservation::where('table_id', $table->id)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->whereBetween('reservation_time', [
+                        $reservationTime->copy()->subHours(2),
+                        $reservationTime->copy()->addHours(2),
+                    ])
+                    ->exists();
+
+                if ($conflict) {
+                    return 'conflict';
+                }
+
+                Reservation::create($validated);
+                return null;
+            });
+
+            if ($conflict === 'capacity') {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'La mesa seleccionada solo tiene capacidad para ' . $table->seats . ' personas.');
+                    ->with('error', 'La mesa seleccionada solo tiene capacidad para ' . Table::find($validated['table_id'])->seats . ' personas.');
             }
 
-            $conflict = Reservation::where('table_id', $table->id)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->whereBetween('reservation_time', [
-                    $reservationTime->copy()->subHours(2),
-                    $reservationTime->copy()->addHours(2),
-                ])
-                ->exists();
-
-            if ($conflict) {
+            if ($conflict === 'conflict') {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'La mesa ya tiene una reserva activa dentro de ese horario.');
             }
+        } else {
+            Reservation::create($validated);
         }
-
-        Reservation::create($validated);
 
         return redirect()->back()->with('success', 'Reserva agendada correctamente.');
     }
