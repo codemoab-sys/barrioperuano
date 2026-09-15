@@ -100,15 +100,25 @@ class SalesService
 
     protected function reduceStockForItem(Product $product, float $requiredQuantity, Order $order, string $context): void
     {
-        if (is_null($product->stock)) {
+        $lockedProduct = Product::query()
+            ->lockForUpdate()
+            ->findOrFail($product->id);
+
+        if (is_null($lockedProduct->stock)) {
             return;
         }
 
-        $oldStock = $product->stock;
-        $product->decrement('stock', $requiredQuantity);
+        if ((float) $lockedProduct->stock < $requiredQuantity) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'stock' => 'Stock insuficiente para ' . $lockedProduct->name . '.',
+            ]);
+        }
+
+        $oldStock = (float) $lockedProduct->stock;
+        $lockedProduct->decrement('stock', $requiredQuantity);
 
         InventoryLog::create([
-            'product_id' => $product->id,
+            'product_id' => $lockedProduct->id,
             'user_id' => Auth::id() ?? $order->user_id,
             'type' => 'sale',
             'quantity' => -$requiredQuantity,
@@ -117,8 +127,8 @@ class SalesService
             'note' => $context . ' #' . $order->id,
         ]);
 
-        if ($product->fresh()->stock <= 0) {
-            $product->update(['is_saleable' => false]);
+        if ((float) $lockedProduct->fresh()->stock <= 0) {
+            $lockedProduct->update(['is_saleable' => false]);
         }
     }
 }

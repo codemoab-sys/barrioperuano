@@ -39,6 +39,17 @@ class SalesHistoryTest extends TestCase
             'table_id' => $table->id,
             'user_id' => $admin->id,
             'status' => 'completed',
+            'total' => 50,
+            'payment_method' => 'transfer',
+            'document_type' => 'Boleta',
+            'client_name' => 'Cliente Tres',
+            'created_at' => now(),
+        ]);
+
+        Order::create([
+            'table_id' => $table->id,
+            'user_id' => $admin->id,
+            'status' => 'completed',
             'total' => 140,
             'payment_method' => 'card',
             'document_type' => 'Factura',
@@ -64,9 +75,10 @@ class SalesHistoryTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('currencySymbol', 'S/');
-        $response->assertViewHas('totalSales', 220.0);
+        $response->assertViewHas('totalSales', 270.0);
+        $response->assertViewHas('totalTransfer', 50.0);
         $response->assertViewHas('orders', function ($orders) {
-            return $orders->count() === 2;
+            return $orders->count() === 3;
         });
     }
 }

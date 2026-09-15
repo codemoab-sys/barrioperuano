@@ -9,6 +9,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -171,34 +172,39 @@ class ProductController extends Controller
     {
         $request->validate(['quantity' => 'required|integer|min:0', 'type' => 'required|in:add,sub,set']);
 
-        $oldStock = $product->stock ?? 0;
-        $qty = $request->quantity;
+        [$oldStock, $newStock, $qty] = DB::transaction(function () use ($request, $product) {
+            $product = Product::query()->lockForUpdate()->findOrFail($product->id);
+            $oldStock = $product->stock ?? 0;
+            $qty = $request->quantity;
 
-        if ($request->type === 'set') {
-            $newStock = $qty;
-        } elseif ($request->type === 'sub') {
-            $newStock = max(0, $oldStock - $qty);
-        } else {
-            $newStock = $oldStock + $qty;
-        }
+            if ($request->type === 'set') {
+                $newStock = $qty;
+            } elseif ($request->type === 'sub') {
+                $newStock = max(0, $oldStock - $qty);
+            } else {
+                $newStock = $oldStock + $qty;
+            }
 
-        $updateData = ['stock' => $newStock];
-        if ($newStock > 0 && !$product->is_saleable) {
-            $updateData['is_saleable'] = true;
-        }
-        $product->update($updateData);
+            $updateData = ['stock' => $newStock];
+            if ($newStock > 0 && !$product->is_saleable) {
+                $updateData['is_saleable'] = true;
+            }
+            $product->update($updateData);
 
-        if ($qty > 0) {
-            InventoryLog::create([
-                'product_id' => $product->id,
-                'user_id' => Auth::id(),
-                'type' => $request->type === 'sub' ? 'adjustment_out' : 'adjustment_in',
-                'quantity' => ($request->type === 'set' ? $qty - $oldStock : ($request->type === 'sub' ? -$qty : $qty)),
-                'old_stock' => $oldStock,
-                'new_stock' => $newStock,
-                'note' => 'Ajuste manual desde panel'
-            ]);
-        }
+            if ($qty > 0) {
+                InventoryLog::create([
+                    'product_id' => $product->id,
+                    'user_id' => Auth::id(),
+                    'type' => $request->type === 'sub' ? 'adjustment_out' : 'adjustment_in',
+                    'quantity' => ($request->type === 'set' ? $qty - $oldStock : ($request->type === 'sub' ? -$qty : $qty)),
+                    'old_stock' => $oldStock,
+                    'new_stock' => $newStock,
+                    'note' => 'Ajuste manual desde panel'
+                ]);
+            }
+
+            return [$oldStock, $newStock, $qty];
+        });
 
         if (request()->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([

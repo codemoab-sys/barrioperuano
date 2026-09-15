@@ -69,6 +69,10 @@
             <td>(+) Tarjeta / Yape:</td>
             <td class="text-end">{{ number_format($stats['card'], 2) }}</td>
         </tr>
+        <tr>
+            <td>(+) Transferencia:</td>
+            <td class="text-end">{{ number_format($stats['transfer'], 2) }}</td>
+        </tr>
     </table>
 
     <div class="line"></div>

@@ -32,6 +32,10 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
+        if (Auth::user()?->role !== 'admin') {
+            return redirect()->back()->with('error', 'Solo un administrador puede eliminar gastos registrados.');
+        }
+
         $expense->delete();
         return redirect()->back()->with('success', 'Gasto eliminado.');
     }

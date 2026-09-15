@@ -19,6 +19,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        $lockoutMinutes = 15;
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -29,8 +30,13 @@ class LoginController extends Controller
         $user = User::where('email', $email)->first();
         $failedAttempts = LoginAudit::where('email', $email)
             ->where('success', false)
-            ->where('created_at', '>=', now()->subMinutes(15))
+            ->where('created_at', '>=', now()->subMinutes($lockoutMinutes))
             ->count();
+
+        if ($user?->locked_at && $user->locked_at->lte(now()->subMinutes($lockoutMinutes))) {
+            $user->update(['failed_login_attempts' => 0, 'locked_at' => null]);
+            $failedAttempts = 0;
+        }
 
         if (($user && $user->locked_at) || $failedAttempts >= 5) {
             if ($user && !$user->locked_at) {

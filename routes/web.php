@@ -54,7 +54,7 @@ Route::get('/debug/ultima-factura-json', function () {
         ->build($order);
 
     return response()->json($payload, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('debug.last.invoice.json');
+})->middleware(['auth', 'role:admin'])->name('debug.last.invoice.json');
 
 // Debug temporal: lista todas las facturas/boletas ordenadas por serie y correlativo
 Route::get('/debug/todas-facturas-json', function () {
@@ -80,7 +80,7 @@ Route::get('/debug/todas-facturas-json', function () {
             ];
         })->values(),
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('debug.all.invoice.json');
+})->middleware(['auth', 'role:admin'])->name('debug.all.invoice.json');
 
 // Debug temporal: devuelve la respuesta cruda que NubeFact respondió para la última factura
 Route::get('/debug/ultima-factura-response', function () {
@@ -136,10 +136,10 @@ Route::get('/debug/ultima-factura-response', function () {
         'raw_body' => $response ?: null,
         'decoded' => $response ? json_decode($response, true) : null,
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('debug.last.invoice.response');
+})->middleware(['auth', 'role:admin'])->name('debug.last.invoice.response');
 
 // Debug temporal: sincroniza la última factura local con el estado real de NubeFact
-Route::get('/debug/sync-ultima-factura-status', function () {
+Route::post('/debug/sync-ultima-factura-status', function () {
     $order = \App\Models\Order::whereIn('document_type', ['Factura', 'Boleta'])
         ->orderByDesc('created_at')
         ->first();
@@ -161,10 +161,10 @@ Route::get('/debug/sync-ultima-factura-status', function () {
         'cdr_path' => $updated->cdr_path,
         'hash' => $updated->hash,
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('debug.sync.last.invoice.status');
+})->middleware(['auth', 'role:admin'])->name('debug.sync.last.invoice.status');
 
 // Debug: intenta enviar manualmente la última factura y muestra TODOS los detalles
-Route::get('/debug/manual-send-ultima-factura', function () {
+Route::post('/debug/manual-send-ultima-factura', function () {
     $order = \App\Models\Order::whereIn('document_type', ['Factura', 'Boleta'])
         ->orderByDesc('created_at')
         ->first();
@@ -224,7 +224,7 @@ Route::get('/debug/manual-send-ultima-factura', function () {
         'cdr_path' => $order->cdr_path,
         'hash' => $order->hash,
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('debug.manual.send.ultima.factura');
+})->middleware(['auth', 'role:admin'])->name('debug.manual.send.ultima.factura');
 
 // Web Informativa Pública (Landing) — ocultada temporalmente
 // Route::get('/', [App\Http\Controllers\LandingController::class, 'index'])->name('landing.index');

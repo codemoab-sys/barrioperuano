@@ -163,17 +163,40 @@ class DeliveryController extends Controller
     ══════════════════════════════════════════════ */
     public function updateStatus(Request $request, Delivery $delivery)
     {
-        $request->validate(['status' => 'required|in:pending,preparing,on_way,delivered,cancelled']);
+        $status = $request->validate([
+            'status' => 'required|in:pending,preparing,on_way,delivered,cancelled',
+        ])['status'];
+
+        if ($status === 'delivered') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Un delivery solo se marca como entregado al completar el cobro.',
+            ], 422);
+        }
+
+        if ($status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usa la acción de cancelar para liberar correctamente el pedido y su inventario.',
+            ], 422);
+        }
+
+        if (in_array($delivery->status, ['delivered', 'cancelled'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este delivery ya está cerrado y no puede cambiar de estado.',
+            ], 422);
+        }
 
         $delivery->update([
-            'status'       => $request->status,
-            'delivered_at' => $request->status === 'delivered' ? now() : $delivery->delivered_at,
+            'status'       => $status,
+            'delivered_at' => $delivery->delivered_at,
         ]);
 
         return response()->json([
             'success' => true,
-            'label'   => Delivery::$statusLabels[$request->status],
-            'color'   => Delivery::$statusColors[$request->status],
+            'label'   => Delivery::$statusLabels[$status],
+            'color'   => Delivery::$statusColors[$status],
         ]);
     }
 

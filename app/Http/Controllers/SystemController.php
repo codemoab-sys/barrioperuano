@@ -37,8 +37,11 @@ class SystemController extends Controller
             return back()->with('error', 'Contraseña incorrecta. No se realizaron cambios.');
         }
 
+        $foreignKeysDisabled = false;
+
         try {
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            $foreignKeysDisabled = true;
 
             // 1. Borrar Ventas y Detalles
             DB::table('bape_order_details')->truncate();
@@ -58,12 +61,14 @@ class SystemController extends Controller
                 ['value' => '1']
             );
 
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
             return back()->with('success', '¡Sistema reiniciado! Ventas, Reservas y Stock han vuelto a cero.');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Error crítico: ' . $e->getMessage());
+        } finally {
+            if ($foreignKeysDisabled) {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            }
         }
     }
 

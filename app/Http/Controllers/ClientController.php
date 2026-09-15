@@ -43,7 +43,8 @@ class ClientController extends Controller
         curl_setopt_array($curl, [
             CURLOPT_URL            => 'https://api.apis.net.pe/v1/' . $endpoint . '?numero=' . $document,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_TIMEOUT        => 15,
             CURLOPT_HTTPHEADER     => [
                 'Authorization: Bearer ' . $token,

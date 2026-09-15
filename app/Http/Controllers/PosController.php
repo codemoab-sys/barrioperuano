@@ -524,7 +524,7 @@ class PosController extends Controller
     private function authorizeTableOrder(Table $table): void
     {
         $user = Auth::user();
-        abort_unless($user && in_array($user->role, ['admin', 'cashier', 'waiter'], true), 403);
+        abort_unless($user && in_array($user->role, ['admin', 'cashier', 'cashier_waiter', 'waiter'], true), 403);
 
         $order = Order::where('table_id', $table->id)
             ->where('status', 'pending')
@@ -544,7 +544,7 @@ class PosController extends Controller
     private function authorizeOrder(Order $order): void
     {
         $user = Auth::user();
-        $canManageAll = in_array($user?->role, ['admin', 'cashier'], true);
+        $canManageAll = in_array($user?->role, ['admin', 'cashier', 'cashier_waiter'], true);
         abort_unless($canManageAll || (int) $order->user_id === (int) $user?->id, 403);
     }
 
