@@ -18,6 +18,12 @@ class PosCheckoutService
 
     public function completeCheckout(Order $order, array $payload): Order
     {
+        if (!Auth::user()?->activeCashRegister) {
+            throw ValidationException::withMessages([
+                'general' => ['Debes abrir tu turno de caja antes de cobrar una venta.'],
+            ]);
+        }
+
         if ($order->status !== 'pending') {
             throw ValidationException::withMessages([
                 'general' => ['Orden cerrada.'],

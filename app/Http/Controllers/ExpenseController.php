@@ -10,6 +10,11 @@ class ExpenseController extends Controller
 {
     public function store(Request $request)
     {
+        $cashRegister = Auth::user()?->activeCashRegister;
+        if (!$cashRegister) {
+            return redirect()->back()->with('error', 'Debes abrir tu turno de caja antes de registrar gastos.');
+        }
+
         $request->validate([
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.1',
@@ -19,7 +24,7 @@ class ExpenseController extends Controller
             'description' => $request->description,
             'amount' => $request->amount,
             'user_id' => Auth::id(),
-            'cash_register_id' => Auth::user()->activeCashRegister->id ?? null
+            'cash_register_id' => $cashRegister->id,
         ]);
 
         return redirect()->back()->with('success', 'Gasto registrado correctamente.');

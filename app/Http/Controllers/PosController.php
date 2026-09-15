@@ -105,6 +105,10 @@ class PosController extends Controller
     // --- AGREGAR POR CLIC (Normal) ---
     public function addToOrder(Request $request, Table $table)
     {
+        if (!Auth::user()?->activeCashRegister) {
+            return response()->json(['error' => 'Debes abrir tu turno de caja antes de agregar productos.'], 422);
+        }
+
         $this->authorizeTableOrder($table);
         $product = Product::findOrFail($request->product_id);
         $error = $this->checkStockAvailability($product, $table);
@@ -119,6 +123,10 @@ class PosController extends Controller
     // --- AGREGAR POR CÓDIGO DE BARRAS / BÚSQUEDA (código, nombre o precio) ---
     public function addByBarcode(Request $request, Table $table)
     {
+        if (!Auth::user()?->activeCashRegister) {
+            return response()->json(['error' => 'Debes abrir tu turno de caja antes de agregar productos.'], 422);
+        }
+
         $this->authorizeTableOrder($table);
         $request->validate(['barcode' => 'required']);
 

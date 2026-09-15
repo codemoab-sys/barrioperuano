@@ -155,6 +155,12 @@ class ProductRecipeTest extends TestCase
         $user = User::factory()->create([
             'role' => 'admin',
         ]);
+        CashRegister::create([
+            'user_id' => $user->id,
+            'opening_time' => now(),
+            'opening_amount' => 0,
+            'status' => 'open',
+        ]);
 
         $area = Area::create(['name' => 'Salón']);
         $table = Table::create([
@@ -212,6 +218,12 @@ class ProductRecipeTest extends TestCase
         /** @var User $user */
         $user = User::factory()->create([
             'role' => 'admin',
+        ]);
+        CashRegister::create([
+            'user_id' => $user->id,
+            'opening_time' => now(),
+            'opening_amount' => 0,
+            'status' => 'open',
         ]);
 
         $area = Area::create(['name' => 'Salón']);
