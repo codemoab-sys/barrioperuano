@@ -21,6 +21,9 @@
                     </h2>
                 </div>
                 <div class="btn-group">
+                    @if($cn->pdf_path)
+                        <a href="{{ route('credit_notes.pdf', $cn) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                    @endif
                     @if($cn->xml_path)
                         <a href="{{ route('credit_notes.xml', $cn) }}" class="btn btn-outline-info">
                             <i class="bi bi-filetype-xml"></i> XML

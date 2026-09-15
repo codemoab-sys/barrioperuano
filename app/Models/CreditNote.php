@@ -17,6 +17,7 @@ use HasFactory;
         'document_type',
         'reason_code',
         'reason_description',
+        'items',
         'subtotal',
         'igv',
         'total',
@@ -36,6 +37,7 @@ use HasFactory;
         'subtotal' => 'decimal:2',
         'igv' => 'decimal:2',
         'total' => 'decimal:2',
+        'items' => 'array',
     ];
 
     public function order()

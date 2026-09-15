@@ -6,9 +6,11 @@ use App\Models\DebitNote;
 use App\Models\DocumentSeries;
 use App\Models\Order;
 use App\Services\Sunat\SunatService;
+use App\Services\Sunat\SunatConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -78,12 +80,16 @@ class DebitNoteController extends Controller
         $request->validate([
             'reason_code'        => 'required|string|in:1,2,3,4,5',
             'reason_description' => 'required|string|max:255',
+            'amount'             => 'required|numeric|min:0.01',
         ]);
 
         $isFactura = $order->document_type === 'Factura';
         $seriesKey = $isFactura ? 'nota_debito_factura' : 'nota_debito_boleta';
+        $total = (float) $request->input('amount');
+        $subtotal = round($total / (1 + (new SunatConfig())->igvFactor()), 2);
+        $igv = round($total - $subtotal, 2);
 
-        $dn = DB::transaction(function () use ($request, $order, $seriesKey) {
+        $dn = DB::transaction(function () use ($request, $order, $seriesKey, $subtotal, $igv, $total) {
             $next = DocumentSeries::next($seriesKey);
 
             return DebitNote::create([
@@ -93,9 +99,10 @@ class DebitNoteController extends Controller
                 'document_type'      => 'nota_debito',
                 'reason_code'        => $request->input('reason_code'),
                 'reason_description' => $request->input('reason_description'),
-                'subtotal'           => $order->total_gravada,
-                'igv'                => $order->igv,
-                'total'              => $order->total,
+                'amount'             => $request->input('amount'),
+                'subtotal'           => $subtotal,
+                'igv'                => $igv,
+                'total'              => $total,
                 'sunat_status'       => 'PENDING',
                 'user_id'            => Auth::id(),
             ]);
@@ -137,6 +144,11 @@ class DebitNoteController extends Controller
         return $this->stream($debitNote->xml_path, 'application/xml');
     }
 
+    public function downloadPdf(DebitNote $debitNote)
+    {
+        return $this->stream($debitNote->pdf_path, 'application/pdf');
+    }
+
     public function downloadCdr(DebitNote $debitNote)
     {
         return $this->stream($debitNote->cdr_path, 'application/zip');
@@ -144,9 +156,23 @@ class DebitNoteController extends Controller
 
     private function stream(?string $relPath, string $mime)
     {
-        if (!$relPath || !Storage::disk('local')->exists($relPath)) {
+        if (!$relPath) {
             abort(404, 'Archivo no encontrado.');
         }
+
+        if (filter_var($relPath, FILTER_VALIDATE_URL)) {
+            $host = parse_url($relPath, PHP_URL_HOST);
+            $configuredHost = parse_url((new SunatConfig())->nubefactRuta(), PHP_URL_HOST);
+            $allowed = is_string($host) && (
+                $host === $configuredHost || str_ends_with($host, '.nubefact.com')
+            );
+            abort_unless($allowed, 404, 'Archivo no encontrado.');
+            $response = Http::timeout(30)->get($relPath);
+            abort_unless($response->successful(), 404, 'Archivo no encontrado.');
+            return response()->streamDownload(fn () => print($response->body()), basename(parse_url($relPath, PHP_URL_PATH) ?: 'comprobante'), ['Content-Type' => $mime]);
+        }
+
+        if (!Storage::disk('local')->exists($relPath)) abort(404, 'Archivo no encontrado.');
         return response()->stream(function () use ($relPath) {
             echo Storage::disk('local')->get($relPath);
         }, 200, [

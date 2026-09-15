@@ -46,6 +46,15 @@
                         <small class="text-muted">Máximo 255 caracteres.</small>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Monto adicional <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">S/</span>
+                            <input type="number" name="amount" class="form-control" min="0.01" step="0.01" required placeholder="0.00">
+                        </div>
+                        <small class="text-muted">Ingresa solo el importe adicional que se cobrará.</small>
+                    </div>
+
                     <div class="card bg-light border-0">
                         <div class="card-body p-3">
                             <h6 class="fw-bold mb-2">Documento afectado</h6>

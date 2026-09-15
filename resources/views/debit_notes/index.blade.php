@@ -83,6 +83,9 @@
                                     <a href="{{ route('debit_notes.show', $dn) }}" class="btn btn-outline-secondary">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    @if($dn->pdf_path)
+                                        <a href="{{ route('debit_notes.pdf', $dn) }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf"></i></a>
+                                    @endif
                                     @if($dn->xml_path)
                                         <a href="{{ route('debit_notes.xml', $dn) }}" class="btn btn-outline-info">
                                             <i class="bi bi-filetype-xml"></i>

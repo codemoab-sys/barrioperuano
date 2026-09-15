@@ -17,6 +17,7 @@ class DebitNote extends Model
         'document_type',
         'reason_code',
         'reason_description',
+        'amount',
         'subtotal',
         'igv',
         'total',
@@ -36,6 +37,7 @@ class DebitNote extends Model
         'subtotal' => 'decimal:2',
         'igv' => 'decimal:2',
         'total' => 'decimal:2',
+        'amount' => 'decimal:2',
     ];
 
     public function order()

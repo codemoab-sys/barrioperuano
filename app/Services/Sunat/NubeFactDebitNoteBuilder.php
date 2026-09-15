@@ -30,7 +30,31 @@ class NubeFactDebitNoteBuilder
         $totalGravada = 0.0;
         $totalIgv     = 0.0;
 
-        foreach ($order->details as $line) {
+        if ($dn->amount !== null) {
+            $valorVenta = round((float) $dn->amount / $denom, 2);
+            $subtotalLinea = round((float) $dn->amount, 2);
+            $igvLinea = round($subtotalLinea - $valorVenta, 2);
+            $totalGravada = $valorVenta;
+            $totalIgv = $igvLinea;
+            $items[] = [
+                'unidad_de_medida' => 'NIU',
+                'codigo' => 'AJUSTE',
+                'descripcion' => $dn->reason_description,
+                'cantidad' => 1,
+                'valor_unitario' => $valorVenta,
+                'precio_unitario' => round((float) $dn->amount, 2),
+                'descuento' => '',
+                'subtotal' => $valorVenta,
+                'tipo_de_igv' => 1,
+                'igv' => $igvLinea,
+                'total' => $subtotalLinea,
+                'anticipo_regularizacion' => false,
+                'anticipo_documento_serie' => '',
+                'anticipo_documento_numero' => '',
+            ];
+        }
+
+        foreach ($dn->amount === null ? $order->details : [] as $line) {
             $product         = $line->product;
             $precioVentaUnit = (float) $line->price;
             $valorUnit       = round($precioVentaUnit / $denom, 6);

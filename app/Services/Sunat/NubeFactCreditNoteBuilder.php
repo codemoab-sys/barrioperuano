@@ -38,11 +38,18 @@ class NubeFactCreditNoteBuilder
         $totalGravada = 0.0;
         $totalIgv     = 0.0;
 
-        foreach ($order->details as $line) {
+        $details = $order->details;
+        if ($cn->reason_code === '07' && is_array($cn->items)) {
+            $details = $details->filter(fn ($line) => array_key_exists((string) $line->id, $cn->items));
+        }
+
+        foreach ($details as $line) {
             $product         = $line->product;
             $precioVentaUnit = (float) $line->price;
             $valorUnit       = round($precioVentaUnit / $denom, 6);
-            $cantidad        = (float) $line->quantity;
+            $cantidad        = $cn->reason_code === '07'
+                ? (float) $cn->items[(string) $line->id]
+                : (float) $line->quantity;
             $valorVenta      = round($valorUnit * $cantidad, 2);
             $igvLinea        = round($valorVenta * $igvFactor, 2);
             $subtotalLinea   = round($valorVenta + $igvLinea, 2);

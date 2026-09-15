@@ -352,6 +352,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/credit-notes/{order}',              [\App\Http\Controllers\CreditNoteController::class, 'store'])->name('credit_notes.store');
         Route::get('/credit-notes/{creditNote}',          [\App\Http\Controllers\CreditNoteController::class, 'show'])->name('credit_notes.show');
         Route::post('/credit-notes/{creditNote}/retry',   [\App\Http\Controllers\CreditNoteController::class, 'retry'])->name('credit_notes.retry');
+        Route::get('/credit-notes/{creditNote}/pdf',      [\App\Http\Controllers\CreditNoteController::class, 'downloadPdf'])->name('credit_notes.pdf');
         Route::get('/credit-notes/{creditNote}/xml',      [\App\Http\Controllers\CreditNoteController::class, 'downloadXml'])->name('credit_notes.xml');
         Route::get('/credit-notes/{creditNote}/cdr',      [\App\Http\Controllers\CreditNoteController::class, 'downloadCdr'])->name('credit_notes.cdr');
 
@@ -361,6 +362,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/debit-notes/{order}',               [\App\Http\Controllers\DebitNoteController::class, 'store'])->name('debit_notes.store');
         Route::get('/debit-notes/{debitNote}',            [\App\Http\Controllers\DebitNoteController::class, 'show'])->name('debit_notes.show');
         Route::post('/debit-notes/{debitNote}/retry',     [\App\Http\Controllers\DebitNoteController::class, 'retry'])->name('debit_notes.retry');
+        Route::get('/debit-notes/{debitNote}/pdf',        [\App\Http\Controllers\DebitNoteController::class, 'downloadPdf'])->name('debit_notes.pdf');
         Route::get('/debit-notes/{debitNote}/xml',        [\App\Http\Controllers\DebitNoteController::class, 'downloadXml'])->name('debit_notes.xml');
         Route::get('/debit-notes/{debitNote}/cdr',        [\App\Http\Controllers\DebitNoteController::class, 'downloadCdr'])->name('debit_notes.cdr');
 

@@ -46,6 +46,19 @@
                         <small class="text-muted">Máximo 255 caracteres.</small>
                     </div>
 
+                    <div class="mb-3" id="creditItemsBox" hidden>
+                        <label class="form-label fw-bold">Productos devueltos</label>
+                        <div class="small text-muted mb-2">Para el motivo 07 selecciona los productos y cantidades devueltas.</div>
+                        @foreach($order->details as $detail)
+                            <div class="row g-2 align-items-center mb-2">
+                                <div class="col-8">{{ $detail->product->name ?? 'Producto' }} (máx. {{ $detail->quantity }})</div>
+                                <div class="col-4">
+                                    <input type="number" name="items[{{ $detail->id }}]" class="form-control form-control-sm" min="0.01" max="{{ $detail->quantity }}" step="0.01" disabled>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
                     <div class="card bg-light border-0">
                         <div class="card-body p-3">
                             <h6 class="fw-bold mb-2">Documento afectado</h6>
@@ -70,4 +83,15 @@
         </div>
     </div>
 </div>
+<script>
+    const creditReason = document.querySelector('select[name="reason_code"]');
+    const creditItemsBox = document.getElementById('creditItemsBox');
+    function toggleCreditItems() {
+        const enabled = creditReason.value === '07';
+        creditItemsBox.hidden = !enabled;
+        creditItemsBox.querySelectorAll('input').forEach(input => { input.disabled = !enabled; });
+    }
+    creditReason.addEventListener('change', toggleCreditItems);
+    toggleCreditItems();
+</script>
 @endsection
