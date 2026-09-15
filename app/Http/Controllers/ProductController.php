@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\InventoryLog;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,9 @@ class ProductController extends Controller
     {
         // Listamos productos con su categoría, ordenados por los más nuevos
         $products = Product::with('category')->orderBy('created_at', 'desc')->paginate(10);
-        return view('products.index', compact('products'));
+        $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
+
+        return view('products.index', compact('products', 'currencySymbol'));
     }
 
     public function create()
@@ -198,7 +201,11 @@ class ProductController extends Controller
         }
 
         if (request()->header('X-Requested-With') === 'XMLHttpRequest') {
-            return response()->json(['success' => true, 'message' => 'Stock ajustado.', 'new_stock' => $newStock]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock ajustado.',
+                'new_stock' => $newStock,
+            ]);
         }
         return back()->with('success', 'Stock ajustado.');
     }

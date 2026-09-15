@@ -83,6 +83,36 @@ class CashRegisterTest extends TestCase
         ]);
     }
 
+    public function test_history_index_filters_turns_by_status_and_renders_admin_view(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin Principal']);
+        $cashier = User::factory()->create(['role' => 'cashier', 'name' => 'Cajero Uno']);
+
+        CashRegister::create([
+            'user_id' => $cashier->id,
+            'opening_time' => now()->subDay(),
+            'opening_amount' => 80,
+            'status' => 'closed',
+            'expected_amount' => 120,
+            'closing_amount' => 120,
+            'difference' => 0,
+        ]);
+
+        CashRegister::create([
+            'user_id' => $cashier->id,
+            'opening_time' => now(),
+            'opening_amount' => 150,
+            'status' => 'open',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('cash_registers.index', ['status' => 'open']));
+
+        $response->assertOk();
+        $response->assertViewHas('registers', function ($registers) {
+            return $registers->count() === 1 && $registers->first()->status === 'open';
+        });
+    }
+
     public function test_expense_requires_an_open_cash_register(): void
     {
         $user = User::factory()->create(['role' => 'cashier']);

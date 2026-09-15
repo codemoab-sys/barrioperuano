@@ -66,13 +66,13 @@
                             </td>
                             <td>
                                 @if($product->ingredients->count() > 0)
-                                    <span class="text-muted small">S/ {{ number_format($product->recipe_cost, 2) }}</span>
+                                    <span class="text-muted small">{{ $currencySymbol }} {{ number_format($product->recipe_cost, 2) }}</span>
                                     <i class="bi bi-info-circle text-info ms-1" title="Costo calculado por receta"></i>
                                 @else
-                                    <span class="text-muted small">S/ {{ number_format($product->cost, 2) }}</span>
+                                    <span class="text-muted small">{{ $currencySymbol }} {{ number_format($product->cost, 2) }}</span>
                                 @endif
                             </td>
-                            <td class="fw-bold text-primary">S/ {{ number_format($product->price, 2) }}</td>
+                            <td class="fw-bold text-primary">{{ $currencySymbol }} {{ number_format($product->price, 2) }}</td>
                             <td>
                                 @if(is_null($product->stock))
                                     <span class="text-muted small">--</span>

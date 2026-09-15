@@ -43,7 +43,7 @@
             <div class="card border-0 shadow-sm bg-primary text-white h-100">
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Venta Total</small>
-                    <h3 class="fw-bold mb-0 mt-1">{{ number_format($totalSales, 2) }}</h3>
+                    <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($totalSales, 2) }}</h3>
                     <small>{{ $orders->count() }} operaciones</small>
                 </div>
             </div>
@@ -52,7 +52,7 @@
             <div class="card border-0 shadow-sm bg-success text-white h-100">
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Entrada Efectivo</small>
-                    <h3 class="fw-bold mb-0 mt-1">{{ number_format($totalCash, 2) }}</h3>
+                    <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($totalCash, 2) }}</h3>
                     <small>Dinero Físico Ingresado</small>
                 </div>
             </div>
@@ -61,7 +61,7 @@
             <div class="card border-0 shadow-sm bg-danger text-white h-100">
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Gastos / Salidas</small>
-                    <h3 class="fw-bold mb-0 mt-1">{{ number_format($totalExpenses, 2) }}</h3>
+                    <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($totalExpenses, 2) }}</h3>
                     <small>{{ $expenses->count() }} movimientos</small>
                 </div>
             </div>
@@ -70,10 +70,7 @@
             <div class="card border-0 shadow-sm h-100 {{ $balance >= 0 ? 'bg-dark text-white' : 'bg-warning text-dark' }}">
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Dinero en Caja (Balance)</small>
-                    <h3 class="fw-bold mb-0 mt-1">{{ number_format($balance, 2) }}</h3>
-                    <small>Efectivo - Gastos</small>
-                </div>
-            </div>
+                    <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($balance, 2) }}</h3>
         </div>
     </div>
 
@@ -122,7 +119,7 @@
                                             {{ $order->payment_method == 'cash' ? 'Efectivo' : 'Tarjeta' }}
                                         </span>
                                     </td>
-                                    <td class="text-end fw-bold">{{ number_format($order->total, 2) }}</td>
+                                    <td class="text-end fw-bold">{{ $currencySymbol }} {{ number_format($order->total, 2) }}</td>
                                     <td class="text-center">
                                         @if($order->isElectronic())
                                             <div class="btn-group btn-group-sm" role="group" aria-label="Acciones del comprobante electrónico">
@@ -166,7 +163,7 @@
                                     <td class="ps-4 text-muted">{{ $expense->created_at->format('d/m H:i') }}</td>
                                     <td class="fw-bold">{{ $expense->description }}</td>
                                     <td><small class="text-muted"><i class="bi bi-person"></i> {{ $expense->user->name }}</small></td>
-                                    <td class="text-end fw-bold text-danger">-{{ number_format($expense->amount, 2) }}</td>
+                                    <td class="text-end fw-bold text-danger">-{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</td>
                                     <td class="text-end pe-4">
                                         <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST" onsubmit="return confirm('¿Eliminar este gasto?')">
                                             @csrf @method('DELETE')

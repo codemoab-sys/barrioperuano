@@ -16,12 +16,14 @@ class SaleController extends Controller
         $startDate = $request->input('start_date', Carbon::today()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::today()->format('Y-m-d'));
 
+        $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
+
         // 1. Obtener Ventas
         $orders = Order::whereDate('created_at', '>=', $startDate)
                        ->whereDate('created_at', '<=', $endDate)
                        ->where('status', 'completed')
                        ->orderBy('created_at', 'desc')
-                       ->with('user')
+                       ->with(['user', 'table'])
                        ->get();
 
         // 2. Totales Ventas
@@ -42,8 +44,8 @@ class SaleController extends Controller
         $balance = $totalCash - $totalExpenses;
 
         return view('sales.index', compact(
-            'orders', 'expenses', 'startDate', 'endDate', 
-            'totalCash', 'totalCard', 'totalSales', 'totalExpenses', 'balance'
+            'orders', 'expenses', 'startDate', 'endDate',
+            'totalCash', 'totalCard', 'totalSales', 'totalExpenses', 'balance', 'currencySymbol'
         ));
     }
 

@@ -2,17 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\CashRegister;
+use App\Models\Setting;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CashRegisterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $registers = CashRegister::with('user')->orderBy('created_at', 'desc')->paginate(15);
-        return view('cash_registers.index', compact('registers'));
+        $request->validate([
+            'status' => ['nullable', 'in:all,open,closed'],
+            'user_id' => ['nullable', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = CashRegister::query()
+            ->with([
+                'user:id,name',
+                'orders' => fn ($query) => $query
+                    ->where('status', 'completed')
+                    ->where('payment_method', 'cash')
+                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
+                'expenses' => fn ($query) => $query
+                    ->select('id', 'cash_register_id', 'amount'),
+            ]);
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('opening_time', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('opening_time', '<=', $request->date_to);
+        }
+
+        $registers = $query
+            ->orderByDesc('opening_time')
+            ->paginate(15)
+            ->appends($request->query());
+
+        $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
+        $users = User::orderBy('name')->get(['id', 'name']);
+
+        return view('cash_registers.index', compact('registers', 'currencySymbol', 'users'));
     }
 
     public function create()
