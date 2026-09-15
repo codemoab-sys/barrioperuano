@@ -32,7 +32,9 @@
                 <div class="col-6 col-md-auto">
                     <button class="btn btn-danger fw-bold d-flex align-items-center justify-content-center w-100" data-bs-toggle="modal" data-bs-target="#expenseModal">
                         <i class="bi bi-dash-circle me-2"></i> Salida
-            </button>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
