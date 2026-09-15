@@ -185,7 +185,7 @@
 </div>
 
 <div class="modal fade" id="expenseModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered expense-modal-dialog">
         <form action="{{ route('expenses.store') }}" method="POST" class="modal-content">
             @csrf
             <div class="modal-header bg-danger text-white">
@@ -216,4 +216,57 @@
         </form>
     </div>
 </div>
+
+<style>
+    /* Fallback local: mantiene el modal funcional si el CDN de Bootstrap no carga. */
+    #expenseModal .expense-modal-dialog {
+        position: relative;
+        width: auto;
+        max-width: 500px;
+        margin: 1.75rem auto;
+        pointer-events: none;
+    }
+
+    #expenseModal .modal-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        pointer-events: auto;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid rgba(0, 0, 0, .2);
+        border-radius: .5rem;
+        outline: 0;
+        overflow: hidden;
+    }
+
+    #expenseModal .modal-header,
+    #expenseModal .modal-body,
+    #expenseModal .modal-footer {
+        position: relative;
+        display: block;
+        width: 100%;
+    }
+
+    #expenseModal .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+    }
+
+    #expenseModal .modal-body { padding: 1rem; }
+    #expenseModal .modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .5rem;
+        padding: .75rem 1rem;
+    }
+
+    @media (max-width: 575.98px) {
+        #expenseModal .expense-modal-dialog { max-width: calc(100% - 1rem); margin: .5rem auto; }
+    }
+</style>
 @endsection
