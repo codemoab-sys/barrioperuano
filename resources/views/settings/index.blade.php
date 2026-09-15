@@ -18,6 +18,22 @@
                     <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
+                        @if($errors->any())
+                            <div class="alert alert-danger border-0 shadow-sm mb-4" role="alert">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                                    <div>
+                                        <div class="fw-bold mb-1">No se pudo guardar la configuración</div>
+                                        <ul class="mb-0 ps-3">
+                                            @foreach($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <h5 class="fw-bold text-primary mb-3">Datos de la Empresa</h5>
                         <div class="row g-3 mb-4">
                             <div class="col-12 col-md-6">
@@ -64,7 +80,10 @@
                         <div class="row align-items-center mb-4">
                             <div class="col-md-8">
                                 <label class="form-label">Subir Logo (Ticket y Sistema)</label>
-                                <input type="file" name="company_logo" class="form-control" accept="image/*">
+                                <input type="file" name="company_logo" class="form-control @error('company_logo') is-invalid @enderror" accept="image/*">
+                                @error('company_logo')
+                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-4 text-center">
                                 @if(isset($settings['company_logo']) && $settings['company_logo'])
@@ -369,9 +388,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Serie Factura <span class="text-danger">*</span></label>
-                                <input type="text" name="serie_factura" class="form-control"
+                                <input type="text" name="serie_factura" class="form-control @error('serie_factura') is-invalid @enderror"
                                        value="{{ $seriesMap['factura']->serie ?? 'FPP1' }}"
                                        maxlength="4" placeholder="FPP1">
+                                @error('serie_factura')
+                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Inicio</label>
@@ -379,9 +401,12 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Serie Boleta <span class="text-danger">*</span></label>
-                                <input type="text" name="serie_boleta" class="form-control"
+                                <input type="text" name="serie_boleta" class="form-control @error('serie_boleta') is-invalid @enderror"
                                        value="{{ $seriesMap['boleta']->serie ?? 'BPP1' }}"
                                        maxlength="4" placeholder="BPP1">
+                                @error('serie_boleta')
+                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Inicio</label>
@@ -389,9 +414,12 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Serie NC</label>
-                                <input type="text" name="serie_nc_factura" class="form-control"
+                                <input type="text" name="serie_nc_factura" class="form-control @error('serie_nc_factura') is-invalid @enderror"
                                        value="{{ $seriesMap['nota_credito_factura']->serie ?? 'FPP1' }}"
                                        maxlength="4" placeholder="FPP1">
+                                @error('serie_nc_factura')
+                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Inicio</label>
@@ -402,9 +430,12 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Serie NC Boleta</label>
-                                <input type="text" name="serie_nc_boleta" class="form-control"
+                                <input type="text" name="serie_nc_boleta" class="form-control @error('serie_nc_boleta') is-invalid @enderror"
                                        value="{{ $seriesMap['nota_credito_boleta']->serie ?? 'BPP1' }}"
                                        maxlength="4" placeholder="BPP1">
+                                @error('serie_nc_boleta')
+                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold">Inicio</label>
@@ -452,15 +483,6 @@
                 icon: 'error',
                 title: 'No se pudo guardar',
                 text: @json(session('error')),
-                confirmButtonColor: '#dc3545'
-            });
-        @endif
-
-        @if($errors->any())
-            Swal.fire({
-                icon: 'error',
-                title: 'No se guardó la configuración',
-                text: @json(implode("\n", $errors->all())),
                 confirmButtonColor: '#dc3545'
             });
         @endif

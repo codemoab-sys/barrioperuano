@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DocumentSeries;
 use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
@@ -66,6 +67,17 @@ class SettingController extends Controller
             'serie_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
             'serie_nc_factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
             'serie_nc_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
+        ], [
+            'company_logo.image' => 'El logo debe ser una imagen válida (.jpg, .png, .webp).',
+            'company_logo.max' => 'El logo no puede superar 2 MB.',
+            'sunat_ruc.digits' => 'El RUC debe tener 11 dígitos.',
+            'sunat_ubigeo.digits' => 'El ubigeo debe tener 6 dígitos.',
+            'serie_factura.regex' => 'La serie de factura debe tener el formato F001.',
+            'serie_boleta.regex' => 'La serie de boleta debe tener el formato B001.',
+            'serie_nc_factura.regex' => 'La serie de nota de crédito de factura debe tener el formato F001.',
+            'serie_nc_boleta.regex' => 'La serie de nota de crédito de boleta debe tener el formato B001.',
+            'nubefact_ruta.url' => 'La ruta de NubeFact debe ser una URL válida.',
+            'sunat_environment.in' => 'El ambiente debe ser beta o produccion.',
         ]);
 
         $currentEnvironment = Setting::where('key', 'sunat_environment')->value('value') ?? 'beta';
@@ -111,60 +123,87 @@ class SettingController extends Controller
             }
         }
 
-        $allowedSettings = [
-            'company_name', 'company_phone', 'company_address', 'welcome_message',
-            'currency_symbol', 'ticket_footer', 'color_primary', 'color_primary_hover',
-            'color_primary_soft', 'color_sidebar_bg', 'color_sidebar_active', 'brand_text_color',
-            'sunat_ruc', 'sunat_razon_social', 'sunat_nombre_comercial',
-            'sunat_direccion_fiscal', 'sunat_ubigeo', 'sunat_departamento',
-            'sunat_provincia', 'sunat_distrito', 'sunat_urbanizacion',
-            'sunat_environment', 'sunat_igv_rate', 'nubefact_ruta',
-        ];
-        $data = collect($validated)->only($allowedSettings)->all();
+        try {
+            DB::transaction(function () use ($request, $validated) {
+                $allowedSettings = [
+                    'company_name', 'company_phone', 'company_address', 'welcome_message',
+                    'currency_symbol', 'ticket_footer', 'color_primary', 'color_primary_hover',
+                    'color_primary_soft', 'color_sidebar_bg', 'color_sidebar_active', 'brand_text_color',
+                    'sunat_ruc', 'sunat_razon_social', 'sunat_nombre_comercial',
+                    'sunat_direccion_fiscal', 'sunat_ubigeo', 'sunat_departamento',
+                    'sunat_provincia', 'sunat_distrito', 'sunat_urbanizacion',
+                    'sunat_environment', 'sunat_igv_rate', 'nubefact_ruta',
+                ];
 
-        foreach ($data as $key => $value) {
-            if ($value === null) continue;
-            Setting::updateOrCreate(['key' => $key], ['value' => $value]);
+                $data = collect($validated)->only($allowedSettings)->all();
+
+                foreach ($data as $key => $value) {
+                    if ($value === null) continue;
+                    Setting::updateOrCreate(['key' => $key], ['value' => $value]);
+                }
+
+                if ($request->filled('nubefact_token')) {
+                    Setting::updateOrCreate(
+                        ['key' => 'nubefact_token'],
+                        ['value' => 'enc:' . Crypt::encryptString(trim($request->input('nubefact_token')))]
+                    );
+                }
+
+                if ($request->filled('smtp_password')) {
+                    Setting::updateOrCreate(
+                        ['key' => 'smtp_password'],
+                        ['value' => 'enc:' . Crypt::encryptString(trim($request->input('smtp_password')))]
+                    );
+                }
+
+                if ($request->hasFile('company_logo')) {
+                    $file = $request->file('company_logo');
+                    if (!$file->isValid()) {
+                        throw ValidationException::withMessages([
+                            'company_logo' => 'No se pudo leer el archivo del logo. Verifica que el archivo sea válido.',
+                        ]);
+                    }
+
+                    $oldLogo = Setting::where('key', 'company_logo')->value('value');
+                    if ($oldLogo) {
+                        $this->deleteLogoFiles($oldLogo);
+                    }
+
+                    $path = $file->store('settings', 'public');
+                    if ($path === false || $path === null || !is_string($path)) {
+                        throw ValidationException::withMessages([
+                            'company_logo' => 'No se pudo guardar el logo. Revisa el archivo o el espacio disponible.',
+                        ]);
+                    }
+
+                    $this->mirrorLogoToPublic($path);
+                    Setting::updateOrCreate(['key' => 'company_logo'], ['value' => $path]);
+                }
+
+                $series = [
+                    'factura' => $request->input('serie_factura'),
+                    'boleta' => $request->input('serie_boleta'),
+                    'nota_credito_factura' => $request->input('serie_nc_factura'),
+                    'nota_credito_boleta' => $request->input('serie_nc_boleta'),
+                ];
+
+                foreach ($series as $documentType => $serie) {
+                    if ($serie !== null && trim((string) $serie) !== '') {
+                        $this->saveSeries($documentType, $serie, 1);
+                    }
+                }
+            });
+
+            return redirect()->back()->with('success', 'Configuración actualizada correctamente.');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+
+            throw ValidationException::withMessages([
+                'general' => 'No se pudo guardar la configuración. Revisa el logo y las series, y vuelve a intentarlo.',
+            ]);
         }
-
-        if ($request->filled('nubefact_token')) {
-            Setting::updateOrCreate(
-                ['key' => 'nubefact_token'],
-                ['value' => 'enc:' . Crypt::encryptString(trim($request->input('nubefact_token')))]
-            );
-        }
-
-        if ($request->filled('smtp_password')) {
-            Setting::updateOrCreate(
-                ['key' => 'smtp_password'],
-                ['value' => 'enc:' . Crypt::encryptString(trim($request->input('smtp_password')))]
-            );
-        }
-
-        if ($request->hasFile('company_logo')) {
-            $request->validate(['company_logo' => 'image|max:2048']);
-            $oldLogo = Setting::where('key', 'company_logo')->value('value');
-            if ($oldLogo) {
-                $this->deleteLogoFiles($oldLogo);
-            }
-            $path = $request->file('company_logo')->store('settings', 'public');
-            $this->mirrorLogoToPublic($path);
-            Setting::updateOrCreate(['key' => 'company_logo'], ['value' => $path]);
-        }
-
-        $series = [
-            'factura' => $request->input('serie_factura'),
-            'boleta' => $request->input('serie_boleta'),
-            'nota_credito_factura' => $request->input('serie_nc_factura'),
-            'nota_credito_boleta' => $request->input('serie_nc_boleta'),
-        ];
-        foreach ($series as $documentType => $serie) {
-            if ($serie !== null && trim($serie) !== '') {
-                $this->saveSeries($documentType, $serie, 1);
-            }
-        }
-
-        return redirect()->back()->with('success', 'Configuración actualizada correctamente.');
     }
 
     /**
