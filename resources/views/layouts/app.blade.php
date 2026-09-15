@@ -711,12 +711,18 @@
             }
         @endphp
         @if($logo && !$logoIsRect)
-            <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="width:40px;height:40px;object-fit:contain;" alt="logo">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+                <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="width:40px;height:40px;object-fit:contain;" alt="logo">
+            </a>
             <div class="brand-name">{{ \App\Models\Setting::where('key', 'company_name')->value('value') ?? 'Mi Restaurante' }}</div>
         @elseif($logoIsRect)
-            <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="max-width:100%;width:100%;max-height:60px;object-fit:contain;" alt="logo">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+                <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="max-width:100%;width:100%;max-height:60px;object-fit:contain;" alt="logo">
+            </a>
         @else
-            <div class="logo-box"><i class="bi bi-shop"></i></div>
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+                <div class="logo-box"><i class="bi bi-shop"></i></div>
+            </a>
             <div class="brand-name">{{ \App\Models\Setting::where('key', 'company_name')->value('value') ?? 'Mi Restaurante' }}</div>
         @endif
         <button class="btn btn-sm text-white-50 d-lg-none ms-auto p-0" onclick="closeMenu()"><i class="bi bi-x-lg fs-5"></i></button>
