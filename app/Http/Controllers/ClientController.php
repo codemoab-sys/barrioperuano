@@ -56,9 +56,13 @@ class ClientController extends Controller
         curl_close($curl);
 
         if ($httpCode !== 200 || !$response) {
+            $friendlyMessage = $isRuc
+                ? 'No se pudo consultar el RUC en este momento. Verifica el número o regístralo manualmente.'
+                : 'No se pudo consultar el DNI en este momento. Verifica el número o regístralo manualmente.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontraron datos. Consúltelo en SUNAT y regístrelo manualmente.',
+                'message' => $friendlyMessage,
                 'link'    => 'https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp'
             ], $httpCode ?: 500);
         }

@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CashRegister;
+use App\Models\Expense;
+use App\Models\LoginAudit;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -65,8 +69,15 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'No puedes eliminar tu propia cuenta mientras estás conectado.');
         }
 
-        // Opcional: Verificar si tiene ventas asociadas antes de borrar,
-        // pero por simplicidad permitimos borrar (el historial queda con ID huerfano o se maneja en BD)
+        $hasSensitiveHistory = Order::where('user_id', $user->id)->exists()
+            || Expense::where('user_id', $user->id)->exists()
+            || CashRegister::where('user_id', $user->id)->exists()
+            || LoginAudit::where('user_id', $user->id)->exists();
+
+        if ($hasSensitiveHistory) {
+            return redirect()->back()->with('error', 'No se puede eliminar al usuario porque tiene historial operativo asociado: ventas, gastos, caja o auditoría de acceso.');
+        }
+
         $user->delete();
 
         return redirect()->back()->with('success', 'Usuario eliminado del sistema.');
