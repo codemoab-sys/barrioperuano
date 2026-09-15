@@ -832,9 +832,7 @@
                 <i class="bi bi-display"></i> Ver Sitio Web <i class="bi bi-box-arrow-up-right ms-auto" style="font-size: 0.75rem;"></i>
             </a>
             --}}
-            <a href="{{ route('system.index') }}" class="nav-link {{ request()->routeIs('system.*') ? 'active' : '' }} text-warning">
-                <i class="bi bi-tools"></i> Mantenimiento
-            </a>
+            {{-- Mantenimiento oculto en producción; se conserva la ruta para administración controlada. --}}
         @endif
     </div>
 </div>

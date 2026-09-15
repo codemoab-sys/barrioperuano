@@ -20,12 +20,17 @@ class SystemController extends Controller
             'logs' => InventoryLog::count(),
         ];
         $productionPrepared = Setting::where('key', 'production_prepared')->value('value') === '1';
+        $isProduction = app()->environment('production');
 
-        return view('system.index', compact('counts', 'productionPrepared'));
+        return view('system.index', compact('counts', 'productionPrepared', 'isProduction'));
     }
 
     public function resetData(Request $request)
     {
+        if (app()->environment('production')) {
+            return back()->with('error', 'El reinicio maestro está deshabilitado en producción.');
+        }
+
         if (Setting::where('key', 'production_prepared')->value('value') === '1') {
             return back()->with('error', 'El sistema ya fue preparado para producción. Esta acción solo puede ejecutarse una vez.');
         }

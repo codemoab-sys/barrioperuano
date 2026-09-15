@@ -72,7 +72,12 @@
             <div class="card-body px-4 pb-4">
                 <p class="small text-muted mb-3">Limpia el sistema de datos de prueba. Se borrarán órdenes, gastos, cajas y reservas, manteniendo productos y configuración.</p>
 
-                @if($productionPrepared)
+                @if($isProduction)
+                    <div class="alert alert-danger py-2 small">
+                        <i class="bi bi-shield-lock-fill me-1"></i>
+                        El reinicio maestro está deshabilitado en producción.
+                    </div>
+                @elseif($productionPrepared)
                     <div class="alert alert-success py-2 small">
                         <i class="bi bi-check-circle-fill me-1"></i>
                         El sistema ya está preparado para producción.
@@ -92,7 +97,7 @@
                     <div class="mb-3">
                         <input type="password" name="password" class="form-control form-control-sm border-danger border-opacity-25" placeholder="Confirma tu contraseña" required>
                     </div>
-                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3" {{ $productionPrepared ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3" {{ ($productionPrepared || $isProduction) ? 'disabled' : '' }}>
                         <i class="bi bi-exclamation-octagon me-2"></i>Borrar Datos de Prueba
                     </button>
                 </form>
