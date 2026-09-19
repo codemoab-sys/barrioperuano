@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -102,7 +103,7 @@ class DashboardController extends Controller
         }
 
         // ─── Monitor de Mesas ─────────────────────────────────────────────────
-        $areas = Area::with(['tables' => function ($q) {
+        $areas = Auth::user()->accessibleAreas()->with(['tables' => function ($q) {
             $q->with(['orders' => function ($o) {
                 $o->where('status', 'pending');
             }]);

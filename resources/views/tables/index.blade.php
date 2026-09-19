@@ -60,6 +60,16 @@
                                     </button>
                                 </form>
                             </li>
+                            @if($area->tables->isEmpty())
+                                <li>
+                                    <form action="{{ route('tables.destroyArea', $area->id) }}" method="POST" class="delete-area-form">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash me-2"></i>Eliminar zona
+                                        </button>
+                                    </form>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -78,6 +88,9 @@
                             <i class="bi bi-display fs-3 {{ $table->status == 'available' ? 'text-success' : 'text-danger' }} mb-1"></i>
                             <span class="fw-bold small text-center text-truncate w-100 px-1">{{ $table->name }}</span>
 
+                            <button type="button" class="btn btn-sm p-0 text-primary position-absolute top-0 start-0 m-1" data-bs-toggle="modal" data-bs-target="#editTableModal{{ $table->id }}" title="Editar mesa" aria-label="Editar mesa {{ $table->name }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
                             <form action="{{ route('tables.destroyTable', $table->id) }}" method="POST" class="position-absolute top-0 end-0 m-1 delete-table-form">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm p-0 text-danger opacity-25 hover-opacity-100">
@@ -87,6 +100,29 @@
                         </div>
                     @endforeach
                 </div>
+
+                @foreach($area->tables as $table)
+                    <div class="modal fade" id="editTableModal{{ $table->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <form action="{{ route('tables.updateTable', $table->id) }}" method="POST" class="modal-content">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title fw-bold">Editar Mesa</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label for="table-name-{{ $table->id }}" class="form-label">Nombre de la mesa</label>
+                                    <input id="table-name-{{ $table->id }}" type="text" name="name" class="form-control" value="{{ $table->name }}" maxlength="100" required>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
             <div class="modal fade" id="editAreaModal{{ $area->id }}" tabindex="-1" aria-hidden="true">
@@ -154,18 +190,19 @@
         document.addEventListener('pointerup', dragEnd);
         document.addEventListener('pointermove', drag);
 
-        document.querySelectorAll('.deactivate-area-form, .activate-area-form, .delete-table-form').forEach(form => {
+        document.querySelectorAll('.deactivate-area-form, .activate-area-form, .delete-area-form, .delete-table-form').forEach(form => {
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const isArea = form.classList.contains('deactivate-area-form') || form.classList.contains('activate-area-form');
                 const isActivation = form.classList.contains('activate-area-form');
+                const isAreaDeletion = form.classList.contains('delete-area-form');
 
                 Swal.fire({
                     icon: isActivation ? 'question' : 'warning',
-                    title: isActivation ? '¿Reactivar esta zona?' : (isArea ? '¿Desactivar esta zona?' : '¿Borrar esta mesa?'),
-                    text: isActivation ? 'La zona y sus mesas volverán a estar disponibles.' : (isArea ? 'La zona y sus mesas se conservarán, pero dejarán de aparecer en el POS.' : 'Esta acción no se puede deshacer.'),
+                    title: isActivation ? '¿Reactivar esta zona?' : (isAreaDeletion ? '¿Eliminar esta zona?' : (isArea ? '¿Desactivar esta zona?' : '¿Borrar esta mesa?')),
+                    text: isActivation ? 'La zona y sus mesas volverán a estar disponibles.' : (isAreaDeletion ? 'Esta acción no se puede deshacer.' : (isArea ? 'La zona y sus mesas se conservarán, pero dejarán de aparecer en el POS.' : 'Esta acción no se puede deshacer.')),
                     showCancelButton: true,
-                    confirmButtonText: isActivation ? 'Sí, reactivar' : (isArea ? 'Sí, desactivar' : 'Sí, eliminar'),
+                    confirmButtonText: isActivation ? 'Sí, reactivar' : (isAreaDeletion ? 'Sí, eliminar' : (isArea ? 'Sí, desactivar' : 'Sí, eliminar')),
                     cancelButtonText: 'Cancelar',
                     confirmButtonColor: isActivation ? '#198754' : '#dc3545',
                     cancelButtonColor: '#6c757d'
@@ -194,7 +231,7 @@
         @endif
 
         function dragStart(e) {
-            if (e.target.closest('form')) return; // No arrastrar si clickea en borrar
+            if (e.target.closest('form, button')) return; // No arrastrar al usar controles
             activeDrag = e.currentTarget;
 
             // Obtener posición actual real

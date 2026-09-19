@@ -111,6 +111,21 @@
                         </select>
                     </div>
                 </div>
+                <div class="area-access-box border rounded p-3 bg-light">
+                    <label class="form-label fw-bold mb-2">Acceso a zonas</label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="all_areas" value="1" id="create_all_areas" checked onchange="toggleAreaList('create')">
+                        <label class="form-check-label" for="create_all_areas">Todas las zonas</label>
+                    </div>
+                    <div id="create_area_list" class="area-list d-none">
+                        @foreach($areas as $area)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="area_ids[]" value="{{ $area->id }}" id="create_area_{{ $area->id }}">
+                                <label class="form-check-label" for="create_area_{{ $area->id }}">{{ $area->name }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -153,6 +168,21 @@
                         </select>
                     </div>
                 </div>
+                <div class="area-access-box border rounded p-3 bg-light">
+                    <label class="form-label fw-bold mb-2">Acceso a zonas</label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="all_areas" value="1" id="edit_all_areas" onchange="toggleAreaList('edit')">
+                        <label class="form-check-label" for="edit_all_areas">Todas las zonas</label>
+                    </div>
+                    <div id="edit_area_list" class="area-list">
+                        @foreach($areas as $area)
+                            <div class="form-check">
+                                <input class="form-check-input edit-area-checkbox" type="checkbox" name="area_ids[]" value="{{ $area->id }}" id="edit_area_{{ $area->id }}">
+                                <label class="form-check-label" for="edit_area_{{ $area->id }}">{{ $area->name }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="submit" class="btn btn-warning fw-bold">Actualizar Datos</button>
@@ -170,15 +200,31 @@
         font-weight: bold; font-size: 18px;
         text-transform: uppercase;
     }
+
+    .area-access-box { border-color: #dee2e6 !important; }
+    .area-list { max-height: 150px; overflow-y: auto; }
 </style>
 
 <script>
+    function toggleAreaList(prefix) {
+        const allAreas = document.getElementById(prefix + '_all_areas');
+        const areaList = document.getElementById(prefix + '_area_list');
+        areaList.classList.toggle('d-none', allAreas.checked);
+    }
+
     function editUser(user) {
         document.getElementById('edit_name').value = user.name;
         document.getElementById('edit_email').value = user.email;
         document.getElementById('edit_role').value = user.role;
+        document.getElementById('edit_all_areas').checked = Boolean(user.all_areas);
+        document.querySelectorAll('.edit-area-checkbox').forEach(input => {
+            input.checked = (user.areas || []).some(area => Number(area.id) === Number(input.value));
+        });
+        toggleAreaList('edit');
         document.getElementById('editUserForm').action = "{{ url('/users') }}/" + user.id;
         new bootstrap.Modal(document.getElementById('editUserModal')).show();
     }
+
+    toggleAreaList('create');
 </script>
 @endsection

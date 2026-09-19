@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Table;
 use App\Models\Area;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TableController extends Controller
 {
     public function index()
     {
-        $areas = Area::with('tables')->orderByDesc('is_active')->orderBy('name')->get();
+        $areas = Auth::user()->accessibleAreas()->with('tables')->orderByDesc('is_active')->orderBy('name')->get();
         return view('tables.index', compact('areas'));
     }
 
@@ -53,6 +54,16 @@ class TableController extends Controller
         return redirect()->back()->with('success', 'Zona reactivada.');
     }
 
+    public function destroyArea(Area $area)
+    {
+        if ($area->tables()->exists()) {
+            return redirect()->back()->with('error', 'No puedes eliminar una zona que tiene mesas.');
+        }
+
+        $area->delete();
+        return redirect()->back()->with('success', 'Zona eliminada.');
+    }
+
     public function storeTable(Request $request)
     {
         $request->validate([
@@ -69,6 +80,17 @@ class TableController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Mesa creada.');
+    }
+
+    public function updateTable(Request $request, Table $table)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+        ]);
+
+        $table->update(['name' => trim($request->name)]);
+
+        return redirect()->back()->with('success', 'Mesa actualizada.');
     }
 
     public function destroyTable(Table $table)

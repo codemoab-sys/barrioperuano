@@ -32,7 +32,7 @@ class PosController extends Controller
 
     public function index()
     {
-        $areas = Area::with(['tables' => function($q) {
+        $areas = Auth::user()->accessibleAreas()->with(['tables' => function($q) {
             $q->with(['orders' => function($q) {
                 $q->where('status', 'pending');
             }, 'reservations' => function($q) {
@@ -57,6 +57,8 @@ class PosController extends Controller
 
     public function order(Table $table)
     {
+        $this->authorizeTableAccess($table);
+
         // Stock reservado en órdenes pendientes de MESAS (no delivery)
         $reservedMap = DB::table('bape_order_details')
             ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
@@ -84,7 +86,11 @@ class PosController extends Controller
 
         $order = Order::where('table_id', $table->id)->where('status', 'pending')->with('details.product')->first();
         $occupiedTableIds = Order::where('status', 'pending')->pluck('table_id');
-        $freeTables = Table::whereNotIn('id', $occupiedTableIds)->where('id', '!=', $table->id)->with('area')->get();
+        $freeTables = Table::whereNotIn('id', $occupiedTableIds)
+            ->where('id', '!=', $table->id)
+            ->whereHas('area', fn ($query) => $query->whereIn('id', Auth::user()->accessibleAreas()->select('id')))
+            ->with('area')
+            ->get();
         $clients = Client::select('id', 'name', 'document_number')->orderBy('name')->get();
         $currency = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
         $clientsData = $clients->map(fn ($c) => [
@@ -525,6 +531,7 @@ class PosController extends Controller
     {
         $user = Auth::user();
         abort_unless($user && in_array($user->role, ['admin', 'cashier', 'cashier_waiter', 'waiter'], true), 403);
+        $this->authorizeTableAccess($table);
 
         $order = Order::where('table_id', $table->id)
             ->where('status', 'pending')
@@ -533,6 +540,11 @@ class PosController extends Controller
         if ($order && $user->role === 'waiter') {
             abort_unless((int) $order->user_id === (int) $user->id, 403);
         }
+    }
+
+    private function authorizeTableAccess(Table $table): void
+    {
+        abort_unless(Auth::user()?->canAccessArea((int) $table->area_id), 403);
     }
 
     private function authorizePendingOrder(Order $order): void

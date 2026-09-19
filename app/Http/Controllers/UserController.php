@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashRegister;
+use App\Models\Area;
 use App\Models\Expense;
 use App\Models\LoginAudit;
 use App\Models\Order;
@@ -16,8 +17,9 @@ class UserController extends Controller
     public function index()
     {
         // Ordenamos: Primero Admins, luego Cajeros, luego Mozos
-        $users = User::orderByRaw("FIELD(role, 'admin', 'cashier_waiter', 'cashier', 'waiter', 'kitchen')")->get();
-        return view('users.index', compact('users'));
+        $users = User::with('areas')->orderByRaw("FIELD(role, 'admin', 'cashier_waiter', 'cashier', 'waiter', 'kitchen')")->get();
+        $areas = Area::where('is_active', true)->orderBy('name')->get();
+        return view('users.index', compact('users', 'areas'));
     }
 
     public function store(Request $request)
@@ -26,15 +28,26 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:bape_users,email',
             'password' => 'required|min:6',
-            'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen'
+            'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen',
+            'all_areas' => 'nullable|boolean',
+            'area_ids' => 'nullable|array',
+            'area_ids.*' => 'integer|exists:bape_areas,id',
         ]);
 
-        User::create([
+        $allAreas = $request->boolean('all_areas');
+        if (!$allAreas && !$request->filled('area_ids')) {
+            return back()->withErrors(['area_ids' => 'Selecciona al menos una zona o marca acceso a todas.'])->withInput();
+        }
+
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role
+            'role' => $request->role,
+            'all_areas' => $allAreas,
         ]);
+
+        $user->areas()->sync($allAreas ? [] : $request->input('area_ids', []));
 
         return redirect()->back()->with('success', 'Usuario registrado correctamente.');
     }
@@ -44,13 +57,22 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:bape_users,email,'.$user->id,
-            'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen'
+            'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen',
+            'all_areas' => 'nullable|boolean',
+            'area_ids' => 'nullable|array',
+            'area_ids.*' => 'integer|exists:bape_areas,id',
         ]);
+
+        $allAreas = $request->boolean('all_areas');
+        if (!$allAreas && !$request->filled('area_ids')) {
+            return back()->withErrors(['area_ids' => 'Selecciona al menos una zona o marca acceso a todas.'])->withInput();
+        }
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role
+            'role' => $request->role,
+            'all_areas' => $allAreas,
         ];
 
         // Solo actualizamos contraseña si el campo no está vacío
@@ -59,6 +81,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        $user->areas()->sync($allAreas ? [] : $request->input('area_ids', []));
 
         return redirect()->back()->with('success', 'Datos actualizados.');
     }

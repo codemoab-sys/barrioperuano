@@ -404,7 +404,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/tables/area/{area}', [TableController::class, 'updateArea'])->name('tables.updateArea');
         Route::patch('/tables/area/{area}/deactivate', [TableController::class, 'deactivateArea'])->name('tables.deactivateArea');
         Route::patch('/tables/area/{area}/activate', [TableController::class, 'activateArea'])->name('tables.activateArea');
+        Route::delete('/tables/area/{area}', [TableController::class, 'destroyArea'])->name('tables.destroyArea');
         Route::post('/tables/table', [TableController::class, 'storeTable'])->name('tables.storeTable');
+        Route::put('/tables/table/{table}', [TableController::class, 'updateTable'])->name('tables.updateTable');
         Route::delete('/tables/table/{table}', [TableController::class, 'destroyTable'])->name('tables.destroyTable');
         Route::post('/tables/update-positions', [TableController::class, 'updatePositions'])->name('tables.updatePositions');
     });

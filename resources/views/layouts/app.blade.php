@@ -326,6 +326,21 @@
             border-bottom: 1px solid rgba(255,255,255,0.07);
         }
 
+        .sidebar-brand:has(.sidebar-brand-logo-link) {
+            justify-content: center;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+        .sidebar-brand-logo-link {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .sidebar-brand-logo-link img {
+            max-width: 160px !important;
+            max-height: 70px !important;
+        }
+
         .logo-box {
             width: 40px; height: 40px;
             background: var(--primary);
@@ -417,7 +432,7 @@
             margin: 18px 8px 8px;
         }
 
-        .nav-link {
+        .sidebar .nav-link {
             color: rgba(255,255,255,0.70);
             padding: 11px 14px;
             border-radius: var(--radius-sm);
@@ -431,25 +446,25 @@
             text-decoration: none;
         }
 
-        .nav-link i {
+        .sidebar .nav-link i {
             font-size: 1.15rem;
             opacity: 0.75;
             transition: opacity 0.2s;
             flex-shrink: 0;
         }
 
-        .nav-link:hover {
+        .sidebar .nav-link:hover {
             background: var(--sidebar-hover);
             color: white;
         }
 
-        .nav-link.active {
+        .sidebar .nav-link.active {
             background: var(--primary);
             color: white;
             box-shadow: 0 6px 18px rgba(255,140,0,0.35);
         }
 
-        .nav-link.active i { opacity: 1; }
+        .sidebar .nav-link.active i { opacity: 1; }
 
         /* =============================================
            MAIN CONTENT
@@ -716,7 +731,7 @@
             </a>
             <div class="brand-name">{{ \App\Models\Setting::where('key', 'company_name')->value('value') ?? 'Mi Restaurante' }}</div>
         @elseif($logoIsRect)
-            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link sidebar-brand-logo-link" aria-label="Ir al dashboard">
                 <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="max-width:100%;width:100%;max-height:60px;object-fit:contain;" alt="logo">
             </a>
         @else
