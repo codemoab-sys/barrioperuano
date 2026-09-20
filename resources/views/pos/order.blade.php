@@ -343,8 +343,9 @@ foreach($categories as $cat) {
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-8"><input type="text" name="client_document" id="clientDoc" class="form-control bg-light" placeholder="RUC/DNI" readonly></div>
-                    <div class="col-4"><select name="document_type" class="form-select fw-bold" required><option value="" selected disabled>Selecciona documento</option><option value="Ticket">Ticket</option><option value="Boleta">Boleta</option><option value="Factura">Factura</option></select></div>
+                    <div class="col-4"><select name="document_type" id="documentType" class="form-select fw-bold" required onchange="showSelectedSeries(this)"><option value="" selected disabled>Selecciona documento</option><option value="Ticket">Ticket</option><option value="Boleta" data-serie="{{ $availableSeries['boleta'] ?? '' }}">Boleta</option><option value="Factura" data-serie="{{ $availableSeries['factura'] ?? '' }}">Factura</option></select></div>
                 </div>
+                <div id="selectedSeries" class="form-text mb-3">Selecciona el documento para ver la serie.</div>
                 <div class="mb-3 text-center">
                     <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="payment_method" id="payCash" value="cash" checked onclick="toggleCashInput(true)">
@@ -637,6 +638,16 @@ foreach($categories as $cat) {
     };
 
     // Cobro
+    window.showSelectedSeries = function(select) {
+        var label = document.getElementById('selectedSeries');
+        if (!label || !select.value) return;
+        if (select.value === 'Ticket') {
+            label.innerHTML = '<span class="text-muted">Este documento no utiliza serie.</span>';
+            return;
+        }
+        var series = select.options[select.selectedIndex].dataset.serie || 'Sin serie activa';
+        label.innerHTML = '<span class="text-muted">Serie asignada:</span> <span class="badge bg-light text-dark border fw-semibold">' + series + '</span>';
+    }
     window.toggleCashInput = function(show) { document.getElementById('cashInputGroup').style.display = show ? 'block' : 'none'; }
     window.calculateChange = function() {
         var total = parseFloat(document.getElementById('hiddenTotal').value) || 0;

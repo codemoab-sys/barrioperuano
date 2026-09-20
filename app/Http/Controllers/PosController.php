@@ -98,6 +98,7 @@ class PosController extends Controller
             'name'     => $c->name,
             'document' => (string) ($c->document_number ?? ''),
         ])->values();
+        $availableSeries = $this->availableSeriesForArea($table->area_id);
 
         $lastSales = Order::where('status', 'completed')
             ->with('client')
@@ -105,7 +106,7 @@ class PosController extends Controller
             ->take(5)
             ->get();
 
-        return view('pos.order', compact('table', 'categories', 'order', 'freeTables', 'clients', 'currency', 'lastSales', 'clientsData', 'reservedMap'));
+        return view('pos.order', compact('table', 'categories', 'order', 'freeTables', 'clients', 'currency', 'lastSales', 'clientsData', 'reservedMap', 'availableSeries'));
     }
 
     // --- AGREGAR POR CLIC (Normal) ---
@@ -390,8 +391,24 @@ class PosController extends Controller
             'name' => $client->name,
             'document' => (string) ($client->document_number ?? ''),
         ])->values();
+        $availableSeries = $this->availableSeriesForArea($order->table()->value('area_id'));
 
-        return view('pos.partials.checkout_modal', compact('order', 'clientsData'));
+        return view('pos.partials.checkout_modal', compact('order', 'clientsData', 'availableSeries'));
+    }
+
+    private function availableSeriesForArea(?int $areaId): array
+    {
+        return collect(['boleta', 'factura'])->mapWithKeys(function (string $documentType) use ($areaId) {
+            $serie = DocumentSeries::where('document_type', $documentType)
+                ->where('is_active', true)
+                ->where(function ($query) use ($areaId) {
+                    $query->where('area_id', $areaId)->orWhereNull('area_id');
+                })
+                ->orderByRaw('CASE WHEN area_id = ? THEN 0 ELSE 1 END', [$areaId])
+                ->value('serie');
+
+            return [$documentType => $serie];
+        })->all();
     }
     public function processSplit(Request $request, Order $order) { $this->authorizePendingOrder($order); return redirect()->back(); }
     public function precheck(Order $order) { $this->authorizeOrder($order); $settings = Setting::pluck('value', 'key')->toArray(); return view('sales.ticket', compact('order', 'settings')); }
