@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\PeruvianDocumentLookupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class ClientController extends Controller
 {
@@ -21,7 +24,7 @@ class ClientController extends Controller
     }
 
     // Buscar RUC/DNI en apis.net.pe
-    public function searchDocument(Request $request)
+    public function searchDocument(Request $request, PeruvianDocumentLookupService $documentLookup)
     {
         $request->validate(['document' => 'required|numeric']);
 
@@ -36,27 +39,14 @@ class ClientController extends Controller
             ], 422);
         }
 
-        $token = env('TOKEN_BUSCAR_CLIENTES');
-        $endpoint = $isRuc ? 'ruc' : 'dni';
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL            => 'https://api.apis.net.pe/v1/' . $endpoint . '?numero=' . $document,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_TIMEOUT        => 15,
-            CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $token,
-                'Referer: https://apis.net.pe/consulta-ruc-api'
-            ]
-        ]);
-
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-
-        if ($httpCode !== 200 || !$response) {
+        try {
+            return response()->json($documentLookup->lookup($document));
+        } catch (\InvalidArgumentException|ValidationException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        } catch (RuntimeException $exception) {
             $friendlyMessage = $isRuc
                 ? 'No se pudo consultar el RUC en este momento. Verifica el número o regístralo manualmente.'
                 : 'No se pudo consultar el DNI en este momento. Verifica el número o regístralo manualmente.';
@@ -65,17 +55,8 @@ class ClientController extends Controller
                 'success' => false,
                 'message' => $friendlyMessage,
                 'link'    => 'https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp'
-            ], $httpCode ?: 500);
+            ], 503);
         }
-
-        $data = json_decode($response, true);
-
-        return response()->json([
-            'success'       => true,
-            'document_type' => $isRuc ? 'RUC' : 'DNI',
-            'name'          => $data['nombre'] ?? null,
-            'address'       => $data['direccion'] ?? null,
-        ]);
     }
 
     public function store(Request $request)

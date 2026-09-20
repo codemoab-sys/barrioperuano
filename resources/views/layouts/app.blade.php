@@ -950,6 +950,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    window.lookupPeruvianDocument = function (url, documentNumber) {
+        return fetch(url + '?document=' + encodeURIComponent(documentNumber))
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    if (!response.ok) {
+                        const error = new Error(data.message || 'No se pudo consultar el documento.');
+                        error.data = data;
+                        throw error;
+                    }
+                    return data;
+                });
+            });
+    };
+
     function openMenu()  { document.getElementById('sidebar').classList.add('show');    document.getElementById('mobileOverlay').classList.add('show');    document.body.style.overflow = 'hidden'; }
     function closeMenu() { document.getElementById('sidebar').classList.remove('show'); document.getElementById('mobileOverlay').classList.remove('show'); document.body.style.overflow = 'auto';   }
 

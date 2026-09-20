@@ -265,26 +265,21 @@
         feedback.textContent = 'Consultando en SUNAT...';
         feedback.className = 'form-text text-muted';
 
-        fetch("{{ route('clients.searchDocument') }}?document=" + encodeURIComponent(doc))
-            .then(res => res.json().then(data => ({ ok: res.ok, data })))
-            .then(({ ok, data }) => {
+        window.lookupPeruvianDocument("{{ route('clients.searchDocument') }}", doc)
+            .then(data => {
                 btn.disabled = false;
                 icon.className = 'bi bi-search';
-                if(!ok) {
-                    var link = data.link ? ' <a href="' + data.link + '" target="_blank" rel="noopener">Consultar en SUNAT</a>' : '';
-                    feedback.innerHTML = (data.message || 'No se encontraron datos.') + link;
-                    feedback.className = 'form-text text-warning';
-                    return;
-                }
                 feedback.textContent = 'Datos obtenidos de ' + (data.document_type || 'RENIEC/SUNAT').toUpperCase();
                 feedback.className = 'form-text text-success';
                 document.querySelector('#resNewClientForm input[name="name"]').value = data.name || '';
                 document.querySelector('#resNewClientForm input[name="address"]').value = data.address || '';
             })
-            .catch(() => {
+            .catch(error => {
                 btn.disabled = false;
                 icon.className = 'bi bi-search';
-                feedback.innerHTML = 'Error al consultar. Inténtalo de nuevo.';
+                var data = error.data || {};
+                var link = data.link ? ' <a href="' + data.link + '" target="_blank" rel="noopener">Consultar en SUNAT</a>' : '';
+                feedback.innerHTML = data.message ? data.message + link : 'Error al consultar. Inténtalo de nuevo.';
                 feedback.className = 'form-text text-warning';
             });
     }

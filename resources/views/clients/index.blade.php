@@ -154,26 +154,21 @@
             feedback.textContent = 'Consultando en SUNAT...';
             feedback.className = 'form-text text-muted';
 
-            fetch("{{ route('clients.searchDocument') }}?document=" + encodeURIComponent(document.getElementById('create_document').value))
-                .then(res => res.json().then(data => ({ ok: res.ok, data })))
-                .then(({ ok, data }) => {
+            window.lookupPeruvianDocument("{{ route('clients.searchDocument') }}", document.getElementById('create_document').value)
+                .then(data => {
                     btn.disabled = false;
                     icon.className = 'bi bi-search';
-                    if (!ok) {
-                        const link = data.link ? ' <a href="' + data.link + '" target="_blank" rel="noopener">Consultar en SUNAT</a>' : '';
-                        feedback.innerHTML = data.message + link;
-                        feedback.className = 'form-text text-warning';
-                        return;
-                    }
                     feedback.textContent = 'Datos obtenidos de ' + (data.document_type || 'RENIEC/SUNAT').toUpperCase();
                     feedback.className = 'form-text text-success';
                     document.querySelector('input[name="name"]').value = data.name || '';
                     document.querySelector('input[name="address"]').value = data.address || '';
                 })
-                .catch(err => {
+                .catch(error => {
                     btn.disabled = false;
                     icon.className = 'bi bi-search';
-                    feedback.textContent = 'Error al consultar. Inténtalo de nuevo.';
+                    const data = error.data || {};
+                    const link = data.link ? ' <a href="' + data.link + '" target="_blank" rel="noopener">Consultar en SUNAT</a>' : '';
+                    feedback.innerHTML = data.message ? data.message + link : 'Error al consultar. Inténtalo de nuevo.';
                     feedback.className = 'form-text text-danger';
                 });
         }

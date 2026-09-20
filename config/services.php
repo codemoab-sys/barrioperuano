@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'apis_net_pe' => [
+        'url' => env('APIS_NET_PE_URL', 'https://api.apis.net.pe/v1'),
+        'token' => env('TOKEN_BUSCAR_CLIENTES'),
+    ],
+
 ];
