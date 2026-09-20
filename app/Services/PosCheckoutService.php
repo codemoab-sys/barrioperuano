@@ -61,7 +61,8 @@ class PosCheckoutService
             $correlativo = null;
             if ($isElectronic) {
                 $tipo = $documentType === 'Factura' ? 'factura' : 'boleta';
-                $next = DocumentSeries::next($tipo);
+                $areaId = $order->table()->value('area_id');
+                $next = DocumentSeries::next($tipo, $areaId);
                 $serie = $next['serie'];
                 $correlativo = $next['correlativo'];
             }

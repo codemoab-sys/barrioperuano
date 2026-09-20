@@ -112,9 +112,10 @@ class CreditNoteController extends Controller
 
         $isFactura = $order->document_type === 'Factura';
         $seriesKey = $isFactura ? 'nota_credito_factura' : 'nota_credito_boleta';
+        $areaId = $order->table()->value('area_id');
 
-        $cn = DB::transaction(function () use ($request, $order, $seriesKey, $items, $subtotal, $igv, $total) {
-            $next = DocumentSeries::next($seriesKey);
+        $cn = DB::transaction(function () use ($request, $order, $seriesKey, $areaId, $items, $subtotal, $igv, $total) {
+            $next = DocumentSeries::next($seriesKey, $areaId);
 
             return CreditNote::create([
                 'order_id'           => $order->id,

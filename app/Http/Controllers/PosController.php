@@ -447,8 +447,14 @@ class PosController extends Controller
         if (in_array($documentType, ['Boleta', 'Factura'], true)) {
             $config = new SunatConfig();
             $seriesKey = $documentType === 'Factura' ? 'factura' : 'boleta';
+            $areaId = $order->table()->value('area_id');
 
-            if (!DocumentSeries::where('document_type', $seriesKey)->where('is_active', true)->exists()) {
+            if (!DocumentSeries::where('document_type', $seriesKey)
+                ->where('is_active', true)
+                ->where(function ($query) use ($areaId) {
+                    $query->where('area_id', $areaId)->orWhereNull('area_id');
+                })
+                ->exists()) {
                 return $request->expectsJson()
                     ? response()->json(['success' => false, 'message' => 'No hay una serie activa configurada para ' . $documentType . '.'], 422)
                     : redirect()->back()->with('error', 'No hay una serie activa configurada para ' . $documentType . '.');

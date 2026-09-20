@@ -378,79 +378,40 @@
                             El primer comprobante de cada serie productiva comenzará en el correlativo <strong>1</strong>.
                         </div>
 
-                        @php
-                            $seriesList = \App\Models\DocumentSeries::where('is_active', true)
-                                ->orderBy('document_type')
-                                ->get();
-                            $seriesMap = $seriesList->keyBy('document_type');
-                        @endphp
+                        @foreach($areas as $area)
+                            @php
+                                $areaSeries = \App\Models\DocumentSeries::where('area_id', $area->id)->where('is_active', true)->get()->keyBy('document_type');
+                                $seriesFields = [
+                                    'factura' => ['label' => 'Serie Factura', 'placeholder' => 'F001'],
+                                    'boleta' => ['label' => 'Serie Boleta', 'placeholder' => 'B001'],
+                                    'nota_credito_factura' => ['label' => 'Serie NC Factura', 'placeholder' => 'F001'],
+                                    'nota_credito_boleta' => ['label' => 'Serie NC Boleta', 'placeholder' => 'B001'],
+                                    'nota_debito_factura' => ['label' => 'Serie ND Factura', 'placeholder' => 'F001'],
+                                    'nota_debito_boleta' => ['label' => 'Serie ND Boleta', 'placeholder' => 'B001'],
+                                ];
+                            @endphp
+                            <div class="card border shadow-sm mb-3">
+                                <div class="card-header bg-light fw-bold">
+                                    <i class="bi bi-shop me-2"></i>{{ $area->name }}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        @foreach($seriesFields as $type => $field)
+                                            @php $series = $areaSeries->get($type); @endphp
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold">{{ $field['label'] }} <span class="text-danger">*</span></label>
+                                                <input type="text" name="area_series[{{ $area->id }}][{{ $type }}]" class="form-control" value="{{ $series?->serie ?? '' }}" maxlength="4" placeholder="{{ $field['placeholder'] }}" required>
+                                                <small class="text-muted">Próximo: {{ $series ? $series->serie . '-' . ($series->last_number + 1) : '1' }}</small>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Serie Factura <span class="text-danger">*</span></label>
-                                <input type="text" name="serie_factura" class="form-control @error('serie_factura') is-invalid @enderror"
-                                       value="{{ $seriesMap['factura']->serie ?? 'FPP1' }}"
-                                       maxlength="4" placeholder="FPP1">
-                                @error('serie_factura')
-                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Inicio</label>
-                                <div class="form-control bg-light">1</div>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Serie Boleta <span class="text-danger">*</span></label>
-                                <input type="text" name="serie_boleta" class="form-control @error('serie_boleta') is-invalid @enderror"
-                                       value="{{ $seriesMap['boleta']->serie ?? 'BPP1' }}"
-                                       maxlength="4" placeholder="BPP1">
-                                @error('serie_boleta')
-                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Inicio</label>
-                                <div class="form-control bg-light">1</div>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Serie NC</label>
-                                <input type="text" name="serie_nc_factura" class="form-control @error('serie_nc_factura') is-invalid @enderror"
-                                       value="{{ $seriesMap['nota_credito_factura']->serie ?? 'FPP1' }}"
-                                       maxlength="4" placeholder="FPP1">
-                                @error('serie_nc_factura')
-                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Inicio</label>
-                                <div class="form-control bg-light">1</div>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Serie NC Boleta</label>
-                                <input type="text" name="serie_nc_boleta" class="form-control @error('serie_nc_boleta') is-invalid @enderror"
-                                       value="{{ $seriesMap['nota_credito_boleta']->serie ?? 'BPP1' }}"
-                                       maxlength="4" placeholder="BPP1">
-                                @error('serie_nc_boleta')
-                                    <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Inicio</label>
-                                <div class="form-control bg-light">1</div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info py-2 mb-3 small">
-                            <strong>Próximo comprobante:</strong>
-                            @foreach($seriesList as $s)
-                                <span class="badge bg-secondary me-1">
-                                    {{ $s->serie }}-{{ $s->last_number + 1 }}
-                                </span>
-                            @endforeach
-                        </div>
+                        @if($areas->isEmpty())
+                            <div class="alert alert-info">Crea al menos una zona para configurar sus series de comprobantes.</div>
+                        @endif
 
                         <div class="mt-5 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-5 fw-bold shadow" id="saveSettingsButton">

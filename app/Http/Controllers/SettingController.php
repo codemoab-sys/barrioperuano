@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentSeries;
+use App\Models\Area;
 use App\Models\Setting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -30,7 +31,8 @@ class SettingController extends Controller
             }
         }
 
-        return view('settings.index', compact('settings'));
+        $areas = Area::where('is_active', true)->orderBy('name')->get();
+        return view('settings.index', compact('settings', 'areas'));
     }
 
     public function update(Request $request)
@@ -67,6 +69,15 @@ class SettingController extends Controller
             'serie_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
             'serie_nc_factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
             'serie_nc_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
+            'serie_nd_factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
+            'serie_nd_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
+            'area_series' => ['nullable', 'array'],
+            'area_series.*.factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
+            'area_series.*.boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
+            'area_series.*.nota_credito_factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
+            'area_series.*.nota_credito_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
+            'area_series.*.nota_debito_factura' => ['nullable', 'string', 'size:4', 'regex:/^F[A-Z0-9]{3}$/i'],
+            'area_series.*.nota_debito_boleta' => ['nullable', 'string', 'size:4', 'regex:/^B[A-Z0-9]{3}$/i'],
         ], [
             'company_logo.image' => 'El logo debe ser una imagen válida (.jpg, .png, .webp).',
             'company_logo.max' => 'El logo no puede superar 2 MB.',
@@ -76,6 +87,8 @@ class SettingController extends Controller
             'serie_boleta.regex' => 'La serie de boleta debe tener el formato B001.',
             'serie_nc_factura.regex' => 'La serie de nota de crédito de factura debe tener el formato F001.',
             'serie_nc_boleta.regex' => 'La serie de nota de crédito de boleta debe tener el formato B001.',
+            'serie_nd_factura.regex' => 'La serie de nota de débito de factura debe tener el formato F001.',
+            'serie_nd_boleta.regex' => 'La serie de nota de débito de boleta debe tener el formato B001.',
             'nubefact_ruta.url' => 'La ruta de NubeFact debe ser una URL válida.',
             'sunat_environment.in' => 'El ambiente debe ser beta o produccion.',
         ]);
@@ -93,38 +106,61 @@ class SettingController extends Controller
             'boleta' => strtoupper(trim((string) $request->input('serie_boleta', ''))),
             'nota_credito_factura' => strtoupper(trim((string) $request->input('serie_nc_factura', ''))),
             'nota_credito_boleta' => strtoupper(trim((string) $request->input('serie_nc_boleta', ''))),
+            'nota_debito_factura' => strtoupper(trim((string) $request->input('serie_nd_factura', ''))),
+            'nota_debito_boleta' => strtoupper(trim((string) $request->input('serie_nd_boleta', ''))),
         ];
 
-        if ($currentEnvironment === 'produccion') {
-            foreach ($requestedSeries as $documentType => $serie) {
-                if ($serie === '') continue;
-                $current = DocumentSeries::where('document_type', $documentType)->first();
-                if ($current && strtoupper($current->serie) !== $serie && $current->last_number > 0) {
+        $areas = Area::where('is_active', true)->orderBy('id')->get();
+        $areaSeries = $request->input('area_series', []);
+        if ($areaSeries === [] && $areas->isNotEmpty() && collect($requestedSeries)->contains(fn ($serie) => $serie !== '')) {
+            $areaSeries = [$areas->first()->id => $requestedSeries];
+        }
+
+        foreach ($areas as $area) {
+            $series = $areaSeries[$area->id] ?? [];
+            foreach (array_keys($requestedSeries) as $documentType) {
+                if (trim((string) ($series[$documentType] ?? '')) === '') {
                     throw ValidationException::withMessages([
-                        'sunat_environment' => 'No puedes cambiar la serie productiva de ' . $documentType . ' porque ya tiene comprobantes emitidos.',
+                        'area_series' => 'Completa las cuatro series de la zona ' . $area->name . '.',
                     ]);
+                }
+            }
+        }
+
+        if ($currentEnvironment === 'produccion') {
+            foreach ($areaSeries as $areaId => $series) {
+                foreach ($series as $documentType => $serie) {
+                    $current = DocumentSeries::where('area_id', $areaId)->where('document_type', $documentType)->first();
+                    if ($current && strtoupper($current->serie) !== strtoupper($serie) && $current->last_number > 0) {
+                        throw ValidationException::withMessages([
+                            'sunat_environment' => 'No puedes cambiar la serie productiva de ' . $documentType . ' porque ya tiene comprobantes emitidos.',
+                        ]);
+                    }
                 }
             }
         }
 
         if ($currentEnvironment !== 'produccion' && $requestedEnvironment === 'produccion') {
-            foreach ($requestedSeries as $documentType => $serie) {
-                if ($serie === '') {
-                    throw ValidationException::withMessages([
-                        'sunat_environment' => 'Para activar PRODUCCIÓN debes completar las cuatro series de comprobantes.',
-                    ]);
-                }
-                $currentSeries = DocumentSeries::where('document_type', $documentType)->value('serie');
-                if ($currentSeries && strtoupper($currentSeries) === $serie) {
-                    throw ValidationException::withMessages([
-                        'sunat_environment' => 'Para pasar a PRODUCCIÓN debes registrar una serie nueva para ' . $documentType . '. El correlativo productivo iniciará en 1.',
-                    ]);
+            if ($areaSeries === []) {
+                throw ValidationException::withMessages([
+                    'sunat_environment' => 'Para activar PRODUCCIÓN debes crear al menos una zona y completar sus cuatro series de comprobantes.',
+                ]);
+            }
+
+            foreach ($areaSeries as $areaId => $series) {
+                foreach ($series as $documentType => $serie) {
+                    $currentSeries = DocumentSeries::where('area_id', $areaId)->where('document_type', $documentType)->value('serie');
+                    if ($currentSeries && strtoupper($currentSeries) === strtoupper($serie)) {
+                        throw ValidationException::withMessages([
+                            'sunat_environment' => 'Para pasar a PRODUCCIÓN debes registrar una serie nueva para cada zona. El correlativo productivo iniciará en 1.',
+                        ]);
+                    }
                 }
             }
         }
 
         try {
-            DB::transaction(function () use ($request, $validated) {
+            DB::transaction(function () use ($request, $validated, $areas, $areaSeries) {
                 $allowedSettings = [
                     'company_name', 'company_phone', 'company_address', 'welcome_message',
                     'currency_symbol', 'ticket_footer', 'color_primary', 'color_primary_hover',
@@ -180,16 +216,11 @@ class SettingController extends Controller
                     Setting::updateOrCreate(['key' => 'company_logo'], ['value' => $path]);
                 }
 
-                $series = [
-                    'factura' => $request->input('serie_factura'),
-                    'boleta' => $request->input('serie_boleta'),
-                    'nota_credito_factura' => $request->input('serie_nc_factura'),
-                    'nota_credito_boleta' => $request->input('serie_nc_boleta'),
-                ];
-
-                foreach ($series as $documentType => $serie) {
-                    if ($serie !== null && trim((string) $serie) !== '') {
-                        $this->saveSeries($documentType, $serie, 1);
+                foreach ($areas as $area) {
+                    foreach (($areaSeries[$area->id] ?? []) as $documentType => $serie) {
+                        if (trim((string) $serie) !== '') {
+                            $this->saveSeries($documentType, $serie, 1, $area->id);
+                        }
                     }
                 }
             });
@@ -210,7 +241,7 @@ class SettingController extends Controller
      * Guarda serie y correlativo.
      * Si el usuario pide inicio en 5, last_number = 4, así el próximo será 5.
      */
-    private function saveSeries(string $documentType, string $serie, int $startNumber): void
+    private function saveSeries(string $documentType, string $serie, int $startNumber, ?int $areaId = null): void
     {
         $code = match ($documentType) {
             'factura' => '01',
@@ -219,13 +250,13 @@ class SettingController extends Controller
         };
 
         $serie = strtoupper(trim($serie));
-        $current = DocumentSeries::where('document_type', $documentType)->first();
+        $current = DocumentSeries::where('area_id', $areaId)->where('document_type', $documentType)->first();
         $lastNumber = $current && $current->serie === $serie
             ? $current->last_number
             : max(0, $startNumber - 1);
 
         DocumentSeries::updateOrCreate(
-            ['document_type' => $documentType],
+            ['area_id' => $areaId, 'document_type' => $documentType],
             [
                 'document_code' => $code,
                 'serie' => $serie,

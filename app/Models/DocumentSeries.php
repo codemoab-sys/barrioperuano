@@ -12,6 +12,7 @@ class DocumentSeries extends Model
 use HasFactory;
 
     protected $fillable = [
+        'area_id',
         'document_code',
         'document_type',
         'serie',
@@ -27,16 +28,22 @@ use HasFactory;
     /**
      * Reserva el prÃƒÂ³ximo correlativo de forma atÃƒÂ³mica.
      */
-    public static function next(string $documentType): array
+    public static function next(string $documentType, ?int $areaId = null): array
     {
-        return DB::transaction(function () use ($documentType) {
-            $serie = static::where('document_type', $documentType)
+        return DB::transaction(function () use ($documentType, $areaId) {
+            $query = static::where('document_type', $documentType)
+                ->where(function ($query) use ($areaId) {
+                    $query->where('area_id', $areaId)->orWhereNull('area_id');
+                })
+                ->orderByRaw('CASE WHEN area_id = ? THEN 0 ELSE 1 END', [$areaId]);
+
+            $serie = $query
                 ->where('is_active', true)
                 ->lockForUpdate()
                 ->first();
 
             if (!$serie) {
-                throw new \RuntimeException("No hay serie configurada para '{$documentType}'.");
+                throw new \RuntimeException("No hay serie configurada para '{$documentType}' en la zona seleccionada.");
             }
 
             $serie->last_number = $serie->last_number + 1;

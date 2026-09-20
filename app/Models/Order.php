@@ -67,6 +67,11 @@ protected $fillable = [
         return $this->belongsTo(Table::class);
     }
 
+    public function area()
+    {
+        return $this->hasOneThrough(Area::class, Table::class, 'id', 'id', 'table_id', 'area_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

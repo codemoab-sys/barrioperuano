@@ -85,12 +85,13 @@ class DebitNoteController extends Controller
 
         $isFactura = $order->document_type === 'Factura';
         $seriesKey = $isFactura ? 'nota_debito_factura' : 'nota_debito_boleta';
+        $areaId = $order->table()->value('area_id');
         $total = (float) $request->input('amount');
         $subtotal = round($total / (1 + (new SunatConfig())->igvFactor()), 2);
         $igv = round($total - $subtotal, 2);
 
-        $dn = DB::transaction(function () use ($request, $order, $seriesKey, $subtotal, $igv, $total) {
-            $next = DocumentSeries::next($seriesKey);
+        $dn = DB::transaction(function () use ($request, $order, $seriesKey, $areaId, $subtotal, $igv, $total) {
+            $next = DocumentSeries::next($seriesKey, $areaId);
 
             return DebitNote::create([
                 'order_id'           => $order->id,
