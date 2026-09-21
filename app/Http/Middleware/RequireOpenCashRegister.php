@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Models\CashRegister;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -15,12 +16,9 @@ class RequireOpenCashRegister
     {
         $user = $request->user();
 
-        // Si el usuario es admin o cajero, exigimos caja abierta para ciertas rutas
-        if ($user && in_array($user->role, ['admin', 'cashier', 'cashier_waiter'])) {
-            if (!$user->activeCashRegister) {
-                return redirect()->route('cash_registers.create')
-                    ->with('warning', 'Debes abrir tu turno de caja antes de realizar operaciones de cobro o venta.');
-            }
+        if ($user && in_array($user->role, ['admin', 'cashier', 'cashier_waiter']) && !CashRegister::current()) {
+            return redirect()->route('cash_registers.create')
+                ->with('warning', 'Debes abrir un turno de caja antes de realizar operaciones de cobro o venta.');
         }
 
         return $next($request);

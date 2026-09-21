@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DocumentSeries;
+use App\Models\CashRegister;
 use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Product;
@@ -18,7 +19,8 @@ class PosCheckoutService
 
     public function completeCheckout(Order $order, array $payload): Order
     {
-        if (!Auth::user()?->activeCashRegister) {
+        $cashRegister = CashRegister::current();
+        if (!$cashRegister) {
             throw ValidationException::withMessages([
                 'general' => ['Debes abrir tu turno de caja antes de cobrar una venta.'],
             ]);
@@ -42,7 +44,7 @@ class PosCheckoutService
         $clientDocument = $payload['client_document'] ?? null;
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        return DB::transaction(function () use ($order, $method, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured) {
+        return DB::transaction(function () use ($order, $method, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             $order->load('details.product.ingredients');
 
@@ -77,7 +79,7 @@ class PosCheckoutService
                 'client_id' => $clientId,
                 'client_name' => $clientName,
                 'client_document' => $clientDocument,
-                'cash_register_id' => Auth::user()->activeCashRegister->id ?? null,
+                'cash_register_id' => $cashRegister->id,
                 'serie' => $serie,
                 'correlativo' => $correlativo,
                 'subtotal' => $totalGravada,

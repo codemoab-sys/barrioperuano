@@ -60,8 +60,8 @@ class CashRegisterController extends Controller
 
     public function create()
     {
-        if (auth()->user()->activeCashRegister) {
-            return redirect()->route('dashboard')->with('info', 'Ya tienes un turno de caja abierto.');
+        if ($cashRegister = CashRegister::current()) {
+            return redirect()->route('dashboard')->with('info', 'Ya hay un turno de caja abierto por ' . $cashRegister->user->name . '.');
         }
         return view('cash_registers.create');
     }
@@ -72,18 +72,17 @@ class CashRegisterController extends Controller
             'opening_amount' => 'required|numeric|min:0'
         ]);
 
-        if (auth()->user()->activeCashRegister) {
-            return redirect()->route('dashboard')->with('error', 'Ya tienes una caja abierta.');
+        if (CashRegister::current()) {
+            return redirect()->route('dashboard')->with('error', 'Ya hay una caja abierta.');
         }
 
         DB::transaction(function () use ($request) {
-            $user = auth()->user()->newQuery()->lockForUpdate()->findOrFail(auth()->id());
-            if ($user->activeCashRegister()->exists()) {
-                abort(409, 'Ya tienes una caja abierta.');
+            if (CashRegister::query()->where('status', 'open')->lockForUpdate()->exists()) {
+                abort(409, 'Ya hay una caja abierta.');
             }
 
             CashRegister::create([
-                'user_id' => $user->id,
+                'user_id' => auth()->id(),
                 'opening_time' => Carbon::now(),
                 'opening_amount' => $request->opening_amount,
                 'status' => 'open',
@@ -95,7 +94,7 @@ class CashRegisterController extends Controller
 
     public function close()
     {
-        $cashRegister = auth()->user()->activeCashRegister;
+        $cashRegister = CashRegister::current();
 
         if (!$cashRegister) {
             return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta para cerrar.');
@@ -118,7 +117,7 @@ class CashRegisterController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $cashRegister = auth()->user()->activeCashRegister;
+        $cashRegister = CashRegister::current();
 
         if (!$cashRegister) {
             return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta.');

@@ -287,7 +287,7 @@ Route::middleware(['auth'])->group(function () {
     // =========================================================
     // ZONA FINANCIERA (Cajeros y Admins)
     // =========================================================
-    Route::middleware(['role:admin,cashier,cashier_waiter'])->group(function () {
+    Route::middleware(['role:admin,cashier,cashier_waiter,waiter'])->group(function () {
         // Cobro Final
         Route::post('/pos/order/{order}/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
 

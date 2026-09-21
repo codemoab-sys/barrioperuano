@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CashRegister extends Model
 {
     protected $table = 'bape_cash_registers';
-protected $fillable = [
+    protected $fillable = [
         'user_id',
         'opening_time',
         'closing_time',
@@ -27,6 +27,14 @@ protected $fillable = [
         'expected_amount' => 'decimal:2',
         'difference' => 'decimal:2',
     ];
+
+    public static function current(): ?self
+    {
+        return static::query()
+            ->where('status', 'open')
+            ->latest('opening_time')
+            ->first();
+    }
 
     public function user()
     {

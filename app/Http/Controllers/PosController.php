@@ -12,6 +12,7 @@ use App\Models\InventoryLog;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Models\DocumentSeries;
+use App\Models\CashRegister;
 use App\Services\PosCheckoutService;
 use App\Services\StockValidationService;
 use App\Services\Sunat\SunatConfig;
@@ -112,7 +113,7 @@ class PosController extends Controller
     // --- AGREGAR POR CLIC (Normal) ---
     public function addToOrder(Request $request, Table $table)
     {
-        if (!Auth::user()?->activeCashRegister) {
+        if (!CashRegister::current()) {
             return response()->json(['error' => 'Debes abrir tu turno de caja antes de agregar productos.'], 422);
         }
 
@@ -130,7 +131,7 @@ class PosController extends Controller
     // --- AGREGAR POR CÓDIGO DE BARRAS / BÚSQUEDA (código, nombre o precio) ---
     public function addByBarcode(Request $request, Table $table)
     {
-        if (!Auth::user()?->activeCashRegister) {
+        if (!CashRegister::current()) {
             return response()->json(['error' => 'Debes abrir tu turno de caja antes de agregar productos.'], 422);
         }
 

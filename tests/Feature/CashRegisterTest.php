@@ -31,6 +31,39 @@ class CashRegisterTest extends TestCase
         ]);
     }
 
+    public function test_waiter_can_use_the_cash_register_opened_by_a_cashier(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $waiter = User::factory()->create(['role' => 'waiter']);
+
+        $this->actingAs($cashier)->post(route('cash_registers.store'), [
+            'opening_amount' => 100,
+        ]);
+
+        $response = $this->actingAs($waiter)->get(route('pos.index'));
+
+        $response->assertOk();
+        $this->assertSame($cashier->id, CashRegister::current()->user_id);
+    }
+
+    public function test_users_cannot_open_a_second_cash_register_while_a_shared_shift_is_open(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $secondCashier = User::factory()->create(['role' => 'cashier']);
+
+        $this->actingAs($cashier)->post(route('cash_registers.store'), [
+            'opening_amount' => 100,
+        ]);
+
+        $response = $this->actingAs($secondCashier)->post(route('cash_registers.store'), [
+            'opening_amount' => 200,
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('error', 'Ya hay una caja abierta.');
+        $this->assertDatabaseCount('bape_cash_registers', 1);
+    }
+
     public function test_closing_uses_only_cash_sales_and_expenses(): void
     {
         $user = User::factory()->create(['role' => 'cashier']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\CashRegister;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +11,7 @@ class ExpenseController extends Controller
 {
     public function store(Request $request)
     {
-        $cashRegister = Auth::user()?->activeCashRegister;
+        $cashRegister = CashRegister::current();
         if (!$cashRegister) {
             return redirect()->back()->with('error', 'Debes abrir tu turno de caja antes de registrar gastos.');
         }

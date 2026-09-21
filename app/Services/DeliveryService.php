@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CashRegister;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -12,7 +13,7 @@ class DeliveryService
 
     public function ensureCashRegisterIsOpen(): void
     {
-        $cashRegister = Auth::user()?->activeCashRegister;
+        $cashRegister = CashRegister::current();
 
         if (!$cashRegister) {
             throw ValidationException::withMessages([
@@ -23,7 +24,7 @@ class DeliveryService
 
     public function getCashRegisterId(): ?int
     {
-        return Auth::user()?->activeCashRegister?->id;
+        return CashRegister::current()?->id;
     }
 
     public function restoreInventoryForOrder(Order $order): void
