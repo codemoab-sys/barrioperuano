@@ -121,11 +121,19 @@
             </div>
         </div>
 
-        <div class="d-grid">
-            <button class="btn btn-success fw-bold py-2 shadow-sm"
-                    onclick="var m=document.getElementById('checkoutModal'); if(m){ new bootstrap.Modal(m).show(); }">
-                <i class="bi bi-cash-coin me-2"></i> COBRAR
-            </button>
-        </div>
+        @if(in_array(auth()->user()->role, ['admin', 'cashier', 'cashier_waiter'], true))
+            <div class="d-grid">
+                <button class="btn btn-success fw-bold py-2 shadow-sm"
+                        onclick="var m=document.getElementById('checkoutModal'); if(m){ new bootstrap.Modal(m).show(); }">
+                    <i class="bi bi-cash-coin me-2"></i> COBRAR
+                </button>
+            </div>
+        @else
+            <div class="d-grid">
+                <a href="{{ route('pos.precheck', $order->id) }}" target="_blank" class="btn btn-outline-primary fw-bold py-2">
+                    <i class="bi bi-receipt me-2"></i> MOSTRAR PRECUENTA
+                </a>
+            </div>
+        @endif
     @endif
 </div>

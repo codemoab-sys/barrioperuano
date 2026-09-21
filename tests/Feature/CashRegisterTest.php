@@ -64,6 +64,31 @@ class CashRegisterTest extends TestCase
         $this->assertDatabaseCount('bape_cash_registers', 1);
     }
 
+    public function test_waiter_can_only_show_the_precheck_and_cannot_charge(): void
+    {
+        $waiter = User::factory()->create(['role' => 'waiter']);
+        $area = Area::create(['name' => 'Salon']);
+        $table = Table::create([
+            'area_id' => $area->id,
+            'name' => 'Mesa 1',
+            'status' => 'available',
+        ]);
+        $order = Order::create([
+            'table_id' => $table->id,
+            'user_id' => $waiter->id,
+            'status' => 'pending',
+            'total' => 25,
+        ]);
+
+        $this->actingAs($waiter)
+            ->get(route('pos.checkout.modal', $order))
+            ->assertForbidden();
+
+        $this->actingAs($waiter)
+            ->post(route('pos.checkout', $order))
+            ->assertForbidden();
+    }
+
     public function test_closing_uses_only_cash_sales_and_expenses(): void
     {
         $user = User::factory()->create(['role' => 'cashier']);

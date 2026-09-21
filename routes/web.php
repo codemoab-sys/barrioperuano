@@ -261,7 +261,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pos/order/{order}/precheck', [PosController::class, 'precheck'])->name('pos.precheck');
     Route::get('/pos/order/{order}/kitchen-ticket', [PosController::class, 'kitchenTicket'])->name('pos.kitchen');
     Route::post('/pos/order/{order}/discount', [PosController::class, 'applyDiscount'])->name('pos.discount');
-    Route::get('/pos/order/{order}/checkout-modal', [PosController::class, 'checkoutModal'])->name('pos.checkout.modal');
+    Route::get('/pos/order/{order}/checkout-modal', [PosController::class, 'checkoutModal'])
+        ->middleware('role:admin,cashier,cashier_waiter')
+        ->name('pos.checkout.modal');
     Route::post('/pos/order/{order}/move', [PosController::class, 'moveTable'])->name('pos.move');
 
     // División de Cuenta
@@ -289,7 +291,9 @@ Route::middleware(['auth'])->group(function () {
     // =========================================================
     Route::middleware(['role:admin,cashier,cashier_waiter,waiter'])->group(function () {
         // Cobro Final
-        Route::post('/pos/order/{order}/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+        Route::post('/pos/order/{order}/checkout', [PosController::class, 'checkout'])
+            ->middleware('role:admin,cashier,cashier_waiter')
+            ->name('pos.checkout');
 
         // Ventas, Caja y Gastos
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
