@@ -62,6 +62,15 @@ protected $fillable = [
         'total_gratuita' => 'decimal:2',
     ];
 
+    public function getClientNameAttribute(?string $value): ?string
+    {
+        if ($value !== null && preg_match('/Ã.|Â.|â€™|â€œ|â€|�/', $value)) {
+            return mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+        }
+
+        return $value;
+    }
+
     public function table()
     {
         return $this->belongsTo(Table::class);

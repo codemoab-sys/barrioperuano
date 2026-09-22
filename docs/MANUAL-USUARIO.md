@@ -152,6 +152,70 @@ El cobro solo puede realizarlo el **cajero**, **cajero/mozo** o **administrador*
 
 Para una factura se necesita un cliente con RUC y razon social validos, ademas de una serie activa configurada.
 
+### 5.7 Capturas del flujo del modo mozo
+
+Estas capturas muestran el recorrido completo del mozo. Las imagenes se conservan localmente en `docs/MODO-MOZO/` y no se suben al repositorio.
+
+#### Ingreso y punto de venta
+
+![Ingreso al sistema](MODO-MOZO/1%20Captura%20de%20pantalla%202026-09-21%20012957.png)
+
+![Mesas del punto de venta](MODO-MOZO/2%20Captura%20de%20pantalla%202026-09-21%20013050.png)
+
+La mesa en rojo esta ocupada y muestra el consumo acumulado. Las mesas en verde estan libres y pueden seleccionarse para iniciar una orden.
+
+![Pedido de la mesa](MODO-MOZO/3%20Captura%20de%20pantalla%202026-09-21%20015609.png)
+
+En la pantalla del pedido, el mozo puede buscar productos, agregarlos a la cuenta y revisar el carrito actual.
+
+![Precuenta](MODO-MOZO/4%20Captura%20de%20pantalla%202026-09-21%20015735.png)
+
+La precuenta muestra mesa, productos, subtotal y total a pagar. El mozo debe mostrarla al cliente y solicitar al cajero que realice el cobro.
+
+#### Reservas
+
+![Reservas sin registros](MODO-MOZO/5%20Captura%20de%20pantalla%202026-09-21%20015856.png)
+
+Desde **Reservas**, pulsa **Nueva Reserva** para registrar una visita futura.
+
+![Nueva reserva](MODO-MOZO/6%20Captura%20de%20pantalla%202026-09-21%20015953.png)
+
+Completa cliente, fecha, hora, cantidad de personas, mesa opcional y notas especiales.
+
+![Registro de cliente desde reserva](MODO-MOZO/7%20Captura%20de%20pantalla%202026-09-21%20020054.png)
+
+Si el cliente no existe, usa el boton de registro y completa DNI/RUC, telefono, nombre, correo y direccion.
+
+![Cliente seleccionado en reserva](MODO-MOZO/8%20Captura%20de%20pantalla%202026-09-21%20020240.png)
+
+Al encontrar al cliente, verifica sus datos, asigna la mesa si corresponde y pulsa **Agendar**.
+
+![Reserva pendiente](MODO-MOZO/9%20Captura%20de%20pantalla%202026-09-21%20020347.png)
+
+Una reserva pendiente puede confirmarse o cancelarse desde sus acciones.
+
+![Reserva confirmada](MODO-MOZO/10%20Captura%20de%20pantalla%202026-09-21%20020518.png)
+
+Cuando el cliente llega, confirma la reserva. La tarjeta mostrara el estado **Confirmada**.
+
+#### Cocina y clientes
+
+![Monitor de cocina](MODO-MOZO/11%20Captura%20de%20pantalla%202026-09-21%20020630.png)
+
+El monitor permite ver pedidos pendientes y en preparacion. Cocina debe pulsar **E2mpezar** y luego **Listo**.
+
+![Cartera de clientes](MODO-MOZO/12%20Captura%20de%20pantalla%202026-09-21%20020756.png)
+
+La cartera muestra nombre, documento, visitas y acciones disponibles.
+
+![Editar cliente](MODO-MOZO/13%20Captura%20de%20pantalla%202026-09-21%20020909.png)
+
+Usa el icono de editar para actualizar nombre, documento, telefono, correo o direccion.
+
+![Registrar cliente](MODO-MOZO/13%20Captura%20de%20pantalla%202026-09-21%20021005.png)
+
+Usa **Nuevo Cliente** para crear un registro desde el modulo de clientes.
+
 ## 6. Manual para el cajero
 
 ### 6.1 Abrir la caja
