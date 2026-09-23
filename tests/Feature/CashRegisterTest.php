@@ -31,6 +31,15 @@ class CashRegisterTest extends TestCase
         ]);
     }
 
+    public function test_cashier_can_view_the_open_cash_register_form_when_the_register_is_closed(): void
+    {
+        $user = User::factory()->create(['role' => 'cashier']);
+
+        $response = $this->actingAs($user)->get(route('cash_registers.create'));
+
+        $response->assertOk();
+    }
+
     public function test_cashier_can_open_a_new_register_after_the_previous_one_was_closed(): void
     {
         $cashier = User::factory()->create(['role' => 'cashier']);
