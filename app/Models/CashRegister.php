@@ -36,6 +36,11 @@ class CashRegister extends Model
             ->first();
     }
 
+    public function canBeClosedBy(User $user): bool
+    {
+        return $user->role === 'admin' || $this->user_id === $user->id;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

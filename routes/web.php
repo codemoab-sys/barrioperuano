@@ -240,11 +240,13 @@ Route::middleware(['auth'])->group(function () {
     // ZONA OPERATIVA (Accesible para Mozo, Cajero, Admin)
     // =========================================================
 
-    // Rutas de Caja (Apertura y Cierre) - Todos pueden intentar entrar, pero el controller valida
-    Route::get('/cash-registers/open', [App\Http\Controllers\CashRegisterController::class, 'create'])->name('cash_registers.create');
-    Route::post('/cash-registers/open', [App\Http\Controllers\CashRegisterController::class, 'store'])->name('cash_registers.store');
-    Route::get('/cash-registers/close', [App\Http\Controllers\CashRegisterController::class, 'close'])->name('cash_registers.close');
-    Route::post('/cash-registers/close', [App\Http\Controllers\CashRegisterController::class, 'processClose'])->name('cash_registers.processClose');
+    // Rutas de Caja: un turno abierto compartido; solo su creador o un admin puede cerrarlo.
+    Route::middleware('role:admin,cashier,cashier_waiter')->group(function () {
+        Route::get('/cash-registers/open', [App\Http\Controllers\CashRegisterController::class, 'create'])->name('cash_registers.create');
+        Route::post('/cash-registers/open', [App\Http\Controllers\CashRegisterController::class, 'store'])->name('cash_registers.store');
+        Route::get('/cash-registers/close', [App\Http\Controllers\CashRegisterController::class, 'close'])->name('cash_registers.close');
+        Route::post('/cash-registers/close', [App\Http\Controllers\CashRegisterController::class, 'processClose'])->name('cash_registers.processClose');
+    });
 
     // POS (Punto de Venta) - Protegido para que cajeros abran caja primero
     Route::middleware(['cash_register'])->group(function () {

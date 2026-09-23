@@ -31,6 +31,32 @@ class CashRegisterTest extends TestCase
         ]);
     }
 
+    public function test_cashier_can_open_a_new_register_after_the_previous_one_was_closed(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        CashRegister::create([
+            'user_id' => $cashier->id,
+            'opening_time' => now()->subHour(),
+            'closing_time' => now()->subMinute(),
+            'opening_amount' => 100,
+            'closing_amount' => 100,
+            'expected_amount' => 100,
+            'difference' => 0,
+            'status' => 'closed',
+        ]);
+
+        $response = $this->actingAs($cashier)->post(route('cash_registers.store'), [
+            'opening_amount' => 50,
+        ]);
+
+        $response->assertRedirect(route('pos.index'));
+        $this->assertDatabaseHas('bape_cash_registers', [
+            'user_id' => $cashier->id,
+            'opening_amount' => 50,
+            'status' => 'open',
+        ]);
+    }
+
     public function test_waiter_can_use_the_cash_register_opened_by_a_cashier(): void
     {
         $cashier = User::factory()->create(['role' => 'cashier']);
@@ -62,6 +88,35 @@ class CashRegisterTest extends TestCase
         $response->assertRedirect(route('dashboard'));
         $response->assertSessionHas('error', 'Ya hay una caja abierta.');
         $this->assertDatabaseCount('bape_cash_registers', 1);
+    }
+
+    public function test_only_the_creator_or_an_admin_can_close_the_open_cash_register(): void
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $secondCashier = User::factory()->create(['role' => 'cashier']);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($cashier)->post(route('cash_registers.store'), [
+            'opening_amount' => 100,
+        ]);
+
+        $this->actingAs($secondCashier)
+            ->post(route('cash_registers.processClose'), ['closing_amount' => 100])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('bape_cash_registers', [
+            'user_id' => $cashier->id,
+            'status' => 'open',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('cash_registers.processClose'), ['closing_amount' => 100])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('bape_cash_registers', [
+            'user_id' => $cashier->id,
+            'status' => 'closed',
+        ]);
     }
 
     public function test_waiter_can_only_show_the_precheck_and_cannot_charge(): void

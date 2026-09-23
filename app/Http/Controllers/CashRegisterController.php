@@ -100,6 +100,8 @@ class CashRegisterController extends Controller
             return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta para cerrar.');
         }
 
+        abort_unless($cashRegister->canBeClosedBy(auth()->user()), 403);
+
         // Calcular el esperado:
         // Monto inicial + Total ventas efectivo - Total gastos
         $totalSalesCash = $cashRegister->orders()->where('payment_method', 'cash')->where('status', 'completed')->sum('total');
@@ -122,6 +124,8 @@ class CashRegisterController extends Controller
         if (!$cashRegister) {
             return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta.');
         }
+
+        abort_unless($cashRegister->canBeClosedBy(auth()->user()), 403);
 
         $difference = DB::transaction(function () use ($request, $cashRegister) {
             $register = CashRegister::whereKey($cashRegister->id)->lockForUpdate()->firstOrFail();
