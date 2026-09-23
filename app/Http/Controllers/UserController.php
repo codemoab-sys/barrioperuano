@@ -57,6 +57,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:bape_users,email,'.$user->id,
+            'password' => 'nullable|string|min:6',
             'role' => 'required|in:admin,cashier,cashier_waiter,waiter,kitchen',
             'all_areas' => 'nullable|boolean',
             'area_ids' => 'nullable|array',

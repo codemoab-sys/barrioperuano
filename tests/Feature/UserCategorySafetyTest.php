@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserCategorySafetyTest extends TestCase
@@ -30,6 +31,27 @@ class UserCategorySafetyTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('error');
         $this->assertDatabaseHas('bape_users', ['id' => $user->id]);
+    }
+
+    public function test_updating_user_without_password_keeps_the_existing_password(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create([
+            'role' => 'cashier',
+            'password' => Hash::make('original-password'),
+        ]);
+        $existingPassword = $user->password;
+
+        $response = $this->actingAs($admin)->put(route('users.update', $user), [
+            'name' => 'Nombre actualizado',
+            'email' => $user->email,
+            'role' => 'cashier',
+            'all_areas' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame($existingPassword, $user->refresh()->password);
+        $this->assertTrue(Hash::check('original-password', $user->password));
     }
 
     public function test_category_with_products_cannot_be_deleted(): void

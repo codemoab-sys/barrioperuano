@@ -155,7 +155,7 @@
                 <div class="row mb-3">
                     <div class="col-6">
                         <label class="form-label fw-bold">Nueva Contraseña</label>
-                        <input type="password" name="password" class="form-control" placeholder="Dejar vacío para no cambiar">
+                        <input type="password" name="password" class="form-control" placeholder="Dejar vacío para no cambiar" autocomplete="new-password">
                     </div>
                     <div class="col-6">
                         <label class="form-label fw-bold">Rol</label>
@@ -216,6 +216,7 @@
         document.getElementById('edit_name').value = user.name;
         document.getElementById('edit_email').value = user.email;
         document.getElementById('edit_role').value = user.role;
+        document.querySelector('#editUserForm input[name="password"]').value = '';
         document.getElementById('edit_all_areas').checked = Boolean(user.all_areas);
         document.querySelectorAll('.edit-area-checkbox').forEach(input => {
             input.checked = (user.areas || []).some(area => Number(area.id) === Number(input.value));
