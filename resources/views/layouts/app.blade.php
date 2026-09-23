@@ -407,6 +407,21 @@
             text-overflow: ellipsis;
         }
 
+        .sidebar-user-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-user-role {
+            color: rgba(255,255,255,0.58);
+            font-size: 0.64rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
         /* --- Navigation Menu --- */
         .sidebar-menu {
             padding: 16px 12px;
@@ -751,7 +766,19 @@
             </div>
             <div class="sidebar-avatar-dot"></div>
         </div>
-        <span class="sidebar-username">{{ Auth::user()->name }}</span>
+        @php
+            $roleLabels = [
+                'admin' => 'Administrador',
+                'cashier' => 'Cajero',
+                'cashier_waiter' => 'Mozo / Cajero',
+                'waiter' => 'Mozo',
+                'kitchen' => 'Cocina',
+            ];
+        @endphp
+        <div class="sidebar-user-info">
+            <span class="sidebar-username">{{ Auth::user()->name }}</span>
+            <span class="sidebar-user-role">{{ $roleLabels[Auth::user()->role] ?? 'Usuario' }}</span>
+        </div>
     </div>
 
     {{-- Navigation --}}
