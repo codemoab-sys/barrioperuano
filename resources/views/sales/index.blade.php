@@ -71,6 +71,8 @@
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Dinero en Caja (Balance)</small>
                     <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($balance, 2) }}</h3>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -98,7 +100,7 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">Hora</th>
+                                    <th class="ps-4">Fecha / Hora</th>
                                     <th>Folio</th>
                                     <th>Cliente</th>
                                     <th>Mesa</th>
@@ -110,7 +112,10 @@
                             <tbody>
                                 @forelse($orders as $order)
                                 <tr>
-                                    <td class="ps-4 text-muted">{{ $order->created_at->format('H:i') }}</td>
+                                    <td class="ps-4 text-muted text-nowrap">
+                                        <span class="d-block">{{ $order->created_at->format('d/m/Y') }}</span>
+                                        <small>{{ $order->created_at->format('H:i') }}</small>
+                                    </td>
                                     <td class="fw-bold">#{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ $order->client_name }} <br><small class="text-muted">{{ $order->document_type }}</small></td>
                                     <td><span class="badge bg-light text-dark border">{{ $order->table->name ?? 'Barra' }}</span></td>
