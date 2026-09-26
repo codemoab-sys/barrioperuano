@@ -95,8 +95,8 @@
             {{-- Barra búsqueda --}}
             <div style="position:sticky;top:0;background:#fff;padding-bottom:10px;z-index:10;">
                 <div class="input-group input-group-lg shadow-sm">
-                    <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-upc-scan"></i></span>
-                    <input type="text" id="barcodeInput" class="form-control border-start-0" placeholder="Escanear código..." autofocus autocomplete="off">
+                    <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-search"></i></span>
+                    <input type="text" id="barcodeInput" class="form-control border-start-0" placeholder="Buscar plato o escanear código..." autofocus autocomplete="off" aria-label="Buscar plato o escanear código">
                 </div>
             </div>
 
@@ -123,7 +123,7 @@ foreach($categories as $cat) {
                 @foreach($categories as $category)
                     @php $pal = $catColorMap[$category->id]; @endphp
                     @foreach($category->products as $product)
-                        <div class="col product-item cat-{{ $category->id }}">
+                        <div class="col product-item cat-{{ $category->id }}" data-name="{{ strtolower($product->name) }}" data-barcode="{{ strtolower($product->barcode ?? '') }}">
                             <div class="pos-product-card" onclick="addToOrder({{ $product->id }})" style="--pal-bg:{{ $pal['bg'] }};--pal-icon:{{ $pal['icon'] }};--pal-border:{{ $pal['border'] }};">
 
                                 {{-- Imagen o bloque de color con ícono --}}
@@ -430,8 +430,21 @@ foreach($categories as $cat) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const currencySymbol = "{{ $currency }}";
 
-    // Escáner
+    // Escáner / búsqueda en vivo
     const barcodeInput = document.getElementById('barcodeInput');
+    let activeCategory = 'all';
+
+    window.applyProductSearch = function() {
+        const query = (barcodeInput ? barcodeInput.value : '').trim().toLowerCase();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = (item.dataset.name || '').toLowerCase();
+            const barcode = (item.dataset.barcode || '').toLowerCase();
+            const matchesQuery = !query || name.includes(query) || barcode.includes(query);
+            const matchesCategory = activeCategory === 'all' || item.classList.contains(activeCategory);
+            item.style.display = matchesQuery && matchesCategory ? 'block' : 'none';
+        });
+    };
+
     if(barcodeInput) {
         setTimeout(() => {
             const activeElement = document.activeElement;
@@ -439,6 +452,10 @@ foreach($categories as $cat) {
                 barcodeInput.focus();
             }
         }, 150);
+
+        barcodeInput.addEventListener('input', function () {
+            window.applyProductSearch();
+        });
 
         barcodeInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
@@ -598,11 +615,10 @@ foreach($categories as $cat) {
 
     // Utils
     window.filterProducts = function(cat) {
+        activeCategory = cat;
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(cat === 'all' ? 'cat-btn-all' : 'cat-btn-' + cat.replace('cat-', '')).classList.add('active');
-        document.querySelectorAll('.product-item').forEach(item => {
-            item.style.display = (cat === 'all' || item.classList.contains(cat)) ? 'block' : 'none';
-        });
+        window.applyProductSearch();
     };
 
     window.updateCheckoutTotal = function() {
