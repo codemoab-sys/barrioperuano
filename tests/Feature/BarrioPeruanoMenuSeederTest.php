@@ -30,14 +30,19 @@ class BarrioPeruanoMenuSeederTest extends TestCase
         $productCount = Product::count();
         $seeder->run();
 
-        $this->assertSame(39, $productCount);
+        $this->assertSame(40, $productCount);
         $this->assertSame($productCount, Product::count());
         $this->assertDatabaseHas('bape_products', [
             'id' => $existingProduct->id,
             'price' => 99,
             'stock' => 7,
         ]);
-        $this->assertSame(38, Product::whereNull('stock')->count());
+        $this->assertSame(39, Product::whereNull('stock')->count());
+
+        $taper = Product::where('name', 'Taper')->firstOrFail();
+        $this->assertSame(1.0, (float) $taper->price);
+        $this->assertNull($taper->stock);
+        $this->assertSame('Envases', $taper->category->name);
 
         $barcoGrande = Product::where('name', 'like', 'Barco Grande%')->firstOrFail();
         $barcoPequeno = Product::where('name', 'like', 'Barco Pequeño%')->firstOrFail();

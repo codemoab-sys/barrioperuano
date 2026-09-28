@@ -63,6 +63,9 @@ class BarrioPeruanoMenuSeeder extends Seeder
                 ['Coca Cola 1.5 L', 10],
                 ['Pepsi 1.5 L', 10],
             ],
+            'Envases' => [
+                ['Taper', 1],
+            ],
         ];
         $requiredSauceCounts = [
             'El Al Toque (6 alas, 1 sabor)' => 1,
