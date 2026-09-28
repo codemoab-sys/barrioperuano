@@ -42,6 +42,6 @@ class PosProductSearchTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('barcodeInput');
-        $response->assertSee("barcodeInput.addEventListener('input'");
+        $response->assertSee("barcodeInput.addEventListener('input'", false);
     }
 }

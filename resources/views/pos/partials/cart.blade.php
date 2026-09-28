@@ -1,12 +1,17 @@
-<div class="p-2" data-order-id="{{ $order?->id }}">
+<div class="pos-cart-items p-2" data-order-id="{{ $order?->id }}">
     @if($order && $order->details->count() > 0)
-        <div class="table-responsive" style="overflow-x: hidden;">
-            <table class="table table-borderless align-middle mb-0" style="width: 100%;">
+        <div class="w-100">
+            <table class="table table-borderless align-middle mb-0 pos-cart-table">
+                <colgroup>
+                    <col style="width: 28px;">
+                    <col>
+                    <col style="width: 84px;">
+                </colgroup>
                 <thead class="text-muted small border-bottom">
                     <tr>
-                        <th style="width: 30px;"></th> <th>PROD.</th>
-                        <th class="text-center" style="min-width: 85px;">CANT.</th>
-                        <th class="text-end" style="min-width: 65px;">TOT.</th>
+                        <th></th>
+                        <th>PRODUCTO</th>
+                        <th class="text-center">CANT.</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,10 +25,13 @@
                             </td>
 
                             <td class="align-middle px-1">
-                                <div class="fw-bold text-dark text-truncate" style="width: 100%; font-size: 0.85rem;" title="{{ $detail->product->name }}">
+                                <div class="fw-bold text-dark text-break" style="font-size: 0.85rem; line-height: 1.25;" title="{{ $detail->product->name }}">
                                     {{ $detail->product->name }}
                                 </div>
-                                <div class="d-flex align-items-center">
+                                @if($detail->sauce_choices)
+                                    <small class="d-block text-danger fw-semibold text-break">Sabores: {{ implode(', ', $detail->sauce_choices) }}</small>
+                                @endif
+                                <div class="d-flex align-items-center flex-wrap">
                                     <small class="text-muted me-1" style="font-size: 0.7rem;">
                                         {{ $currency ?? 'S/' }}{{ number_format($detail->price, 2) }}
                                     </small>
@@ -37,24 +45,24 @@
                                        <i class="bi bi-pencil" style="font-size: 0.7rem;"></i>
                                     </a>
                                 </div>
+                                <small class="d-block text-end fw-bold text-dark" style="font-size: 0.75rem;">
+                                    Total: {{ $currency ?? 'S/' }}{{ number_format($detail->quantity * $detail->price, 2) }}
+                                </small>
                             </td>
 
                             <td class="align-middle px-0">
-                                <div class="input-group input-group-sm flex-nowrap">
-                                    <button class="btn btn-outline-secondary px-1 py-0" style="font-size: 0.8rem;" onclick="updateQty({{ $detail->id }}, {{ $detail->quantity - 1 }})">-</button>
+                                <div class="input-group input-group-sm flex-nowrap cart-quantity-control">
+                                    <button class="btn btn-outline-secondary px-1 py-0" type="button" aria-label="Restar uno" onclick="updateQty({{ $detail->id }}, {{ $detail->quantity - 1 }})">-</button>
                                     <input type="text" class="form-control text-center px-0 py-0 fw-bold bg-white border-secondary"
-                                           value="{{ $detail->quantity }}" readonly style="font-size: 0.85rem;">
+                                           value="{{ $detail->quantity }}" readonly aria-label="Cantidad" style="font-size: 0.85rem;">
                                     @php $atLimit = !is_null($detail->product->stock) && $detail->quantity >= $detail->product->stock; @endphp
                                     <button class="btn btn-{{ $atLimit ? 'secondary' : 'outline-primary' }} px-1 py-0" style="font-size: 0.8rem;"
+                                            type="button" aria-label="Sumar uno"
                                             onclick="updateQty({{ $detail->id }}, {{ $detail->quantity + 1 }})"
                                             {{ $atLimit ? 'disabled' : '' }}>
                                         @if($atLimit) <i class="bi bi-lock-fill" style="font-size: 0.6rem;"></i> @endif +
                                     </button>
                                 </div>
-                            </td>
-
-                            <td class="text-end align-middle fw-bold text-dark px-0" style="font-size: 0.9rem;">
-                                {{ number_format($detail->quantity * $detail->price, 2) }}
                             </td>
                         </tr>
                     @endforeach
@@ -69,7 +77,7 @@
     @endif
 </div>
 
-<div class="bg-white border-top p-3" style="flex-shrink: 0; margin-top: auto;">
+<div class="pos-cart-summary bg-white border-top p-3">
     @if($order)
         @php
             $igvRate = (new \App\Services\Sunat\SunatConfig())->igvRate();

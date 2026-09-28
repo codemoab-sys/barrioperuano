@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -42,6 +43,7 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:50|unique:bape_products,barcode', // <--- NUEVO
             'image' => 'nullable|image|max:2048',
             'stock' => 'nullable|integer|min:0',
+            'required_sauce_count' => $this->requiredSauceCountRules($request),
             'ingredients' => 'sometimes|array',
             'ingredients.*' => 'nullable|numeric|min:0.01',
         ]);
@@ -105,6 +107,7 @@ class ProductController extends Controller
             'promotional_price' => 'nullable|numeric|min:0',
             'barcode' => 'nullable|string|max:50|unique:bape_products,barcode,' . $product->id, // <--- NUEVO
             'image' => 'nullable|image|max:2048',
+            'required_sauce_count' => $this->requiredSauceCountRules($request),
             'ingredients' => 'sometimes|array',
             'ingredients.*' => 'nullable|numeric|min:0.01',
         ]);
@@ -132,6 +135,24 @@ class ProductController extends Controller
         $product->ingredients()->sync($recipeIngredients);
 
         return redirect()->route('products.index')->with('success', 'Producto actualizado.');
+    }
+
+    private function requiredSauceCountRules(Request $request): array
+    {
+        $categoryName = Category::whereKey($request->input('category_id'))->value('name');
+        $supportsSauceSelection = in_array(
+            mb_strtolower(trim((string) $categoryName)),
+            ['alitas', 'barcos'],
+            true
+        );
+
+        return [
+            Rule::prohibitedIf(!$supportsSauceSelection),
+            'nullable',
+            'integer',
+            'min:1',
+            'max:10',
+        ];
     }
 
     private function normalizeRecipeIngredients(array $ingredients): array

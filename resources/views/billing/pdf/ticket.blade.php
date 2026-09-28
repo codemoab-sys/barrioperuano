@@ -59,7 +59,10 @@
     <tbody>
         @foreach($order->details as $d)
             <tr>
-                <td>{{ $d->quantity }} x {{ $d->product->name ?? '—' }}</td>
+                <td>
+                    {{ $d->quantity }} x {{ $d->product->name ?? '—' }}
+                    @if($d->sauce_choices)<br><small>Sabores: {{ implode(', ', $d->sauce_choices) }}</small>@endif
+                </td>
                 <td class="right">{{ number_format($d->price * $d->quantity, 2) }}</td>
             </tr>
         @endforeach

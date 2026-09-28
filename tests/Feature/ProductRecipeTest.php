@@ -17,6 +17,53 @@ class ProductRecipeTest extends TestCase
 {
     use WithFaker;
 
+    public function test_product_endpoints_reject_invalid_required_sauce_counts(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $category = Category::create(['name' => 'Alitas', 'is_active' => true]);
+        $regularCategory = Category::create(['name' => 'Bebidas', 'is_active' => true]);
+
+        $this->actingAs($admin)->post('/products', [
+            'name' => 'Combo inválido',
+            'category_id' => $category->id,
+            'price' => 20,
+            'required_sauce_count' => 0,
+        ])->assertSessionHasErrors('required_sauce_count');
+
+        $this->post('/products', [
+            'name' => 'Bebida con salsa',
+            'category_id' => $regularCategory->id,
+            'price' => 5,
+            'required_sauce_count' => 1,
+        ])->assertSessionHasErrors('required_sauce_count');
+
+        $product = Product::create([
+            'name' => 'Combo válido',
+            'category_id' => $category->id,
+            'price' => 20,
+            'is_active' => true,
+            'is_saleable' => true,
+        ]);
+
+        $this->put('/products/' . $product->id, [
+            'name' => $product->name,
+            'category_id' => $category->id,
+            'price' => 20,
+            'required_sauce_count' => 11,
+        ])->assertSessionHasErrors('required_sauce_count');
+
+        $this->assertNull($product->fresh()->required_sauce_count);
+
+        $this->put('/products/' . $product->id, [
+            'name' => $product->name,
+            'category_id' => $regularCategory->id,
+            'price' => 20,
+            'required_sauce_count' => 1,
+        ])->assertSessionHasErrors('required_sauce_count');
+
+        $this->assertSame($category->id, $product->fresh()->category_id);
+    }
+
     public function test_admin_can_create_product_with_recipe_ingredients(): void
     {
         /** @var User $user */

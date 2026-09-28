@@ -37,18 +37,26 @@ class StockValidationService
      */
     public function validateItems(array $items): void
     {
+        $quantitiesByProduct = [];
+
         foreach ($items as $item) {
-            $product = Product::with('ingredients')->find($item['id'] ?? null);
+            $productId = (int) ($item['id'] ?? 0);
+            $quantity = (int) ($item['qty'] ?? 0);
+
+            if ($productId < 1 || $quantity < 1) {
+                continue;
+            }
+
+            $quantitiesByProduct[$productId] = ($quantitiesByProduct[$productId] ?? 0) + $quantity;
+        }
+
+        foreach ($quantitiesByProduct as $productId => $quantity) {
+            $product = Product::with('ingredients')->find($productId);
             if (!$product) {
                 continue;
             }
 
-            $qty = (int) ($item['qty'] ?? 0);
-            if ($qty < 1) {
-                continue;
-            }
-
-            $this->validateForQuantity($product, $qty);
+            $this->validateForQuantity($product, $quantity);
         }
     }
 }

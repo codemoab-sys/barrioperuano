@@ -48,6 +48,9 @@
                                                 </span>
                                             </div>
                                         @endif
+                                        @if($detail->sauce_choices)
+                                            <div class="ms-5 mt-1 fw-bold text-danger">Sabores: {{ implode(', ', $detail->sauce_choices) }}</div>
+                                        @endif
                                     </div>
                                     
                                     <form action="{{ route('kitchen.update', $detail) }}" method="POST">

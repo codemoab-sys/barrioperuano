@@ -21,9 +21,14 @@ use HasFactory;
         'stock',
         'is_active',
         'is_saleable',
+        'required_sauce_count',
         'promotional_price',
         'is_chef_recommendation',
         'is_new'
+    ];
+
+    protected $casts = [
+        'required_sauce_count' => 'integer',
     ];
 
     // RelaciÃƒÂ³n con CategorÃƒÂ­a

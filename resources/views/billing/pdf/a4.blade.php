@@ -89,7 +89,10 @@
             @foreach($order->details as $d)
                 <tr>
                     <td class="center">{{ $d->quantity }}</td>
-                    <td>{{ $d->product->name ?? '—' }}</td>
+                    <td>
+                        {{ $d->product->name ?? '—' }}
+                        @if($d->sauce_choices)<br><small>Sabores: {{ implode(', ', $d->sauce_choices) }}</small>@endif
+                    </td>
                     <td class="num">{{ number_format($d->price, 2) }}</td>
                     <td class="num">{{ number_format($d->price * $d->quantity, 2) }}</td>
                 </tr>

@@ -139,6 +139,9 @@
                                             @if($detail->note)
                                                 <br><small class="text-muted"><i class="bi bi-chat-left-text me-1"></i>{{ $detail->note }}</small>
                                             @endif
+                                            @if($detail->sauce_choices)
+                                                <br><small class="text-danger fw-bold">Sabores: {{ implode(', ', $detail->sauce_choices) }}</small>
+                                            @endif
                                         </td>
                                         <td class="text-end text-muted">{{ $currency }}{{ number_format($detail->price, 2) }}</td>
                                         <td class="text-end fw-bold">{{ $currency }}{{ number_format($detail->quantity * $detail->price, 2) }}</td>

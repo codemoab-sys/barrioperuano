@@ -17,7 +17,12 @@ use HasFactory;
         'quantity',
         'price',
         'status',
-        'note' // <--- NUEVO CAMPO AUTORIZADO
+        'note',
+        'sauce_choices',
+    ];
+
+    protected $casts = [
+        'sauce_choices' => 'array',
     ];
 
     // RelaciÃƒÂ³n: Pertenece a una Orden

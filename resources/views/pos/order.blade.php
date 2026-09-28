@@ -176,7 +176,7 @@ foreach($categories as $cat) {
                     <i class="bi bi-eye-fill"></i> Ver
                 </button>
             </div>
-            <div id="cart-container" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;">
+            <div id="cart-container" style="flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;">
                 @include('pos.partials.cart', ['order' => $order])
             </div>
         </div>
@@ -248,6 +248,29 @@ foreach($categories as $cat) {
             </div>
             <div class="modal-footer p-1">
                 <button type="button" class="btn btn-warning w-100 btn-sm text-dark fw-bold" onclick="saveNote()">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sauceModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <div>
+                    <h5 class="modal-title fw-bold">Elige los sabores</h5>
+                    <div id="sauceProductName" class="small text-dark"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="sauceSelectionHint" class="small text-muted mb-2"></p>
+                <div id="sauceOptions" class="row g-2"></div>
+                <div id="sauceSelectionCount" class="small fw-bold text-end mt-2">0 seleccionados</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning fw-bold" onclick="confirmSauceChoices()">Agregar al pedido</button>
             </div>
         </div>
     </div>
@@ -429,6 +452,9 @@ foreach($categories as $cat) {
     const tableId = {{ $table->id }};
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const currencySymbol = "{{ $currency }}";
+    const wingSauceGroups = @json(\App\Services\WingSauceMenu::groups());
+    let pendingSauceProductId = null;
+    let pendingSauceLimit = 0;
 
     // Escáner / búsqueda en vivo
     const barcodeInput = document.getElementById('barcodeInput');
@@ -467,49 +493,124 @@ foreach($categories as $cat) {
     }
 
     // AJAX
+    async function handleProductAddResponse(response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.requires_sauces) {
+                showSauceSelector(data);
+                return;
+            }
+            if (data.error) {
+                Swal.fire({ icon: 'warning', title: 'No se pudo agregar', text: data.error, confirmButtonColor: '#0d6efd' });
+                return;
+            }
+        }
+
+        document.getElementById('cart-container').innerHTML = await response.text();
+        updateCheckoutTotal();
+        ensureCheckoutModal();
+    }
+
     window.addByBarcode = function(code) {
         fetch(`{{ url('/pos/order') }}/${tableId}/barcode`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
             body: JSON.stringify({ barcode: code })
-        }).then(r => r.text()).then(html => {
-            // Respuesta JSON: múltiples coincidencias o error (no toca el carrito)
-            if(html.trim().startsWith('{')) {
-                try {
-                    var data = JSON.parse(html);
-                    if(data.matches) {
-                        showProductPick(data.matches);
-                    } else if(data.error) {
-                        Swal.fire({ icon: 'warning', title: 'Stock insuficiente', text: data.error, confirmButtonColor: '#0d6efd' });
-                    }
-                    barcodeInput.value = ''; barcodeInput.focus();
-                    return;
-                } catch(e) {}
+        }).then(async response => {
+            if ((response.headers.get('content-type') || '').includes('application/json')) {
+                const data = await response.json();
+                if (data.matches) {
+                    showProductPick(data.matches);
+                } else if (data.requires_sauces) {
+                    showSauceSelector(data);
+                } else if (data.error) {
+                    Swal.fire({ icon: 'warning', title: 'No se pudo agregar', text: data.error, confirmButtonColor: '#0d6efd' });
+                }
+                barcodeInput.value = '';
+                window.applyProductSearch();
+                return;
             }
-            document.getElementById('cart-container').innerHTML = html;
+            document.getElementById('cart-container').innerHTML = await response.text();
             barcodeInput.value = ''; barcodeInput.focus();
             updateCheckoutTotal();
         });
     };
 
     window.addByProductId = function(productId) {
+        requestProductAdd(productId);
+    };
+
+    function requestProductAdd(productId, sauceChoices = null) {
+        const payload = { product_id: productId };
+        if (sauceChoices !== null) payload.sauce_choices = sauceChoices;
         fetch(`{{ url('/pos/order') }}/${tableId}/add`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ product_id: productId })
-        }).then(r => r.text()).then(html => {
-            if(html.trim().startsWith('{')) {
-                try {
-                    var data = JSON.parse(html);
-                    if(data.error) {
-                        Swal.fire({ icon: 'warning', title: 'Stock insuficiente', text: data.error, confirmButtonColor: '#0d6efd' });
-                        return;
-                    }
-                } catch(e) {}
-            }
-            document.getElementById('cart-container').innerHTML = html;
-            updateCheckoutTotal();
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify(payload)
+        }).then(handleProductAddResponse);
+    }
+
+    function showSauceSelector(data) {
+        pendingSauceProductId = data.product_id;
+        pendingSauceLimit = data.max_sauces;
+        document.getElementById('sauceProductName').textContent = data.product_name;
+        document.getElementById('sauceSelectionHint').textContent = `Selecciona exactamente ${pendingSauceLimit} sabor${pendingSauceLimit === 1 ? '' : 'es'}.`;
+        const options = document.getElementById('sauceOptions');
+        options.innerHTML = '';
+
+        Object.entries(wingSauceGroups).forEach(([group, sauces]) => {
+            const column = document.createElement('div');
+            column.className = 'col-6';
+            const section = document.createElement('div');
+            section.className = 'border rounded p-2 h-100';
+            const heading = document.createElement('div');
+            heading.className = 'small fw-bold mb-1';
+            heading.textContent = group;
+            section.appendChild(heading);
+
+            sauces.forEach(sauce => {
+                const label = document.createElement('label');
+                label.className = 'form-check small mb-1';
+                const checkbox = document.createElement('input');
+                checkbox.className = 'form-check-input sauce-choice';
+                checkbox.type = 'checkbox';
+                checkbox.value = sauce;
+                checkbox.addEventListener('change', updateSauceSelection);
+                const text = document.createElement('span');
+                text.className = 'form-check-label';
+                text.textContent = sauce;
+                label.append(checkbox, text);
+                section.appendChild(label);
+            });
+            column.appendChild(section);
+            options.appendChild(column);
         });
+
+        updateSauceSelection();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('sauceModal')).show();
+    }
+
+    function updateSauceSelection() {
+        const checkboxes = Array.from(document.querySelectorAll('.sauce-choice'));
+        const selectedCount = checkboxes.filter(checkbox => checkbox.checked).length;
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = !checkbox.checked && selectedCount >= pendingSauceLimit;
+        });
+        document.getElementById('sauceSelectionCount').textContent = `${selectedCount} de ${pendingSauceLimit} seleccionados`;
+    }
+
+    window.confirmSauceChoices = function() {
+        const sauceChoices = Array.from(document.querySelectorAll('.sauce-choice:checked')).map(checkbox => checkbox.value);
+        if (sauceChoices.length !== pendingSauceLimit) {
+            document.getElementById('sauceSelectionHint').textContent = `Selecciona exactamente ${pendingSauceLimit} sabor${pendingSauceLimit === 1 ? '' : 'es'} para continuar.`;
+            return;
+        }
+
+        const productId = pendingSauceProductId;
+        bootstrap.Modal.getInstance(document.getElementById('sauceModal')).hide();
+        pendingSauceProductId = null;
+        requestProductAdd(productId, sauceChoices);
     };
 
     window.showProductPick = function(matches) {
@@ -531,24 +632,7 @@ foreach($categories as $cat) {
     };
 
     window.addToOrder = function(productId) {
-        fetch(`{{ url('/pos/order') }}/${tableId}/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ product_id: productId })
-        }).then(r => r.text()).then(html => {
-            if(html.trim().startsWith('{')) {
-                try {
-                    var data = JSON.parse(html);
-                    if(data.error) {
-                        Swal.fire({ icon: 'warning', title: 'Stock insuficiente', text: data.error, confirmButtonColor: '#0d6efd' });
-                        return;
-                    }
-                } catch(e) {}
-            }
-            document.getElementById('cart-container').innerHTML = html;
-            updateCheckoutTotal();
-            ensureCheckoutModal();
-        });
+        requestProductAdd(productId);
     };
 
     window.ensureCheckoutModal = function() {
@@ -991,6 +1075,7 @@ foreach($categories as $cat) {
     /* ── POS Cart Column ─────────────────────────────────────────── */
     .pos-cart-col {
         width: 280px;
+        min-width: 0;
         flex-shrink: 0;
         background: #fff;
         border-left: 1px solid #e5e7eb;
@@ -998,6 +1083,37 @@ foreach($categories as $cat) {
         flex-direction: column;
         height: 100%;
         box-shadow: -4px 0 20px rgba(45,27,94,0.07);
+    }
+
+    #cart-container { min-width: 0; }
+    .pos-cart-items {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+    .pos-cart-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+    .pos-cart-table > :not(caption) > * > * {
+        padding: .45rem .25rem;
+    }
+    .pos-cart-table th { font-size: .7rem; }
+    .cart-quantity-control { width: 84px; }
+    .cart-quantity-control .btn {
+        flex: 0 0 25px;
+        min-width: 25px;
+    }
+    .cart-quantity-control .form-control {
+        flex: 1 1 30px;
+        width: 30px;
+        min-width: 0;
+    }
+    .pos-cart-summary {
+        flex: 0 0 auto;
+        margin-top: auto;
     }
 
     /* ── POS Product Cards ─────────────────────────────────────── */
@@ -1223,6 +1339,12 @@ foreach($categories as $cat) {
         }
         .pos-cart-col.mobile-open {
             transform: translateY(0);
+            top: 0;
+            bottom: 0;
+            height: 100vh;
+            height: 100dvh;
+            max-height: 100vh;
+            max-height: 100dvh;
         }
 
         .pos-cart-col > div:first-child .btn {

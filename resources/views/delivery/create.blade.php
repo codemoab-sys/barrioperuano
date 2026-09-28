@@ -104,7 +104,7 @@
                             @foreach($categories as $category)
                                 @foreach($category->products as $product)
                                     <div class="col-6 product-card" data-name="{{ strtolower($product->name) }}" data-cat="{{ $category->id }}">
-                                        <div class="card h-100 border-0 shadow-sm" style="cursor: pointer;" onclick="addDeliveryProduct({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }})">
+                                        <div class="card h-100 border-0 shadow-sm" style="cursor: pointer;" onclick="addDeliveryProduct({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, {{ \\App\\Services\\WingSauceMenu::flavorLimit($product) ?? 0 }})">
                                             <div class="card-body p-2 text-center">
                                                 <h6 class="small fw-bold mb-1 text-truncate" title="{{ $product->name }}">{{ $product->name }}</h6>
                                                 <div class="text-primary fw-bold small">{{ $currency }}{{ number_format($product->price, 2) }}</div>
@@ -145,8 +145,33 @@
     </form>
 </div>
 
+<div class="modal fade" id="deliverySauceModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <div>
+                    <h5 class="modal-title fw-bold">Elige los sabores</h5>
+                    <div id="deliverySauceProduct" class="small text-dark"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deliverySauceHint" class="small text-muted mb-2"></p>
+                <div id="deliverySauceOptions" class="row g-2"></div>
+                <div id="deliverySauceCount" class="small fw-bold text-end mt-2">0 seleccionados</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning fw-bold" onclick="confirmDeliverySauces()">Agregar al pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let deliveryCart = [];
+    const wingSauceGroups = @json(\\App\\Services\\WingSauceMenu::groups());
+    let pendingSauceProduct = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof TomSelect !== 'undefined') {
@@ -197,11 +222,77 @@
 
     document.getElementById('delivery_fee').addEventListener('input', renderDeliveryCart);
 
-    function addDeliveryProduct(id, name, price) {
-        const existing = deliveryCart.find(i => i.id === id);
+    function addDeliveryProduct(id, name, price, maxSauces = 0, sauceChoices = null) {
+        if (maxSauces > 0 && sauceChoices === null) {
+            showDeliverySauceSelector({ id, name, price, maxSauces });
+            return;
+        }
+
+        const selectedSauces = sauceChoices || [];
+        const existing = deliveryCart.find(i => i.id === id && JSON.stringify(i.sauce_choices) === JSON.stringify(selectedSauces));
         if(existing) existing.qty++;
-        else deliveryCart.push({ id, name, price, qty: 1 });
+        else deliveryCart.push({ id, name, price, qty: 1, sauce_choices: selectedSauces });
         renderDeliveryCart();
+    }
+
+    function showDeliverySauceSelector(product) {
+        pendingSauceProduct = product;
+        document.getElementById('deliverySauceProduct').textContent = product.name;
+        document.getElementById('deliverySauceHint').textContent = `Selecciona exactamente ${product.maxSauces} sabor${product.maxSauces === 1 ? '' : 'es'}.`;
+        const options = document.getElementById('deliverySauceOptions');
+        options.innerHTML = '';
+
+        Object.entries(wingSauceGroups).forEach(([group, sauces]) => {
+            const column = document.createElement('div');
+            column.className = 'col-6';
+            const section = document.createElement('div');
+            section.className = 'border rounded p-2 h-100';
+            const heading = document.createElement('div');
+            heading.className = 'small fw-bold mb-1';
+            heading.textContent = group;
+            section.appendChild(heading);
+            sauces.forEach(sauce => {
+                const label = document.createElement('label');
+                label.className = 'form-check small mb-1';
+                const checkbox = document.createElement('input');
+                checkbox.className = 'form-check-input delivery-sauce-choice';
+                checkbox.type = 'checkbox';
+                checkbox.value = sauce;
+                checkbox.addEventListener('change', updateDeliverySauceCount);
+                const text = document.createElement('span');
+                text.className = 'form-check-label';
+                text.textContent = sauce;
+                label.append(checkbox, text);
+                section.appendChild(label);
+            });
+            column.appendChild(section);
+            options.appendChild(column);
+        });
+
+        updateDeliverySauceCount();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deliverySauceModal')).show();
+    }
+
+    function updateDeliverySauceCount() {
+        const checkboxes = Array.from(document.querySelectorAll('.delivery-sauce-choice'));
+        const selected = checkboxes.filter(checkbox => checkbox.checked).length;
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = !checkbox.checked && selected >= pendingSauceProduct.maxSauces;
+        });
+        document.getElementById('deliverySauceCount').textContent = `${selected} de ${pendingSauceProduct.maxSauces} seleccionados`;
+    }
+
+    function confirmDeliverySauces() {
+        const sauceChoices = Array.from(document.querySelectorAll('.delivery-sauce-choice:checked')).map(checkbox => checkbox.value);
+        if (sauceChoices.length !== pendingSauceProduct.maxSauces) {
+            document.getElementById('deliverySauceHint').textContent = `Selecciona exactamente ${pendingSauceProduct.maxSauces} sabor${pendingSauceProduct.maxSauces === 1 ? '' : 'es'} para continuar.`;
+            return;
+        }
+
+        const product = pendingSauceProduct;
+        bootstrap.Modal.getInstance(document.getElementById('deliverySauceModal')).hide();
+        pendingSauceProduct = null;
+        addDeliveryProduct(product.id, product.name, product.price, product.maxSauces, sauceChoices);
     }
 
     function removeDeliveryProduct(index) {
@@ -238,7 +329,7 @@
                     <td style="width:25px;" class="px-0">
                         <button type="button" class="btn btn-sm text-danger p-0" onclick="removeDeliveryProduct(${index})"><i class="bi bi-x-circle-fill"></i></button>
                     </td>
-                    <td class="small fw-bold lh-sm text-truncate px-1" title="${item.name}">${item.name}<br><span class="text-muted fw-normal" style="font-size:0.7rem;">S/${item.price.toFixed(2)}</span></td>
+                    <td class="small fw-bold lh-sm text-truncate px-1" title="${item.name}">${item.name}${item.sauce_choices.length ? `<br><span class="text-danger">Sabores: ${item.sauce_choices.join(', ')}</span>` : ''}<br><span class="text-muted fw-normal" style="font-size:0.7rem;">S/${item.price.toFixed(2)}</span></td>
                     <td style="width:80px;" class="px-0">
                         <div class="input-group input-group-sm flex-nowrap">
                             <button type="button" class="btn btn-outline-secondary px-1 py-0" onclick="updateDeliveryQty(${index}, -1)">-</button>
@@ -247,6 +338,7 @@
                         </div>
                         <input type="hidden" name="products[${index}][id]" value="${item.id}">
                         <input type="hidden" name="products[${index}][qty]" value="${item.qty}">
+                        ${item.sauce_choices.map(sauce => `<input type="hidden" name="products[${index}][sauce_choices][]" value="${sauce}">`).join('')}
                     </td>
                     <td style="width:60px;" class="text-end fw-bold px-0 small">
                         ${lineTotal.toFixed(2)}

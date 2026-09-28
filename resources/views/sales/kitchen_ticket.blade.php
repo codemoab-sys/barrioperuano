@@ -80,6 +80,9 @@
             @if($detail->note)
                 <span class="note">⚠️ {{ $detail->note }}</span>
             @endif
+            @if($detail->sauce_choices)
+                <span class="note">Sabores: {{ implode(', ', $detail->sauce_choices) }}</span>
+            @endif
         </div>
     </div>
     @endforeach

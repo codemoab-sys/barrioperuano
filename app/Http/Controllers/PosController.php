@@ -15,12 +15,15 @@ use App\Models\DocumentSeries;
 use App\Models\CashRegister;
 use App\Services\PosCheckoutService;
 use App\Services\StockValidationService;
+use App\Services\WingSauceMenu;
 use App\Services\Sunat\SunatConfig;
 use App\Services\Sunat\NubeFactService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -119,12 +122,17 @@ class PosController extends Controller
 
         $this->authorizeTableOrder($table);
         $product = Product::findOrFail($request->product_id);
+        $sauceChoices = $this->validatedSauceChoices($request, $product);
+        if ($sauceChoices instanceof \Illuminate\Http\JsonResponse) {
+            return $sauceChoices;
+        }
+
         $error = $this->checkStockAvailability($product, $table);
         if ($error) {
             return response()->json(['error' => $error], 422);
         }
 
-        $this->addItemToTable($table, $product);
+        $this->addItemToTable($table, $product, $sauceChoices);
         return $this->getCartHtml($table);
     }
 
@@ -148,12 +156,7 @@ class PosController extends Controller
                           ->first();
 
         if ($product) {
-            $error = $this->checkStockAvailability($product, $table);
-            if ($error) {
-                return response()->json(['error' => $error], 422);
-            }
-            $this->addItemToTable($table, $product);
-            return $this->getCartHtml($table);
+            return $this->addProductFromBarcode($table, $product, $request);
         }
 
         // 2) Búsqueda por nombre (parcial)
@@ -169,12 +172,7 @@ class PosController extends Controller
         }
 
         if ($matches->count() === 1) {
-            $error = $this->checkStockAvailability($matches->first(), $table);
-            if ($error) {
-                return response()->json(['error' => $error], 422);
-            }
-            $this->addItemToTable($table, $matches->first());
-            return $this->getCartHtml($table);
+            return $this->addProductFromBarcode($table, $matches->first(), $request);
         }
 
         return response()->json([
@@ -185,6 +183,64 @@ class PosController extends Controller
                 'barcode' => $p->barcode,
             ]),
         ]);
+    }
+
+    private function addProductFromBarcode(Table $table, Product $product, Request $request)
+    {
+        $sauceChoices = $this->validatedSauceChoices($request, $product);
+        if ($sauceChoices instanceof \Illuminate\Http\JsonResponse) {
+            return $sauceChoices;
+        }
+
+        $error = $this->checkStockAvailability($product, $table);
+        if ($error) {
+            return response()->json(['error' => $error], 422);
+        }
+
+        $this->addItemToTable($table, $product, $sauceChoices);
+        return $this->getCartHtml($table);
+    }
+
+    private function validatedSauceChoices(Request $request, Product $product): array|\Illuminate\Http\JsonResponse
+    {
+        $limit = WingSauceMenu::flavorLimit($product);
+        if ($limit === null) {
+            return [];
+        }
+
+        if (!$request->exists('sauce_choices')) {
+            return response()->json([
+                'requires_sauces' => true,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'max_sauces' => $limit,
+            ]);
+        }
+
+        $choices = $request->input('sauce_choices');
+        $validator = Validator::make(
+            ['sauce_choices' => $choices],
+            [
+                'sauce_choices' => ['required', 'array', 'size:' . $limit],
+                'sauce_choices.*' => [
+                    'required',
+                    'string',
+                    'distinct',
+                    Rule::in(WingSauceMenu::sauces()),
+                ],
+            ],
+            [
+                'sauce_choices.size' => 'Este combo requiere exactamente :size sabores.',
+                'sauce_choices.*.distinct' => 'No repitas el mismo sabor.',
+                'sauce_choices.*.in' => 'Uno de los sabores seleccionados no es válido.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        return array_values($choices);
     }
 
     /**
@@ -263,15 +319,18 @@ class PosController extends Controller
     /**
      * Agrega producto al carrito dentro de una transacción.
      */
-    private function addItemToTable(Table $table, Product $product)
+    private function addItemToTable(Table $table, Product $product, array $sauceChoices = [])
     {
-        DB::transaction(function() use ($table, $product) {
+        DB::transaction(function() use ($table, $product, $sauceChoices) {
             $order = Order::firstOrCreate(
                 ['table_id' => $table->id, 'status' => 'pending'],
                 ['user_id' => Auth::id() ?? 1, 'total' => 0]
             );
 
-            $detail = $order->details()->where('product_id', $product->id)->first();
+            $detail = $order->details()
+                ->where('product_id', $product->id)
+                ->get()
+                ->first(fn ($item) => ($item->sauce_choices ?? []) === $sauceChoices);
 
             if ($detail) {
                 $detail->increment('quantity');
@@ -280,7 +339,8 @@ class PosController extends Controller
                     'product_id' => $product->id,
                     'quantity' => 1,
                     'price' => $product->price,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'sauce_choices' => $sauceChoices ?: null,
                 ]);
             }
             $this->recalculateTotal($order);

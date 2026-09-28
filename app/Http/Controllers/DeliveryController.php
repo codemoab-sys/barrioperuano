@@ -15,11 +15,14 @@ use App\Models\Setting;
 use App\Services\DeliveryService;
 use App\Services\SalesService;
 use App\Services\StockValidationService;
+use App\Services\WingSauceMenu;
 use App\Services\Sunat\SunatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class DeliveryController extends Controller
@@ -89,9 +92,42 @@ class DeliveryController extends Controller
             'products.*.qty' => 'required|integer|min:1',
         ]);
 
-        $this->stockValidationService->validateItems($request->products);
+        $products = $request->input('products');
+        foreach ($products as $index => &$item) {
+            $product = Product::with('category')->findOrFail($item['id']);
+            $flavorLimit = WingSauceMenu::flavorLimit($product);
+            if ($flavorLimit === null) {
+                $item['sauce_choices'] = [];
+                continue;
+            }
 
-        DB::transaction(function () use ($request) {
+            $validator = Validator::make(
+                ['sauce_choices' => $item['sauce_choices'] ?? null],
+                [
+                    'sauce_choices' => ['required', 'array', 'size:' . $flavorLimit],
+                    'sauce_choices.*' => ['required', 'string', 'distinct', Rule::in(WingSauceMenu::sauces())],
+                ],
+                [
+                    'sauce_choices.required' => 'Selecciona los sabores del combo de alitas.',
+                    'sauce_choices.size' => 'Este combo requiere exactamente :size sabores.',
+                    'sauce_choices.*.distinct' => 'No repitas el mismo sabor.',
+                    'sauce_choices.*.in' => 'Uno de los sabores seleccionados no es válido.',
+                ]
+            );
+
+            if ($validator->fails()) {
+                throw ValidationException::withMessages([
+                    "products.{$index}.sauce_choices" => $validator->errors()->first(),
+                ]);
+            }
+
+            $item['sauce_choices'] = array_values($item['sauce_choices']);
+        }
+        unset($item);
+
+        $this->stockValidationService->validateItems($products);
+
+        DB::transaction(function () use ($request, $products) {
             // 1. Crear la Orden (sin mesa — delivery)
             $order = Order::create([
                 'table_id'       => null,
@@ -105,7 +141,7 @@ class DeliveryController extends Controller
 
             // 2. Agregar productos a la orden
             $subtotal = 0;
-            foreach ($request->products as $item) {
+            foreach ($products as $item) {
                 $product = Product::findOrFail($item['id']);
                 $line    = $product->price * $item['qty'];
                 $subtotal += $line;
@@ -117,6 +153,7 @@ class DeliveryController extends Controller
                     'price'      => $product->price,
                     'status'     => 'pending',
                     'note'       => $item['note'] ?? null,
+                    'sauce_choices' => $item['sauce_choices'] ?: null,
                 ]);
             }
 

@@ -86,6 +86,9 @@
                         @if($detail->note)
                             <br><i style="font-size: 10px;">({{ $detail->note }})</i>
                         @endif
+                        @if($detail->sauce_choices)
+                            <br><i style="font-size: 10px;">Sabores: {{ implode(', ', $detail->sauce_choices) }}</i>
+                        @endif
                     </td>
                     <td class="price">{{ number_format($detail->quantity * $detail->price, 2) }}</td>
                 </tr>
