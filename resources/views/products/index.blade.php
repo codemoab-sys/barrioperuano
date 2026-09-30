@@ -18,6 +18,23 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
+        <form method="GET" action="{{ route('products.index') }}" class="p-3 border-bottom">
+            <div class="row g-2">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <label for="inventorySearch" class="visually-hidden">Buscar productos</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="search" name="search" id="inventorySearch" class="form-control" value="{{ request('search') }}" placeholder="Producto, código de barras o categoría" autocomplete="off">
+                        @if(request()->filled('search'))
+                            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        @endif
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Buscar</button>
+                    </div>
+                </div>
+            </div>
+        </form>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">

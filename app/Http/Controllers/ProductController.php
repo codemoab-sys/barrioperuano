@@ -14,10 +14,23 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Listamos productos con su categoría, ordenados por los más nuevos
-        $products = Product::with('category')->orderBy('created_at', 'desc')->paginate(10);
+        $search = trim((string) $request->query('search', ''));
+        $products = Product::with('category')
+            ->when($search !== '', function ($query) use ($search) {
+                $term = '%' . $search . '%';
+                $query->where(function ($query) use ($term) {
+                    $query->where('name', 'like', $term)
+                        ->orWhere('barcode', 'like', $term)
+                        ->orWhereHas('category', function ($categoryQuery) use ($term) {
+                            $categoryQuery->where('name', 'like', $term);
+                        });
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
         $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
 
         return view('products.index', compact('products', 'currencySymbol'));
