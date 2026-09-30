@@ -54,7 +54,7 @@
                             <button type="submit" class="btn btn-primary btn-lg fw-bold border-0 shadow-sm" style="background: #2d1b5e; border-radius: 12px; padding: 14px;">
                                 Cerrar Caja
                             </button>
-                            <a href="{{ route('dashboard') }}" class="btn btn-light btn-lg mt-3 text-muted fw-bold shadow-sm" style="border-radius: 12px; padding: 14px;">
+                            <a href="{{ auth()->user()->role === 'admin' ? route('dashboard') : route('pos.index') }}" class="btn btn-light btn-lg mt-3 text-muted fw-bold shadow-sm" style="border-radius: 12px; padding: 14px;">
                                 Cancelar
                             </a>
                         </div>

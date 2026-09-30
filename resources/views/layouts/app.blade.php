@@ -726,6 +726,14 @@
 
 <!-- ===================== SIDEBAR ===================== -->
 <div class="sidebar" id="sidebar">
+    @php
+        $role = Auth::user()->role;
+        $homeRoute = match ($role) {
+            'admin' => route('dashboard'),
+            'kitchen' => route('kitchen.index'),
+            default => route('pos.index'),
+        };
+    @endphp
 
     {{-- Brand --}}
     <div class="sidebar-brand">
@@ -741,16 +749,16 @@
             }
         @endphp
         @if($logo && !$logoIsRect)
-            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+            <a href="{{ $homeRoute }}" class="sidebar-brand-link" aria-label="Ir al inicio">
                 <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="width:40px;height:40px;object-fit:contain;" alt="logo">
             </a>
             <div class="brand-name">{{ \App\Models\Setting::where('key', 'company_name')->value('value') ?? 'Mi Restaurante' }}</div>
         @elseif($logoIsRect)
-            <a href="{{ route('dashboard') }}" class="sidebar-brand-link sidebar-brand-logo-link" aria-label="Ir al dashboard">
+            <a href="{{ $homeRoute }}" class="sidebar-brand-link sidebar-brand-logo-link" aria-label="Ir al inicio">
                 <img src="{{ route('uploaded-assets.show', ['path' => $logo]) }}" style="max-width:100%;width:100%;max-height:60px;object-fit:contain;" alt="logo">
             </a>
         @else
-            <a href="{{ route('dashboard') }}" class="sidebar-brand-link" aria-label="Ir al dashboard">
+            <a href="{{ $homeRoute }}" class="sidebar-brand-link" aria-label="Ir al inicio">
                 <div class="logo-box"><i class="bi bi-shop"></i></div>
             </a>
             <div class="brand-name">{{ \App\Models\Setting::where('key', 'company_name')->value('value') ?? 'Mi Restaurante' }}</div>
@@ -783,9 +791,7 @@
 
     {{-- Navigation --}}
     <div class="sidebar-menu">
-        @php $role = Auth::user()->role; @endphp
-
-        @if(in_array($role, ['admin', 'cashier', 'cashier_waiter']))
+        @if($role === 'admin')
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-1x2-fill"></i> Dashboard
             </a>

@@ -61,7 +61,8 @@ class CashRegisterController extends Controller
     public function create()
     {
         if ($cashRegister = CashRegister::current()) {
-            return redirect()->route('dashboard')->with('info', 'Ya hay un turno de caja abierto por ' . $cashRegister->user->name . '.');
+            $route = auth()->user()->role === 'admin' ? 'dashboard' : 'pos.index';
+            return redirect()->route($route)->with('info', 'Ya hay un turno de caja abierto por ' . $cashRegister->user->name . '.');
         }
         return view('cash_registers.create');
     }
@@ -73,7 +74,8 @@ class CashRegisterController extends Controller
         ]);
 
         if (CashRegister::current()) {
-            return redirect()->route('dashboard')->with('error', 'Ya hay una caja abierta.');
+            $route = auth()->user()->role === 'admin' ? 'dashboard' : 'pos.index';
+            return redirect()->route($route)->with('error', 'Ya hay una caja abierta.');
         }
 
         DB::transaction(function () use ($request) {
@@ -97,7 +99,8 @@ class CashRegisterController extends Controller
         $cashRegister = CashRegister::current();
 
         if (!$cashRegister) {
-            return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta para cerrar.');
+            $route = auth()->user()->role === 'admin' ? 'dashboard' : 'cash_registers.create';
+            return redirect()->route($route)->with('error', 'No tienes ninguna caja abierta para cerrar.');
         }
 
         abort_unless($cashRegister->canBeClosedBy(auth()->user()), 403);
@@ -122,7 +125,8 @@ class CashRegisterController extends Controller
         $cashRegister = CashRegister::current();
 
         if (!$cashRegister) {
-            return redirect()->route('dashboard')->with('error', 'No tienes ninguna caja abierta.');
+            $route = auth()->user()->role === 'admin' ? 'dashboard' : 'cash_registers.create';
+            return redirect()->route($route)->with('error', 'No tienes ninguna caja abierta.');
         }
 
         abort_unless($cashRegister->canBeClosedBy(auth()->user()), 403);
@@ -150,6 +154,7 @@ class CashRegisterController extends Controller
             return $difference;
         });
 
-        return redirect()->route('dashboard')->with('success', 'Turno de caja cerrado correctamente. Diferencia: S/ ' . number_format($difference, 2));
+        $route = auth()->user()->role === 'admin' ? 'dashboard' : 'cash_registers.create';
+        return redirect()->route($route)->with('success', 'Turno de caja cerrado correctamente. Diferencia: S/ ' . number_format($difference, 2));
     }
 }

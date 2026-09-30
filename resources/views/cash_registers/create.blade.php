@@ -47,9 +47,11 @@
                             <button type="submit" class="btn btn-primary btn-lg fw-bold border-0 shadow-sm" style="background: var(--primary); border-radius: 12px; padding: 14px;">
                                 Abrir Turno de Caja
                             </button>
-                            <a href="{{ route('dashboard') }}" class="btn btn-light btn-lg mt-3 text-muted fw-bold shadow-sm" style="border-radius: 12px; padding: 14px;">
-                                Cancelar y volver
-                            </a>
+                            @if(auth()->user()->role === 'admin')
+                                <a href="{{ route('dashboard') }}" class="btn btn-light btn-lg mt-3 text-muted fw-bold shadow-sm" style="border-radius: 12px; padding: 14px;">
+                                    Cancelar y volver
+                                </a>
+                            @endif
                         </div>
                     </form>
 

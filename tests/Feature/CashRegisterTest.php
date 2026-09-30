@@ -94,7 +94,7 @@ class CashRegisterTest extends TestCase
             'opening_amount' => 200,
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('pos.index'));
         $response->assertSessionHas('error', 'Ya hay una caja abierta.');
         $this->assertDatabaseCount('bape_cash_registers', 1);
     }
@@ -196,7 +196,7 @@ class CashRegisterTest extends TestCase
             'closing_amount' => 140,
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('cash_registers.create'));
         $this->assertDatabaseHas('bape_cash_registers', [
             'id' => $register->id,
             'expected_amount' => 140,
