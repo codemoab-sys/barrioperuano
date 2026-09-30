@@ -887,20 +887,19 @@ foreach($categories as $cat) {
             });
     }
 
-    var quickBtnSearchDoc = document.getElementById('quickBtnSearchDoc');
-    var quickDocumentInput = document.getElementById('quick_document');
-    var quickClientForm = document.getElementById('quickClientForm');
-
-    if (quickBtnSearchDoc) {
-        quickBtnSearchDoc.addEventListener('click', window.quickSearchDocument);
-    }
-    if (quickDocumentInput) {
-        quickDocumentInput.addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') { e.preventDefault(); window.quickSearchDocument(); }
-        });
-    }
-    if (quickClientForm) {
-        quickClientForm.addEventListener('submit', function(e) {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#quickBtnSearchDoc')) {
+            window.quickSearchDocument();
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.target.matches('#quick_document') && e.key === 'Enter') {
+            e.preventDefault();
+            window.quickSearchDocument();
+        }
+    });
+    document.addEventListener('submit', function(e) {
+        if (e.target.id === 'quickClientForm') {
             e.preventDefault();
             var form = e.target;
             var submitBtn = form.querySelector('button[type="submit"]');
@@ -944,8 +943,8 @@ foreach($categories as $cat) {
                 submitBtn.innerHTML = 'Guardar';
                 alert('Error al guardar el cliente.');
             });
-        });
-    }
+        }
+    });
 
     // Confirmar pago: evitar doble envío, mostrar spinner y alerta con SweetAlert2
     window.initializeCheckoutForm = function() {
