@@ -118,11 +118,6 @@
                 </button>
             </div>
             <div class="col-4">
-                <a href="{{ route('pos.split.content', $order->id) }}" class="btn btn-light w-100 border text-muted btn-sm fw-bold py-2" title="Dividir">
-                    <i class="bi bi-scissors"></i> <span style="font-size: 0.7rem;">Div.</span>
-                </a>
-            </div>
-            <div class="col-4">
                 <a href="{{ route('pos.precheck', $order->id) }}" target="_blank" class="btn btn-light w-100 border text-muted btn-sm fw-bold py-2" title="Pre-cuenta">
                     <i class="bi bi-receipt"></i> <span style="font-size: 0.7rem;">Pre</span>
                 </a>
