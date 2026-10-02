@@ -238,7 +238,7 @@
     function showDeliverySauceSelector(product) {
         pendingSauceProduct = product;
         document.getElementById('deliverySauceProduct').textContent = product.name;
-        document.getElementById('deliverySauceHint').textContent = `Selecciona exactamente ${product.maxSauces} sabor${product.maxSauces === 1 ? '' : 'es'}.`;
+        document.getElementById('deliverySauceHint').textContent = `Selecciona entre 1 y ${product.maxSauces} sabores.`;
         const options = document.getElementById('deliverySauceOptions');
         options.innerHTML = '';
 
@@ -284,8 +284,8 @@
 
     function confirmDeliverySauces() {
         const sauceChoices = Array.from(document.querySelectorAll('.delivery-sauce-choice:checked')).map(checkbox => checkbox.value);
-        if (sauceChoices.length !== pendingSauceProduct.maxSauces) {
-            document.getElementById('deliverySauceHint').textContent = `Selecciona exactamente ${pendingSauceProduct.maxSauces} sabor${pendingSauceProduct.maxSauces === 1 ? '' : 'es'} para continuar.`;
+        if (sauceChoices.length < 1) {
+            document.getElementById('deliverySauceHint').textContent = 'Selecciona al menos un sabor para continuar.';
             return;
         }
 

@@ -117,14 +117,17 @@ class WingSauceSelectionTest extends TestCase
         $payload['products'][0]['sauce_choices'] = ['BBQ', 'Original'];
         $payload['products'][0]['sauce_choices'] = ['BBQ'];
         $this->post(route('delivery.store'), $payload)
-            ->assertSessionHasErrors('products.0.sauce_choices');
-        $this->assertDatabaseCount('bape_orders', 0);
+            ->assertRedirect(route('delivery.index'));
+        $this->assertSame(['BBQ'], OrderDetail::firstOrFail()->sauce_choices);
 
         $payload['products'][0]['sauce_choices'] = ['BBQ', 'Original'];
         $this->post(route('delivery.store'), $payload)
             ->assertRedirect(route('delivery.index'));
 
-        $this->assertSame(['BBQ', 'Original'], OrderDetail::firstOrFail()->sauce_choices);
+        $this->assertEqualsCanonicalizing(
+            [['BBQ'], ['BBQ', 'Original']],
+            OrderDetail::query()->orderBy('id')->pluck('sauce_choices')->all()
+        );
     }
 
     public function test_delivery_sums_duplicate_product_lines_before_validating_stock(): void

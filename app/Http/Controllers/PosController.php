@@ -221,7 +221,7 @@ class PosController extends Controller
         $validator = Validator::make(
             ['sauce_choices' => $choices],
             [
-                'sauce_choices' => ['required', 'array', 'size:' . $limit],
+                'sauce_choices' => ['required', 'array', 'min:1', 'max:' . $limit],
                 'sauce_choices.*' => [
                     'required',
                     'string',
@@ -230,7 +230,8 @@ class PosController extends Controller
                 ],
             ],
             [
-                'sauce_choices.size' => 'Este combo requiere exactamente :size sabores.',
+                'sauce_choices.min' => 'Selecciona al menos un sabor.',
+                'sauce_choices.max' => 'Este combo permite como máximo :max sabores.',
                 'sauce_choices.*.distinct' => 'No repitas el mismo sabor.',
                 'sauce_choices.*.in' => 'Uno de los sabores seleccionados no es válido.',
             ]

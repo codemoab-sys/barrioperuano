@@ -555,7 +555,7 @@ foreach($categories as $cat) {
         pendingSauceProductId = data.product_id;
         pendingSauceLimit = data.max_sauces;
         document.getElementById('sauceProductName').textContent = data.product_name;
-        document.getElementById('sauceSelectionHint').textContent = `Selecciona exactamente ${pendingSauceLimit} sabor${pendingSauceLimit === 1 ? '' : 'es'}.`;
+        document.getElementById('sauceSelectionHint').textContent = `Selecciona entre 1 y ${pendingSauceLimit} sabores.`;
         const options = document.getElementById('sauceOptions');
         options.innerHTML = '';
 
@@ -602,8 +602,8 @@ foreach($categories as $cat) {
 
     window.confirmSauceChoices = function() {
         const sauceChoices = Array.from(document.querySelectorAll('.sauce-choice:checked')).map(checkbox => checkbox.value);
-        if (sauceChoices.length !== pendingSauceLimit) {
-            document.getElementById('sauceSelectionHint').textContent = `Selecciona exactamente ${pendingSauceLimit} sabor${pendingSauceLimit === 1 ? '' : 'es'} para continuar.`;
+        if (sauceChoices.length < 1) {
+            document.getElementById('sauceSelectionHint').textContent = 'Selecciona al menos un sabor para continuar.';
             return;
         }
 

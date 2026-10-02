@@ -104,12 +104,13 @@ class DeliveryController extends Controller
             $validator = Validator::make(
                 ['sauce_choices' => $item['sauce_choices'] ?? null],
                 [
-                    'sauce_choices' => ['required', 'array', 'size:' . $flavorLimit],
+                    'sauce_choices' => ['required', 'array', 'min:1', 'max:' . $flavorLimit],
                     'sauce_choices.*' => ['required', 'string', 'distinct', Rule::in(WingSauceMenu::sauces())],
                 ],
                 [
                     'sauce_choices.required' => 'Selecciona los sabores del combo de alitas.',
-                    'sauce_choices.size' => 'Este combo requiere exactamente :size sabores.',
+                    'sauce_choices.min' => 'Selecciona al menos un sabor.',
+                    'sauce_choices.max' => 'Este combo permite como máximo :max sabores.',
                     'sauce_choices.*.distinct' => 'No repitas el mismo sabor.',
                     'sauce_choices.*.in' => 'Uno de los sabores seleccionados no es válido.',
                 ]

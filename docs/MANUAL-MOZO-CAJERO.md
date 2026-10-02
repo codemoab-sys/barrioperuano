@@ -119,10 +119,11 @@ Para comenzar una venta, selecciona el área correcta y pulsa una mesa con estad
 2. Busca una categoría de productos.
 3. Pulsa cada producto para agregarlo.
 4. Usa el buscador o lector de código si está disponible.
-5. Revisa cantidades y precios en el carrito.
-6. Agrega observaciones, por ejemplo: sin cebolla o término medio.
-7. Confirma el pedido.
-8. Verifica que el pedido aparezca en cocina.
+5. Si el producto requiere sabores, selecciona uno o varios, sin superar la cantidad permitida, en la ventana **Elige los sabores**. No repitas sabores. Si el producto no requiere sabores, continúa con el siguiente paso.
+6. Revisa cantidades y precios en el carrito.
+7. Agrega observaciones, por ejemplo: sin cebolla o término medio.
+8. Confirma el pedido.
+9. Verifica que el pedido aparezca en cocina.
 
 ### Captura 4. Pedido en la mesa
 
