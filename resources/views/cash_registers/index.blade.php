@@ -135,7 +135,7 @@
                                 <td class="px-4 py-3 text-end">
                                     <button type="button"
                                             class="btn btn-sm btn-outline-primary js-cash-register-detail"
-                                            data-detail-url="{{ route('cash_registers.show', $reg) }}"
+                                            data-detail-url="{{ route('cash_registers.show', $reg) }}?modal=1"
                                             data-register-id="{{ $reg->id }}"
                                             title="Ver detalle de la caja">
                                         <i class="bi bi-eye me-1"></i> Detalle

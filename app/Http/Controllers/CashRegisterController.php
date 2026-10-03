@@ -66,7 +66,7 @@ class CashRegisterController extends Controller
         return view('cash_registers.create');
     }
 
-    public function show(CashRegister $cashRegister)
+    public function show(Request $request, CashRegister $cashRegister)
     {
         $cashRegister->load([
             'user:id,name',
@@ -80,7 +80,11 @@ class CashRegisterController extends Controller
 
         $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
 
-        return view('cash_registers.show', compact('cashRegister', 'currencySymbol'));
+        $view = $request->boolean('modal')
+            ? 'cash_registers.partials.detail'
+            : 'cash_registers.show';
+
+        return view($view, compact('cashRegister', 'currencySymbol'));
     }
 
     public function store(Request $request)
