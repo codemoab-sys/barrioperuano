@@ -1,3 +1,58 @@
+<style>
+    :root {
+        color-scheme: dark;
+        --cash-bg: #171827;
+        --cash-panel: #202136;
+        --cash-panel-soft: #292b43;
+        --cash-border: rgba(255,255,255,.09);
+        --cash-text: #f7f7fb;
+        --cash-muted: #aeb1c8;
+        --cash-accent: #f2a900;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--cash-bg); color: var(--cash-text); font: 14px/1.45 Arial, sans-serif; }
+    .cash-modal-detail { padding: 22px; }
+    .cash-modal-detail h4 { margin: 0 0 4px; font-size: 22px; color: var(--cash-text); }
+    .cash-modal-detail .text-muted { color: var(--cash-muted) !important; }
+    .cash-modal-detail .d-flex { display: flex; }
+    .cash-modal-detail .justify-content-between { justify-content: space-between; }
+    .cash-modal-detail .align-items-start { align-items: flex-start; }
+    .cash-modal-detail .mb-1 { margin-bottom: 4px; }
+    .cash-modal-detail .mb-2 { margin-bottom: 10px; }
+    .cash-modal-detail .mb-3 { margin-bottom: 16px; }
+    .cash-modal-detail .p-3 { padding: 16px; }
+    .cash-modal-detail .row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .cash-modal-detail .col-6 { flex: 1 1 calc(50% - 10px); min-width: 150px; }
+    .cash-modal-detail .col-lg { flex: 1 1 130px; min-width: 125px; }
+    .cash-modal-detail .border { border: 1px solid var(--cash-border) !important; }
+    .cash-modal-detail .rounded,
+    .cash-modal-detail .rounded-3 { border-radius: 10px; }
+    .cash-modal-detail .h-100 { height: 100%; }
+    .cash-modal-detail .bg-light-subtle { background: var(--cash-panel-soft); }
+    .cash-modal-detail .fw-bold { font-weight: 700; }
+    .cash-modal-detail .fs-5 { font-size: 17px; }
+    .cash-modal-detail .d-block { display: block; }
+    .cash-modal-detail .small { font-size: 12px; }
+    .cash-modal-detail .border-bottom { border-bottom: 1px solid var(--cash-border) !important; }
+    .cash-modal-detail .badge { display: inline-block; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .cash-modal-detail .bg-primary { background: #3f73e8; color: #fff; }
+    .cash-modal-detail .bg-danger { background: #d95368; color: #fff; }
+    .cash-modal-detail .bg-warning { background: var(--cash-accent); color: #241d08; }
+    .cash-modal-detail .text-dark { color: #241d08; }
+    .cash-modal-detail .table-responsive { overflow-x: auto; }
+    .cash-modal-detail table { width: 100%; border-collapse: collapse; color: var(--cash-text); }
+    .cash-modal-detail th,
+    .cash-modal-detail td { padding: 10px 12px; border-bottom: 1px solid var(--cash-border); text-align: left; white-space: nowrap; }
+    .cash-modal-detail th { color: var(--cash-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .cash-modal-detail .text-end { text-align: right; }
+    .cash-modal-detail .text-center { text-align: center; }
+    @media (max-width: 640px) {
+        .cash-modal-detail { padding: 16px; }
+        .cash-modal-detail th, .cash-modal-detail td { padding: 8px; }
+    }
+</style>
+
 @php
     $paymentLabels = [
         'cash' => 'Efectivo',
@@ -23,7 +78,7 @@
         : (float) $cashRegister->opening_amount + $cashSales - $expensesTotal;
 @endphp
 
-<div class="p-3 p-lg-4">
+<div class="p-3 p-lg-4 cash-modal-detail">
     <div class="d-flex justify-content-between align-items-start mb-3">
         <div>
             <h4 class="fw-bold mb-1">Turno de caja #{{ $cashRegister->id }}</h4>
