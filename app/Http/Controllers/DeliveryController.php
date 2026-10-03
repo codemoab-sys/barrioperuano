@@ -288,6 +288,8 @@ class DeliveryController extends Controller
             // Marcar orden como completada
             $order->update([
                 'status'          => 'completed',
+                'issued_at'       => now(),
+                'issued_by_user_id'=> Auth::id(),
                 'payment_method'  => $delivery->payment_method,
                 'received_amount' => $request->received_amount ?? $delivery->total_with_fee,
                 'change_amount'   => max(0, ($request->received_amount ?? 0) - $delivery->total_with_fee),

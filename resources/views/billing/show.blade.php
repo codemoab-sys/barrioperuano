@@ -168,6 +168,15 @@
             </div>
 
             <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header bg-white"><strong>Responsables</strong></div>
+                <div class="card-body small">
+                    <div><strong>Creó la orden:</strong> {{ $order->user?->name ?? '—' }}</div>
+                    <div><strong>Generó el comprobante:</strong> {{ $order->issuedBy?->name ?? '—' }}</div>
+                    <div><strong>Fecha de generación:</strong> {{ $order->issued_at?->format('d/m/Y H:i:s') ?? '—' }}</div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-3">
                 <div class="card-header bg-white"><strong>Trazabilidad SUNAT</strong></div>
                 <div class="card-body small">
                     <div><strong>Estado:</strong> <span class="badge bg-{{ $color }}">{{ $order->sunat_status }}</span></div>

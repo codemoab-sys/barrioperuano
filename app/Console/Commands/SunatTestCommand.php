@@ -177,8 +177,10 @@ class SunatTestCommand extends Command
             $order = Order::create([
                 'table_id'         => $table->id,
                 'user_id'          => $user->id,
+                'issued_by_user_id'=> $user->id,
                 'client_id'        => $testClient?->id,
                 'status'           => 'completed',
+                'issued_at'        => now(),
                 'total'            => $total,
                 'document_type'    => $documentType,
                 'client_name'      => $documentType === 'Factura' ? 'EMPRESA PRUEBA SAC' : 'Cliente Prueba',

@@ -83,7 +83,7 @@ class BillingController extends Controller
     public function show(Order $order)
     {
         abort_unless(in_array($order->document_type, ['Boleta', 'Factura']), 404);
-        $order->load('details.product', 'creditNotes');
+        $order->load('details.product', 'creditNotes', 'user', 'issuedBy');
         $igvRate = (new SunatConfig())->igvRate();
         return view('billing.show', compact('order', 'igvRate'));
     }

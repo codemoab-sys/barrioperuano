@@ -72,6 +72,7 @@ class PosCheckoutService
             $order->update([
                 'status' => 'completed',
                 'issued_at' => now(),
+                'issued_by_user_id' => Auth::id(),
                 'payment_method' => $method,
                 'received_amount' => $received,
                 'change_amount' => $change,

@@ -10,6 +10,7 @@ class Order extends Model
 protected $fillable = [
         'table_id',
         'user_id',
+        'issued_by_user_id',
         'client_id',
         'status',
         'total',
@@ -84,6 +85,11 @@ protected $fillable = [
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function issuedBy()
+    {
+        return $this->belongsTo(User::class, 'issued_by_user_id');
     }
 
     public function client()
