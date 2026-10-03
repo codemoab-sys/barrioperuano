@@ -486,7 +486,7 @@ class PosController extends Controller
         }
 
         $request->validate([
-            'payment_method' => ['required', 'in:cash,card,transfer'],
+            'payment_method' => ['required', 'in:cash,card,transfer,yape,plin'],
             'received_amount' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
             'client_id' => ['nullable', 'integer', 'exists:bape_clients,id'],
             'client_name' => ['nullable', 'string', 'max:255'],

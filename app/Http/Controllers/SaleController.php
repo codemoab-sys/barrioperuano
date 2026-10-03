@@ -30,7 +30,9 @@ class SaleController extends Controller
         $totalCash = $orders->where('payment_method', 'cash')->sum('total');
         $totalCard = $orders->where('payment_method', 'card')->sum('total');
         $totalTransfer = $orders->where('payment_method', 'transfer')->sum('total');
-        $totalSales = $totalCash + $totalCard + $totalTransfer;
+        $totalYape = $orders->where('payment_method', 'yape')->sum('total');
+        $totalPlin = $orders->where('payment_method', 'plin')->sum('total');
+        $totalSales = $totalCash + $totalCard + $totalTransfer + $totalYape + $totalPlin;
 
         // 3. Obtener Gastos (Lista y Total)
         $expenses = Expense::whereDate('created_at', '>=', $startDate)
@@ -46,7 +48,7 @@ class SaleController extends Controller
 
         return view('sales.index', compact(
             'orders', 'expenses', 'startDate', 'endDate',
-            'totalCash', 'totalCard', 'totalTransfer', 'totalSales', 'totalExpenses', 'balance', 'currencySymbol'
+            'totalCash', 'totalCard', 'totalTransfer', 'totalYape', 'totalPlin', 'totalSales', 'totalExpenses', 'balance', 'currencySymbol'
         ));
     }
 
@@ -73,6 +75,8 @@ class SaleController extends Controller
             'cash' => $orders->where('payment_method', 'cash')->sum('total'),
             'card' => $orders->where('payment_method', 'card')->sum('total'),
             'transfer' => $orders->where('payment_method', 'transfer')->sum('total'),
+            'yape' => $orders->where('payment_method', 'yape')->sum('total'),
+            'plin' => $orders->where('payment_method', 'plin')->sum('total'),
             'orders_count' => $orders->count(),
             'expenses' => 0
         ];
@@ -83,7 +87,7 @@ class SaleController extends Controller
                                         ->sum('amount');
         }
 
-        $stats['total'] = $stats['cash'] + $stats['card'] + $stats['transfer'];
+        $stats['total'] = $stats['cash'] + $stats['card'] + $stats['transfer'] + $stats['yape'] + $stats['plin'];
         $stats['balance'] = $stats['cash'] - $stats['expenses'];
 
         $settings = Setting::pluck('value', 'key')->toArray();

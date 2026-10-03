@@ -57,7 +57,9 @@
                             <select name="payment_method" class="form-select" required>
                                 <option value="cash">Efectivo</option>
                                 <option value="card">Tarjeta</option>
-                                <option value="transfer">Transferencia / Yape</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="yape">Yape</option>
+                                <option value="plin">Plin</option>
                             </select>
                         </div>
                         <div class="col-6 mb-3">

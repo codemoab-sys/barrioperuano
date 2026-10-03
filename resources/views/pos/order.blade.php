@@ -377,6 +377,10 @@ foreach($categories as $cat) {
                         <label class="btn btn-outline-primary fw-bold" for="payCard">Tarjeta</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payTransfer" value="transfer" onclick="toggleCashInput(false)">
                         <label class="btn btn-outline-info fw-bold" for="payTransfer">Transferencia</label>
+                        <input type="radio" class="btn-check" name="payment_method" id="payYape" value="yape" onclick="toggleCashInput(false)">
+                        <label class="btn btn-outline-dark fw-bold" for="payYape">Yape</label>
+                        <input type="radio" class="btn-check" name="payment_method" id="payPlin" value="plin" onclick="toggleCashInput(false)">
+                        <label class="btn btn-outline-warning fw-bold" for="payPlin">Plin</label>
                     </div>
                 </div>
                 <div id="cashInputGroup">

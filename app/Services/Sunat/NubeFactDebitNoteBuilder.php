@@ -164,6 +164,8 @@ class NubeFactDebitNoteBuilder
                 'cash' => 'EFECTIVO',
                 'card' => 'TARJETA',
                 'transfer' => 'TRANSFERENCIA',
+                'yape' => 'YAPE',
+                'plin' => 'PLIN',
                 default => '',
             },
             'cancelado'                  => true,

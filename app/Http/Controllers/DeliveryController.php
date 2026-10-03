@@ -86,7 +86,7 @@ class DeliveryController extends Controller
             'client_name'    => 'required|string|max:255',
             'client_phone'   => 'required|string|max:30',
             'address'        => 'required|string',
-            'payment_method' => 'required|in:cash,card,transfer',
+            'payment_method' => 'required|in:cash,card,transfer,yape,plin',
             'products'       => 'required|array|min:1',
             'products.*.id'  => 'required|exists:bape_products,id',
             'products.*.qty' => 'required|integer|min:1',

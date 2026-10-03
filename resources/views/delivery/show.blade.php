@@ -61,7 +61,10 @@
                         <div class="text-capitalize"><i class="bi bi-credit-card-2-front me-2"></i>
                             @if($delivery->payment_method == 'cash') Efectivo
                             @elseif($delivery->payment_method == 'card') Tarjeta
-                            @else Transferencia / Yape @endif
+                            @elseif($delivery->payment_method == 'transfer') Transferencia
+                            @elseif($delivery->payment_method == 'yape') Yape
+                            @elseif($delivery->payment_method == 'plin') Plin
+                            @else {{ $delivery->payment_method }} @endif
                         </div>
                     </div>
                     @if($delivery->notes)

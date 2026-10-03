@@ -44,7 +44,7 @@
                 <div class="card-body">
                     <small class="opacity-75 text-uppercase fw-bold">Venta Total</small>
                     <h3 class="fw-bold mb-0 mt-1">{{ $currencySymbol }} {{ number_format($totalSales, 2) }}</h3>
-                    <small>{{ $orders->count() }} operaciones · Transferencias: {{ $currencySymbol }} {{ number_format($totalTransfer, 2) }}</small>
+                    <small>{{ $orders->count() }} operaciones · Yape: {{ $currencySymbol }} {{ number_format($totalYape, 2) }} · Plin: {{ $currencySymbol }} {{ number_format($totalPlin, 2) }}</small>
                 </div>
             </div>
         </div>
