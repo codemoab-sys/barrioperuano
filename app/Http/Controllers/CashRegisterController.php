@@ -25,9 +25,11 @@ class CashRegisterController extends Controller
                 'user:id,name',
                 'orders' => fn ($query) => $query
                     ->where('status', 'completed')
-                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
+                    ->with(['user:id,name', 'issuedBy:id,name'])
+                    ->select('id', 'cash_register_id', 'user_id', 'issued_by_user_id', 'total', 'payment_method', 'document_type', 'serie', 'correlativo', 'issued_at', 'created_at', 'status'),
                 'expenses' => fn ($query) => $query
-                    ->select('id', 'cash_register_id', 'amount'),
+                    ->with('user:id,name')
+                    ->select('id', 'cash_register_id', 'user_id', 'description', 'amount', 'created_at'),
             ]);
 
         if ($request->filled('status') && $request->status !== 'all') {
@@ -64,6 +66,23 @@ class CashRegisterController extends Controller
             return redirect()->route($route)->with('info', 'Ya hay un turno de caja abierto por ' . $cashRegister->user->name . '.');
         }
         return view('cash_registers.create');
+    }
+
+    public function show(CashRegister $cashRegister)
+    {
+        $cashRegister->load([
+            'user:id,name',
+            'orders' => fn ($query) => $query
+                ->where('status', 'completed')
+                ->with(['user:id,name', 'issuedBy:id,name'])
+                ->orderBy('issued_at')
+                ->orderBy('created_at'),
+            'expenses.user:id,name',
+        ]);
+
+        $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
+
+        return view('cash_registers.show', compact('cashRegister', 'currencySymbol'));
     }
 
     public function store(Request $request)

@@ -60,6 +60,7 @@
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Monto real</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Diferencia</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Estado</th>
+                            <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -131,10 +132,15 @@
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill"><i class="bi bi-door-closed me-1"></i> Cerrada</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3 text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#cashDetailModal{{ $reg->id }}" title="Ver detalle de la caja">
+                                        <i class="bi bi-eye me-1"></i> Detalle
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                         No hay registros de caja disponibles con los filtros actuales.
@@ -145,6 +151,81 @@
                     </tbody>
                 </table>
             </div>
+
+            @foreach($registers as $reg)
+                @php
+                    $detailPayments = $reg->orders->groupBy('payment_method')->map(fn ($orders) => (float) $orders->sum('total'));
+                    $detailCash = $detailPayments->get('cash', 0);
+                    $detailExpenses = (float) $reg->expenses->sum('amount');
+                    $detailExpected = $reg->status === 'closed'
+                        ? (float) ($reg->expected_amount ?? $reg->opening_amount)
+                        : (float) $reg->opening_amount + $detailCash - $detailExpenses;
+                @endphp
+                <div class="modal fade" id="cashDetailModal{{ $reg->id }}" tabindex="-1" aria-labelledby="cashDetailLabel{{ $reg->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold" id="cashDetailLabel{{ $reg->id }}">Detalle de caja #{{ $reg->id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-3"><small class="text-muted d-block">Responsable</small><strong>{{ $reg->user->name ?? 'Usuario' }}</strong></div>
+                                    <div class="col-md-3"><small class="text-muted d-block">Apertura</small><strong>{{ $reg->opening_time?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+                                    <div class="col-md-3"><small class="text-muted d-block">Cierre</small><strong>{{ $reg->closing_time?->format('d/m/Y H:i') ?? 'Abierta' }}</strong></div>
+                                    <div class="col-md-3"><small class="text-muted d-block">Estado</small><strong>{{ ucfirst($reg->status) }}</strong></div>
+                                </div>
+                                <div class="row g-2 mb-4">
+                                    <div class="col-md-3"><div class="border rounded p-2"><small class="text-muted d-block">Apertura</small><strong>{{ $currencySymbol }} {{ number_format($reg->opening_amount, 2) }}</strong></div></div>
+                                    <div class="col-md-3"><div class="border rounded p-2"><small class="text-muted d-block">Efectivo esperado</small><strong>{{ $currencySymbol }} {{ number_format($detailExpected, 2) }}</strong></div></div>
+                                    <div class="col-md-3"><div class="border rounded p-2"><small class="text-muted d-block">Efectivo real</small><strong>{{ $reg->closing_amount !== null ? $currencySymbol . ' ' . number_format($reg->closing_amount, 2) : '-' }}</strong></div></div>
+                                    <div class="col-md-3"><div class="border rounded p-2"><small class="text-muted d-block">Gastos</small><strong>{{ $currencySymbol }} {{ number_format($detailExpenses, 2) }}</strong></div></div>
+                                </div>
+                                <h6 class="fw-bold">Medios de pago</h6>
+                                <div class="row g-2 mb-4">
+                                    @foreach(['cash' => 'Efectivo', 'card' => 'Tarjeta', 'transfer' => 'Transferencia', 'yape' => 'Yape', 'plin' => 'Plin'] as $method => $label)
+                                        <div class="col-md"><div class="bg-light rounded p-2"><small class="text-muted d-block">{{ $label }}</small><strong>{{ $currencySymbol }} {{ number_format($detailPayments->get($method, 0), 2) }}</strong></div></div>
+                                    @endforeach
+                                </div>
+                                <h6 class="fw-bold">Ventas ({{ $reg->orders->count() }})</h6>
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-sm align-middle">
+                                        <thead><tr><th>Fecha</th><th>Documento</th><th>Medio</th><th>Creador</th><th>Generó</th><th class="text-end">Total</th></tr></thead>
+                                        <tbody>
+                                            @forelse($reg->orders as $sale)
+                                                <tr>
+                                                    <td>{{ ($sale->issued_at ?? $sale->created_at)?->format('d/m/Y H:i') }}</td>
+                                                    <td>{{ $sale->document_type ?? 'Venta' }} {{ $sale->full_number ?? '' }}</td>
+                                                    <td>{{ ucfirst($sale->payment_method) }}</td>
+                                                    <td>{{ $sale->user->name ?? '-' }}</td>
+                                                    <td>{{ $sale->issuedBy->name ?? '-' }}</td>
+                                                    <td class="text-end">{{ $currencySymbol }} {{ number_format($sale->total, 2) }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr><td colspan="6" class="text-center text-muted">Sin ventas completadas.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h6 class="fw-bold">Gastos ({{ $reg->expenses->count() }})</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle">
+                                        <thead><tr><th>Fecha</th><th>Descripción</th><th>Registró</th><th class="text-end">Importe</th></tr></thead>
+                                        <tbody>
+                                            @forelse($reg->expenses as $expense)
+                                                <tr><td>{{ $expense->created_at?->format('d/m/Y H:i') }}</td><td>{{ $expense->description }}</td><td>{{ $expense->user->name ?? '-' }}</td><td class="text-end">{{ $currencySymbol }} {{ number_format($expense->amount, 2) }}</td></tr>
+                                            @empty
+                                                <tr><td colspan="4" class="text-center text-muted">Sin gastos registrados.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
 
             @if($registers->hasPages())
                 <div class="p-4 border-top">
