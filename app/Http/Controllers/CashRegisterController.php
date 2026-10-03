@@ -25,11 +25,9 @@ class CashRegisterController extends Controller
                 'user:id,name',
                 'orders' => fn ($query) => $query
                     ->where('status', 'completed')
-                    ->with(['user:id,name', 'issuedBy:id,name'])
-                    ->select('id', 'cash_register_id', 'user_id', 'issued_by_user_id', 'total', 'payment_method', 'document_type', 'serie', 'correlativo', 'issued_at', 'created_at', 'status'),
+                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
                 'expenses' => fn ($query) => $query
-                    ->with('user:id,name')
-                    ->select('id', 'cash_register_id', 'user_id', 'description', 'amount', 'created_at'),
+                    ->select('id', 'cash_register_id', 'amount'),
             ]);
 
         if ($request->filled('status') && $request->status !== 'all') {
