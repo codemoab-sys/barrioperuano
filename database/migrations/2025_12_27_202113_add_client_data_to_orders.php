@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bape_orders', function (Blueprint $table) {
-            // Nuevos campos para facturaciÃ³n
+            // Nuevos campos para facturacion
             $table->string('document_type')->default('Ticket')->after('status'); // Ticket, Boleta, Factura
-            $table->string('client_name')->default('PÃºblico General')->after('document_type');
+            $table->string('client_name')->default('Público General')->after('document_type');
             $table->string('client_document')->nullable()->after('client_name'); // DNI o RUC
         });
     }
