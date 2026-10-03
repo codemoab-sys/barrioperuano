@@ -120,8 +120,21 @@
                                     <td>{{ $order->client_name }} <br><small class="text-muted">{{ $order->document_type }}</small></td>
                                     <td><span class="badge bg-light text-dark border">{{ $order->table->name ?? 'Barra' }}</span></td>
                                     <td>
-                                        <span class="badge {{ $order->payment_method == 'cash' ? 'bg-success text-success' : 'bg-primary text-primary' }} bg-opacity-10 border {{ $order->payment_method == 'cash' ? 'border-success' : 'border-primary' }}">
-                                            {{ $order->payment_method == 'cash' ? 'Efectivo' : 'Tarjeta' }}
+                                        @php
+                                            $paymentLabel = match ($order->payment_method) {
+                                                'cash' => 'Efectivo',
+                                                'card' => 'Tarjeta',
+                                                'transfer' => 'Transferencia',
+                                                'yape' => 'Yape',
+                                                'plin' => 'Plin',
+                                                default => ucfirst((string) $order->payment_method),
+                                            };
+                                            $paymentClass = $order->payment_method === 'cash'
+                                                ? 'success'
+                                                : ($order->payment_method === 'yape' ? 'dark' : ($order->payment_method === 'plin' ? 'warning' : 'primary'));
+                                        @endphp
+                                        <span class="badge bg-{{ $paymentClass }} text-{{ $paymentClass }} bg-opacity-10 border border-{{ $paymentClass }}">
+                                            {{ $paymentLabel }}
                                         </span>
                                     </td>
                                     <td class="text-end fw-bold">{{ $currencySymbol }} {{ number_format($order->total, 2) }}</td>
