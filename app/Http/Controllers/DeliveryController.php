@@ -16,6 +16,7 @@ use App\Services\DeliveryService;
 use App\Services\SalesService;
 use App\Services\StockValidationService;
 use App\Services\WingSauceMenu;
+use App\Services\Sunat\SunatConfig;
 use App\Services\Sunat\SunatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -281,6 +282,10 @@ class DeliveryController extends Controller
             $order = $delivery->order;
 
             $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
+            $total = round((float) $order->total + (float) $delivery->delivery_fee, 2);
+            $igvFactor = (new SunatConfig())->igvFactor();
+            $totalGravada = $isElectronic ? round($total / (1 + $igvFactor), 2) : 0;
+            $igv = $isElectronic ? round($total - $totalGravada, 2) : 0;
             $series = $isElectronic
                 ? DocumentSeries::next($documentType === 'Factura' ? 'factura' : 'boleta')
                 : null;
@@ -290,6 +295,7 @@ class DeliveryController extends Controller
                 'status'          => 'completed',
                 'issued_at'       => now(),
                 'issued_by_user_id'=> Auth::id(),
+                'total'           => $total,
                 'payment_method'  => $delivery->payment_method,
                 'received_amount' => $request->received_amount ?? $delivery->total_with_fee,
                 'change_amount'   => max(0, ($request->received_amount ?? 0) - $delivery->total_with_fee),
@@ -300,6 +306,9 @@ class DeliveryController extends Controller
                 'cash_register_id'=> $this->deliveryService->getCashRegisterId(),
                 'serie'           => $series['serie'] ?? null,
                 'correlativo'     => $series['correlativo'] ?? null,
+                'subtotal'        => $totalGravada,
+                'igv'              => $igv,
+                'total_gravada'    => $totalGravada,
                 'sunat_status'    => $isElectronic ? 'PENDING' : 'NA',
             ]);
 

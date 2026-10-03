@@ -44,7 +44,11 @@ protected $fillable = [
 
     public function getTotalWithFeeAttribute(): float
     {
-        return ($this->order->total ?? 0) + $this->delivery_fee;
+        $order = $this->order;
+
+        return $order?->status === 'completed'
+            ? (float) $order->total
+            : (float) ($order?->total ?? 0) + (float) $this->delivery_fee;
     }
 
     /* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Relationships Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */

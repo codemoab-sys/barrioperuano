@@ -21,7 +21,7 @@ class NubeFactInvoiceBuilder
      */
     public function build(Order $order): array
     {
-        $order->loadMissing('client');
+        $order->loadMissing('client', 'delivery');
 
         $isFactura = $order->document_type === 'Factura';
         $igvRate   = $this->config->igvRate();
@@ -80,6 +80,30 @@ class NubeFactInvoiceBuilder
                 'tipo_de_igv'      => 1,          // 1 = Gravado - Operación Onerosa
                 'igv'              => $igvLinea,
                 'total'            => $subtotalLinea,
+                'anticipo_regularizacion' => false,
+                'anticipo_documento_serie' => '',
+                'anticipo_documento_numero' => '',
+            ];
+        }
+
+        $deliveryFee = (float) ($order->delivery?->delivery_fee ?? 0);
+        if ($deliveryFee > 0) {
+            $deliveryValue = round($deliveryFee / $denom, 2);
+            $deliveryIgv = round($deliveryFee - $deliveryValue, 2);
+            $totalGravada += $deliveryValue;
+            $totalIgv += $deliveryIgv;
+            $items[] = [
+                'unidad_de_medida' => 'ZZ',
+                'codigo' => 'DELIVERY',
+                'descripcion' => 'Servicio de delivery',
+                'cantidad' => 1,
+                'valor_unitario' => $deliveryValue,
+                'precio_unitario' => round($deliveryFee, 2),
+                'descuento' => '',
+                'subtotal' => $deliveryValue,
+                'tipo_de_igv' => 1,
+                'igv' => $deliveryIgv,
+                'total' => round($deliveryValue + $deliveryIgv, 2),
                 'anticipo_regularizacion' => false,
                 'anticipo_documento_serie' => '',
                 'anticipo_documento_numero' => '',

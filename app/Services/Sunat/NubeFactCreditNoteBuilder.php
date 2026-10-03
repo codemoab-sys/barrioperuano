@@ -21,7 +21,7 @@ class NubeFactCreditNoteBuilder
      */
     public function build(CreditNote $cn): array
     {
-        $order = $cn->order()->with('details.product', 'client')->first();
+        $order = $cn->order()->with('details.product', 'client', 'delivery')->first();
         if (!$order) {
             throw new \RuntimeException('La nota de crédito no tiene una orden asociada.');
         }
@@ -71,6 +71,30 @@ class NubeFactCreditNoteBuilder
                 'tipo_de_igv'      => 1,
                 'igv'              => $zeroAmounts ? 0 : $igvLinea,
                 'total'            => $zeroAmounts ? 0 : $subtotalLinea,
+                'anticipo_regularizacion' => false,
+                'anticipo_documento_serie' => '',
+                'anticipo_documento_numero' => '',
+            ];
+        }
+
+        $deliveryFee = (float) ($order->delivery?->delivery_fee ?? 0);
+        if (!$zeroAmounts && $cn->reason_code !== '07' && $deliveryFee > 0) {
+            $deliveryValue = round($deliveryFee / $denom, 2);
+            $deliveryIgv = round($deliveryFee - $deliveryValue, 2);
+            $totalGravada += $deliveryValue;
+            $totalIgv += $deliveryIgv;
+            $items[] = [
+                'unidad_de_medida' => 'ZZ',
+                'codigo' => 'DELIVERY',
+                'descripcion' => 'Servicio de delivery',
+                'cantidad' => 1,
+                'valor_unitario' => $deliveryValue,
+                'precio_unitario' => round($deliveryFee, 2),
+                'descuento' => '',
+                'subtotal' => $deliveryValue,
+                'tipo_de_igv' => 1,
+                'igv' => $deliveryIgv,
+                'total' => round($deliveryValue + $deliveryIgv, 2),
                 'anticipo_regularizacion' => false,
                 'anticipo_documento_serie' => '',
                 'anticipo_documento_numero' => '',

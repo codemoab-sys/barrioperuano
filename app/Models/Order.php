@@ -102,6 +102,11 @@ protected $fillable = [
         return $this->hasMany(OrderDetail::class);
     }
 
+    public function delivery()
+    {
+        return $this->hasOne(Delivery::class);
+    }
+
     public function cashRegister()
     {
         return $this->belongsTo(CashRegister::class);
