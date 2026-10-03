@@ -311,8 +311,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/delivery/{delivery}',               [DeliveryController::class, 'show'])->name('delivery.show');
         Route::post('/delivery/{delivery}/status',       [DeliveryController::class, 'updateStatus'])->name('delivery.status');
         Route::post('/delivery/{delivery}/driver',       [DeliveryController::class, 'assignDriver'])->name('delivery.driver');
-        Route::post('/delivery/{delivery}/checkout',     [DeliveryController::class, 'checkout'])->name('delivery.checkout');
-        Route::post('/delivery/{delivery}/cancel',       [DeliveryController::class, 'cancel'])->name('delivery.cancel');
+        Route::post('/delivery/{delivery}/checkout',     [DeliveryController::class, 'checkout'])->middleware('role:admin,cashier,cashier_waiter')->name('delivery.checkout');
+        Route::post('/delivery/{delivery}/cancel',       [DeliveryController::class, 'cancel'])->middleware('role:admin,cashier,cashier_waiter')->name('delivery.cancel');
         // Repartidores
         Route::get('/delivery-drivers',                  [DeliveryController::class, 'driversIndex'])->name('delivery.drivers');
         Route::post('/delivery-drivers',                 [DeliveryController::class, 'driversStore'])->name('delivery.drivers.store');

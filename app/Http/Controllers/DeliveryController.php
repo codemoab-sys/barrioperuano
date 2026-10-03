@@ -88,6 +88,7 @@ class DeliveryController extends Controller
             'client_phone'   => 'required|string|max:30',
             'address'        => 'required|string',
             'payment_method' => 'required|in:cash,card,transfer,yape,plin',
+            'delivery_fee'   => 'nullable|numeric|min:0|max:999999.99',
             'products'       => 'required|array|min:1',
             'products.*.id'  => 'required|exists:bape_products,id',
             'products.*.qty' => 'required|integer|min:1',
@@ -265,6 +266,15 @@ class DeliveryController extends Controller
             return redirect()->route('delivery.show', $delivery)->with('error', 'Este pedido ya fue cerrado.');
         }
 
+        $validated = $request->validate([
+            'received_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+        $totalToCollect = $delivery->total_with_fee;
+        $receivedAmount = (float) $validated['received_amount'];
+        if ($receivedAmount < $totalToCollect) {
+            return back()->with('error', 'El monto recibido es insuficiente.');
+        }
+
         $documentType = $request->input('document_type', 'Ticket');
         if (!in_array($documentType, ['Ticket', 'Boleta', 'Factura'], true)) {
             return back()->with('error', 'Tipo de comprobante inválido.');
@@ -278,7 +288,9 @@ class DeliveryController extends Controller
             }
         }
 
-        DB::transaction(function () use ($delivery, $request, $documentType, $client) {
+        $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
+
+        DB::transaction(function () use ($delivery, $documentType, $client, $receivedAmount, $totalToCollect, $nubefactConfigured) {
             $order = $delivery->order;
 
             $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
@@ -297,8 +309,8 @@ class DeliveryController extends Controller
                 'issued_by_user_id'=> Auth::id(),
                 'total'           => $total,
                 'payment_method'  => $delivery->payment_method,
-                'received_amount' => $request->received_amount ?? $delivery->total_with_fee,
-                'change_amount'   => max(0, ($request->received_amount ?? 0) - $delivery->total_with_fee),
+                'received_amount' => $receivedAmount,
+                'change_amount'   => round($receivedAmount - $totalToCollect, 2),
                 'document_type'   => $documentType,
                 'client_id'       => $client?->id,
                 'client_name'     => $client?->name ?: $delivery->client_name,
@@ -309,7 +321,7 @@ class DeliveryController extends Controller
                 'subtotal'        => $totalGravada,
                 'igv'              => $igv,
                 'total_gravada'    => $totalGravada,
-                'sunat_status'    => $isElectronic ? 'PENDING' : 'NA',
+                'sunat_status'    => $isElectronic ? ($nubefactConfigured ? 'PENDING' : 'NO_ENVIADO') : 'NA',
             ]);
 
             $this->salesService->applyStockReductionForOrder($order, 'Delivery');
@@ -321,7 +333,7 @@ class DeliveryController extends Controller
             ]);
         });
 
-        if ($documentType !== 'Ticket') {
+        if ($documentType !== 'Ticket' && $nubefactConfigured) {
             $order = $delivery->order->fresh('details.product');
             try {
                 (new SunatService())->sendInvoice($order);
@@ -353,7 +365,9 @@ class DeliveryController extends Controller
         $order = $delivery->order()->with('details.product.ingredients')->first();
 
         DB::transaction(function () use ($delivery, $order) {
-            $this->deliveryService->restoreInventoryForOrder($order);
+            if ($order->status === 'completed') {
+                $this->deliveryService->restoreInventoryForOrder($order);
+            }
             $delivery->update(['status' => 'cancelled']);
             $order->update(['status' => 'cancelled']);
         });

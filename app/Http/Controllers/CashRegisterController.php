@@ -15,7 +15,7 @@ class CashRegisterController extends Controller
     {
         $request->validate([
             'status' => ['nullable', 'in:all,open,closed'],
-            'user_id' => ['nullable', 'exists:users,id'],
+            'user_id' => ['nullable', 'exists:bape_users,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
