@@ -56,6 +56,7 @@
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Apertura</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Cierre</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Monto proyectado</th>
+                            <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Medios de pago</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Monto real</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Diferencia</th>
                             <th class="px-4 py-3 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Estado</th>
@@ -65,6 +66,7 @@
                         @forelse($registers as $reg)
                             @php
                                 $cashSales = (float) $reg->orders->sum('total');
+                                $paymentTotals = $reg->orders->groupBy('payment_method')->map(fn ($orders) => (float) $orders->sum('total'));
                                 $totalExpenses = (float) $reg->expenses->sum('amount');
                                 $expectedValue = $reg->status === 'closed'
                                     ? (float) ($reg->expected_amount ?? $reg->opening_amount)
@@ -94,6 +96,13 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm fw-bold">
                                     {{ $currencySymbol }} {{ number_format($expectedValue, 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-xs">
+                                    <div>Efectivo: <strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get('cash', 0), 2) }}</strong></div>
+                                    <div>Tarjeta: <strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get('card', 0), 2) }}</strong></div>
+                                    <div>Transferencia: <strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get('transfer', 0), 2) }}</strong></div>
+                                    <div>Yape: <strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get('yape', 0), 2) }}</strong></div>
+                                    <div>Plin: <strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get('plin', 0), 2) }}</strong></div>
                                 </td>
                                 <td class="px-4 py-3 text-sm fw-bold">
                                     @if($reg->status == 'closed')
@@ -125,7 +134,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="9" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                         No hay registros de caja disponibles con los filtros actuales.

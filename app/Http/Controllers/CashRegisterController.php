@@ -25,7 +25,6 @@ class CashRegisterController extends Controller
                 'user:id,name',
                 'orders' => fn ($query) => $query
                     ->where('status', 'completed')
-                    ->where('payment_method', 'cash')
                     ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
                 'expenses' => fn ($query) => $query
                     ->select('id', 'cash_register_id', 'amount'),
