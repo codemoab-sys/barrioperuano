@@ -6,6 +6,13 @@
         'yape' => 'Yape',
         'plin' => 'Plin',
     ];
+    $paymentIcons = [
+        'cash' => 'bi-cash-coin',
+        'card' => 'bi-credit-card-2-front',
+        'transfer' => 'bi-bank',
+        'yape' => 'bi-phone',
+        'plin' => 'bi-phone-fill',
+    ];
     $paymentTotals = $cashRegister->orders
         ->groupBy('payment_method')
         ->map(fn ($orders) => (float) $orders->sum('total'));
@@ -38,7 +45,12 @@
         <div class="fw-bold mb-2">Resumen por medio de pago</div>
         <div class="row g-2">
             @foreach($paymentLabels as $method => $label)
-                <div class="col-6 col-lg"><small class="text-muted d-block">{{ $label }}</small><strong>{{ $currencySymbol }} {{ number_format($paymentTotals->get($method, 0), 2) }}</strong></div>
+                <div class="col-6 col-lg">
+                    <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                        <div class="text-muted small"><i class="bi {{ $paymentIcons[$method] }} me-1"></i>{{ $label }}</div>
+                        <strong class="fs-5 d-block mt-1">{{ $currencySymbol }} {{ number_format($paymentTotals->get($method, 0), 2) }}</strong>
+                    </div>
+                </div>
             @endforeach
         </div>
     </div>
