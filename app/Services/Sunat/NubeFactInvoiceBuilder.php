@@ -62,8 +62,8 @@ class NubeFactInvoiceBuilder
             $lineDiscount    = min($lineDiscount, $remainingDiscountNet);
             $remainingDiscountNet = round($remainingDiscountNet - $lineDiscount, 2);
             $valorVenta      = round(($valorUnit * $cantidad) - $lineDiscount, 2);
-            $igvLinea        = round($valorVenta * $igvFactor, 2);
-            $subtotalLinea   = round($valorVenta + $igvLinea, 2);
+            $subtotalLinea   = round($lineGross - ($lineDiscount * $denom), 2);
+            $igvLinea        = round($subtotalLinea - $valorVenta, 2);
             $isService       = mb_strtolower(trim((string) $product->category?->name)) === 'servicio';
 
             $totalGravada += $valorVenta;

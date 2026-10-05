@@ -60,8 +60,8 @@ class NubeFactDebitNoteBuilder
             $valorUnit       = round($precioVentaUnit / $denom, 6);
             $cantidad        = (float) $line->quantity;
             $valorVenta      = round($valorUnit * $cantidad, 2);
-            $igvLinea        = round($valorVenta * $igvFactor, 2);
-            $subtotalLinea   = round($valorVenta + $igvLinea, 2);
+            $subtotalLinea   = round($precioVentaUnit * $cantidad, 2);
+            $igvLinea        = round($subtotalLinea - $valorVenta, 2);
             $isService       = mb_strtolower(trim((string) $product->category?->name)) === 'servicio';
 
             $totalGravada += $valorVenta;
