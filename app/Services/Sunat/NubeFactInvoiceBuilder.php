@@ -69,8 +69,10 @@ class NubeFactInvoiceBuilder
             $totalIgv     += $igvLinea;
 
             $items[] = [
-                'unidad_de_medida' => 'NIU',
-                'codigo'           => (string) ($product->id ?? '001'),
+                'unidad_de_medida' => mb_strtolower(trim((string) $product->category?->name)) === 'servicio' ? 'ZZ' : 'NIU',
+                'codigo'           => mb_strtolower(trim((string) $product->category?->name)) === 'servicio'
+                    ? 'DELIVERY'
+                    : (string) ($product->id ?? '001'),
                 'descripcion'      => $product->name ?? 'Producto',
                 'cantidad'         => $cantidad,
                 'valor_unitario'   => $valorUnit,
