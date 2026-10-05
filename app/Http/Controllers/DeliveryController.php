@@ -162,6 +162,7 @@ class DeliveryController extends Controller
 
             $deliveryFee = (float) ($request->delivery_fee ?? 0);
             $order->update(['total' => $subtotal]);
+            $this->salesService->applyStockReductionForOrder($order, 'Delivery');
 
             // 3. Crear el Delivery
             Delivery::create([
@@ -280,6 +281,27 @@ class DeliveryController extends Controller
             return back()->with('error', 'Tipo de comprobante inválido.');
         }
 
+        $seriesAreaId = null;
+        if (in_array($documentType, ['Boleta', 'Factura'], true)) {
+            $seriesKey = $documentType === 'Factura' ? 'factura' : 'boleta';
+            $series = DocumentSeries::where('document_type', $seriesKey)
+                ->where('is_active', true)
+                ->orderByRaw('CASE WHEN area_id IS NULL THEN 0 ELSE 1 END')
+                ->orderBy('area_id')
+                ->orderBy('id')
+                ->first();
+
+            if (!$series) {
+                return back()->with(
+                    'error',
+                    "No hay una serie activa configurada para {$documentType}. Configúrala en Configuración antes de cobrar."
+                );
+            }
+
+            // Delivery no pertenece a una zona de mesas: usa la primera serie activa.
+            $seriesAreaId = $series->area_id;
+        }
+
         $client = $delivery->client;
         if ($documentType === 'Factura') {
             $clientDocument = preg_replace('/\D/', '', (string) ($client?->document_number ?? ''));
@@ -290,7 +312,7 @@ class DeliveryController extends Controller
 
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        DB::transaction(function () use ($delivery, $documentType, $client, $receivedAmount, $totalToCollect, $nubefactConfigured) {
+        DB::transaction(function () use ($delivery, $documentType, $client, $receivedAmount, $totalToCollect, $nubefactConfigured, $seriesAreaId) {
             $order = $delivery->order;
 
             $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
@@ -299,7 +321,7 @@ class DeliveryController extends Controller
             $totalGravada = $isElectronic ? round($total / (1 + $igvFactor), 2) : 0;
             $igv = $isElectronic ? round($total - $totalGravada, 2) : 0;
             $series = $isElectronic
-                ? DocumentSeries::next($documentType === 'Factura' ? 'factura' : 'boleta')
+                ? DocumentSeries::next($documentType === 'Factura' ? 'factura' : 'boleta', $seriesAreaId)
                 : null;
 
             // Marcar orden como completada
@@ -323,8 +345,6 @@ class DeliveryController extends Controller
                 'total_gravada'    => $totalGravada,
                 'sunat_status'    => $isElectronic ? ($nubefactConfigured ? 'PENDING' : 'NO_ENVIADO') : 'NA',
             ]);
-
-            $this->salesService->applyStockReductionForOrder($order, 'Delivery');
 
             // Marcar delivery como entregado
             $delivery->update([
@@ -365,9 +385,7 @@ class DeliveryController extends Controller
         $order = $delivery->order()->with('details.product.ingredients')->first();
 
         DB::transaction(function () use ($delivery, $order) {
-            if ($order->status === 'completed') {
-                $this->deliveryService->restoreInventoryForOrder($order);
-            }
+            $this->deliveryService->restoreInventoryForOrder($order);
             $delivery->update(['status' => 'cancelled']);
             $order->update(['status' => 'cancelled']);
         });

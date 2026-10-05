@@ -88,7 +88,7 @@ class PosController extends Controller
             });
         });
 
-        $order = Order::where('table_id', $table->id)->where('status', 'pending')->with('details.product')->first();
+        $order = Order::where('table_id', $table->id)->where('status', 'pending')->with('details.product.category')->first();
         $occupiedTableIds = Order::where('status', 'pending')->pluck('table_id');
         $freeTables = Table::whereNotIn('id', $occupiedTableIds)
             ->where('id', '!=', $table->id)
@@ -381,6 +381,26 @@ class PosController extends Controller
         return $this->getCartHtml($order->table()->firstOrFail());
     }
 
+    public function updatePrice(Request $request, OrderDetail $detail)
+    {
+        $this->authorizePendingDetail($detail);
+        $request->validate([
+            'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+        ]);
+
+        $detail->load('product.category');
+        if (mb_strtolower(trim((string) $detail->product->category?->name)) !== 'servicio') {
+            return response()->json([
+                'error' => 'Solo se puede editar el precio de productos de la categoría Servicio.',
+            ], 422);
+        }
+
+        $detail->update(['price' => round((float) $request->input('price'), 2)]);
+        $this->recalculateTotal($detail->order);
+
+        return $this->getCartHtml($detail->order->table()->firstOrFail());
+    }
+
     // --- ACTUALIZAR NOTA ---
     public function updateNote(Request $request, OrderDetail $detail)
     {
@@ -647,7 +667,7 @@ class PosController extends Controller
 
     private function getCartHtml(Table $table)
     {
-        $order = Order::where('table_id', $table->id)->where('status', 'pending')->with('details.product')->first();
+        $order = Order::where('table_id', $table->id)->where('status', 'pending')->with('details.product.category')->first();
         $clients = Client::select('id', 'name', 'document_number')->orderBy('name')->get();
         $currency = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
         return view('pos.partials.cart', compact('order', 'clients', 'currency'))->render();

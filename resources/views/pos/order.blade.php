@@ -676,6 +676,45 @@ foreach($categories as $cat) {
         });
     };
 
+    window.editServicePrice = function(detailId, currentPrice) {
+        Swal.fire({
+            title: 'Precio del servicio',
+            input: 'number',
+            inputValue: Number(currentPrice).toFixed(2),
+            inputAttributes: { min: '0', step: '0.01', max: '999999.99' },
+            inputLabel: 'Ingresa el precio de este servicio',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: value => {
+                if (value === '' || Number(value) < 0 || Number(value) > 999999.99) {
+                    return 'Ingresa un precio válido entre 0 y 999999.99.';
+                }
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(`{{ url('/pos/detail') }}/${detailId}/price`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'text/html, application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({ price: result.value })
+            }).then(async response => {
+                const contentType = response.headers.get('content-type') || '';
+                const data = contentType.includes('application/json')
+                    ? await response.json()
+                    : await response.text();
+
+                if (!response.ok) {
+                    Swal.fire({ icon: 'error', title: 'No se pudo actualizar', text: data.error || 'Revisa el precio ingresado.' });
+                    return;
+                }
+
+                document.getElementById('cart-container').innerHTML = data;
+                updateCheckoutTotal();
+            });
+        });
+    };
+
     window.removeItem = function(id) {
         fetch(`{{ url('/pos/detail') }}/${id}`, {
             method: 'DELETE',

@@ -106,7 +106,7 @@
                             @foreach($categories as $category)
                                 @foreach($category->products as $product)
                                     <div class="col-6 product-card" data-name="{{ strtolower($product->name) }}" data-cat="{{ $category->id }}">
-                                        <div class="card h-100 border-0 shadow-sm" style="cursor: pointer;" onclick="addDeliveryProduct({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, {{ \\App\\Services\\WingSauceMenu::flavorLimit($product) ?? 0 }})">
+                                        <div class="card h-100 border-0 shadow-sm" style="cursor: pointer;" onclick="addDeliveryProduct({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, {{ \App\Services\WingSauceMenu::flavorLimit($product) ?? 0 }})">
                                             <div class="card-body p-2 text-center">
                                                 <h6 class="small fw-bold mb-1 text-truncate" title="{{ $product->name }}">{{ $product->name }}</h6>
                                                 <div class="text-primary fw-bold small">{{ $currency }}{{ number_format($product->price, 2) }}</div>
@@ -172,7 +172,7 @@
 
 <script>
     let deliveryCart = [];
-    const wingSauceGroups = @json(\\App\\Services\\WingSauceMenu::groups());
+    const wingSauceGroups = @json(\App\Services\WingSauceMenu::groups());
     let pendingSauceProduct = null;
 
     document.addEventListener('DOMContentLoaded', function() {

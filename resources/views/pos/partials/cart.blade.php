@@ -35,6 +35,13 @@
                                     <small class="text-muted me-1" style="font-size: 0.7rem;">
                                         {{ $currency ?? 'S/' }}{{ number_format($detail->price, 2) }}
                                     </small>
+                                    @if(mb_strtolower(trim((string) $detail->product->category?->name)) === 'servicio')
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-primary"
+                                                onclick="editServicePrice({{ $detail->id }}, {{ $detail->price }})"
+                                                title="Editar precio del servicio">
+                                            <i class="bi bi-pencil-square" style="font-size: 0.7rem;"></i>
+                                        </button>
+                                    @endif
                                     @if($detail->note)
                                         <i class="bi bi-chat-square-text-fill text-warning" style="font-size: 0.7rem;" title="{{ $detail->note }}"></i>
                                     @endif

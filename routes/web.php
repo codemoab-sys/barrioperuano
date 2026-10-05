@@ -84,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Gestión de Items
     Route::post('/pos/detail/{detail}/update', [PosController::class, 'updateQuantity'])->name('pos.update');
+    Route::post('/pos/detail/{detail}/price', [PosController::class, 'updatePrice'])->name('pos.price');
     Route::post('/pos/detail/{detail}/note', [PosController::class, 'updateNote'])->name('pos.note');
     Route::delete('/pos/detail/{detail}', [PosController::class, 'removeItem'])->name('pos.remove');
 
