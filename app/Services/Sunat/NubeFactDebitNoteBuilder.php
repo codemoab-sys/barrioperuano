@@ -62,16 +62,14 @@ class NubeFactDebitNoteBuilder
             $valorVenta      = round($valorUnit * $cantidad, 2);
             $igvLinea        = round($valorVenta * $igvFactor, 2);
             $subtotalLinea   = round($valorVenta + $igvLinea, 2);
+            $isService       = mb_strtolower(trim((string) $product->category?->name)) === 'servicio';
 
             $totalGravada += $valorVenta;
             $totalIgv     += $igvLinea;
 
-            $items[] = [
-                'unidad_de_medida' => mb_strtolower(trim((string) $product->category?->name)) === 'servicio' ? 'ZZ' : 'NIU',
-                'codigo'           => mb_strtolower(trim((string) $product->category?->name)) === 'servicio'
-                    ? 'DELIVERY'
-                    : (string) ($product->id ?? '001'),
-                'descripcion'      => $product->name ?? 'Producto',
+            $item = [
+                'unidad_de_medida' => $isService ? 'ZZ' : 'NIU',
+                'descripcion'      => $isService ? 'Servicio Delivery' : ($product->name ?? 'Producto'),
                 'cantidad'         => $cantidad,
                 'valor_unitario'   => $valorUnit,
                 'precio_unitario'  => round($precioVentaUnit, 2),
@@ -84,6 +82,10 @@ class NubeFactDebitNoteBuilder
                 'anticipo_documento_serie' => '',
                 'anticipo_documento_numero' => '',
             ];
+            if (!$isService) {
+                $item['codigo'] = (string) ($product->id ?? '001');
+            }
+            $items[] = $item;
         }
 
         $totalGravada = round($totalGravada, 2);
