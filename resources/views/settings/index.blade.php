@@ -195,10 +195,10 @@
                         <hr class="text-muted opacity-25">
 
                         {{-- ═══════════════════════════════════════════════════════════════ --}}
-                        {{--    FACTURACIÓN ELECTRÓNICA — NUBEFACT (PERÚ)                    --}}
+                        {{--    FACTURACIÓN ELECTRÓNICA (PERÚ)                              --}}
                         {{-- ═══════════════════════════════════════════════════════════════ --}}
                         <h5 class="fw-bold text-danger mb-3">
-                            <i class="bi bi-receipt-cutoff me-2"></i>Facturación Electrónica · NubeFact
+                            <i class="bi bi-receipt-cutoff me-2"></i>Facturación Electrónica
                         </h5>
 
                         @php
@@ -288,18 +288,18 @@
                             </div>
                         </div>
 
-                        {{-- ═══ CREDENCIALES NUBEFACT ═══ --}}
+                        {{-- ═══ CREDENCIALES DE INTEGRACIÓN ═══ --}}
                         <h6 class="fw-bold text-primary mb-3 mt-4">
-                            <i class="bi bi-key-fill me-2"></i>Credenciales NubeFact
+                            <i class="bi bi-key-fill me-2"></i>Credenciales de integración
                         </h6>
                         <p class="text-muted small mb-3">
-                            Obtén tu RUTA y TOKEN en <a href="https://www.nubefact.com/login" target="_blank">nubefact.com</a> → API (Integración).
+                            Ingresa la RUTA y el TOKEN proporcionados por tu servicio de facturación.
                         </p>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-8">
                                 <label class="form-label fw-bold">
-                                    <i class="bi bi-link-45deg"></i> RUTA NubeFact <span class="text-danger">*</span>
+                                    <i class="bi bi-link-45deg"></i> RUTA de integración <span class="text-danger">*</span>
                                 </label>
                                 <input type="url" name="nubefact_ruta" class="form-control"
                                        value="{{ $settings['nubefact_ruta'] ?? '' }}"
@@ -311,11 +311,11 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">
-                                    <i class="bi bi-shield-lock"></i> TOKEN NubeFact <span class="text-danger">*</span>
+                                    <i class="bi bi-shield-lock"></i> TOKEN de integración <span class="text-danger">*</span>
                                 </label>
                                 <input type="password" name="nubefact_token" class="form-control"
                                         value=""
-                                        placeholder="{{ !empty($settings['nubefact_token'] ?? '') ? 'Token registrado; escribir para reemplazar' : 'Ingresa el TOKEN de NubeFact' }}"
+                                        placeholder="{{ !empty($settings['nubefact_token'] ?? '') ? 'Token registrado; escribir para reemplazar' : 'Ingresa el TOKEN de integración' }}"
                                         autocomplete="new-password">
                                     <small class="text-muted">
                                      {{ !empty($settings['nubefact_token'] ?? '') ? 'Token registrado de forma segura. Déjalo vacío para conservarlo.' : 'Se guardará cifrado.' }}
@@ -329,10 +329,10 @@
                         <div class="alert {{ $tieneNubeFact ? 'alert-success' : 'alert-secondary' }} py-2 mb-3">
                             @if($tieneNubeFact)
                                 <i class="bi bi-check-circle-fill"></i>
-                                <strong>NubeFact configurado.</strong> RUTA y TOKEN establecidos.
+                                <strong>Integración configurada.</strong> RUTA y TOKEN establecidos.
                             @else
                                 <i class="bi bi-exclamation-triangle"></i>
-                                <strong>Sin configurar.</strong> Ingresa tu RUTA y TOKEN de NubeFact para emitir comprobantes electrónicos.
+                                <strong>Sin configurar.</strong> Ingresa tu RUTA y TOKEN para emitir comprobantes electrónicos.
                             @endif
                         </div>
 
@@ -364,12 +364,12 @@
 
                         <div class="alert alert-warning alert-permanent py-3 mb-3 border border-warning">
                             <h6 class="alert-heading fw-bold mb-2">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i> IMPORTANTE: Las series deben ser IGUALES a las de tu cuenta NubeFact.
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> IMPORTANTE: Las series deben coincidir con las de tu cuenta de facturación.
                             </h6>
-                            <p class="mb-1"><strong>Para este sistema migrado, registra series nuevas en NubeFact antes de emitir.</strong> Ejemplo: Factura <code>F002</code> y Boleta <code>B002</code>.</p>
+                            <p class="mb-1"><strong>Para este sistema migrado, registra series nuevas en el servicio de facturación antes de emitir.</strong> Ejemplo: Factura <code>F002</code> y Boleta <code>B002</code>.</p>
                             <p class="mb-1">Una serie nueva comenzará obligatoriamente con el correlativo <strong>1</strong>. No reutilices una serie del sistema anterior.</p>
                             <p class="mb-1">Si conservas una serie ya usada, debes mantener su último correlativo real; el sistema lo preserva al guardar la configuración.</p>
-                            <p class="mb-0"><small>Verifica tus series en: <a href="https://www.nubefact.com/login" target="_blank">nubefact.com</a> → Datos de la Empresa → Series asignadas.</small></p>
+                            <p class="mb-0"><small>Verifica tus series en el portal de facturación → Datos de la Empresa → Series asignadas.</small></p>
                         </div>
 
                         <div class="alert alert-danger py-2 mb-3 small">

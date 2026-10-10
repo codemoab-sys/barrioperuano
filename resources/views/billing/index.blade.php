@@ -163,13 +163,13 @@
                                                 </li>
                                                 <li>
                                                     <a href="{{ route('billing.pdf', $o) }}" target="_blank" rel="noopener" class="dropdown-item">
-                                                        <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial NubeFact
+                                                        <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial
                                                     </a>
                                                 </li>
                                             </ul>
                                         </div>
                                     @elseif($o->sunat_status !== 'VOIDED')
-                                        <a href="{{ route('billing.pdf', $o) }}" target="_blank" rel="noopener" class="btn btn-outline-dark" title="Abrir PDF oficial de NubeFact">
+                                        <a href="{{ route('billing.pdf', $o) }}" target="_blank" rel="noopener" class="btn btn-outline-dark" title="Abrir PDF oficial">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     @endif

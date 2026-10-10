@@ -25,7 +25,7 @@
         </div>
         <div class="btn-group">
             <a href="{{ route('billing.pdf', $order) }}" target="_blank" rel="noopener" class="btn btn-danger">
-                <i class="bi bi-file-earmark-pdf"></i> PDF oficial NubeFact
+                <i class="bi bi-file-earmark-pdf"></i> PDF oficial
             </a>
             @if($order->pdf_path)
                 @php
@@ -57,7 +57,7 @@
                         </li>
                         <li>
                             <a href="{{ route('billing.pdf', $order) }}" target="_blank" rel="noopener" class="dropdown-item">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial NubeFact
+                                <i class="bi bi-file-earmark-pdf me-2"></i>PDF oficial
                             </a>
                         </li>
                     </ul>
