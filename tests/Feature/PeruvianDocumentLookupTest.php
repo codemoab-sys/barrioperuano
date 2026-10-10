@@ -21,6 +21,8 @@ class PeruvianDocumentLookupTest extends TestCase
             'https://api.apis.net.pe/v1/dni*' => Http::response([
                 'nombre' => 'Cliente de prueba',
                 'direccion' => 'Av. Principal 123',
+                'provincia' => 'Lima',
+                'departamento' => 'Lima',
             ], 200),
         ]);
 
@@ -31,7 +33,7 @@ class PeruvianDocumentLookupTest extends TestCase
             'success' => true,
             'document_type' => 'DNI',
             'name' => 'Cliente de prueba',
-            'address' => 'Av. Principal 123',
+            'address' => 'Av. Principal 123, Lima, Lima',
         ]);
         Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer test-token'));
     }

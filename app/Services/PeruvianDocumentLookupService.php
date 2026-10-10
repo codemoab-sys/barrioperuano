@@ -33,12 +33,17 @@ class PeruvianDocumentLookupService
         }
 
         $data = $response->json();
+        $addressParts = array_filter([
+            trim((string) ($data['direccion'] ?? '')),
+            trim((string) ($data['provincia'] ?? '')),
+            trim((string) ($data['departamento'] ?? '')),
+        ], static fn (string $part): bool => $part !== '');
 
         return [
             'success' => true,
             'document_type' => $documentType,
             'name' => $data['nombre'] ?? null,
-            'address' => $data['direccion'] ?? null,
+            'address' => $addressParts ? implode(', ', $addressParts) : null,
         ];
     }
 }
