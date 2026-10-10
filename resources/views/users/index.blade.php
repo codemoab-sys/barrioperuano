@@ -49,8 +49,12 @@
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">Cajero</span>
                                     @elseif($user->role == 'cashier_waiter')
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">Cajero / Mozo</span>
+                                    @elseif($user->role == 'waiter')
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2">Mozo</span>
+                                    @elseif($user->role == 'kitchen')
+                                        <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning px-3 py-2">Cocina</span>
                                     @else
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2">Mozo / Staff</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2">Sin rol</span>
                                     @endif
                                 </td>
                                 <td class="text-muted">{{ $user->email }}</td>
