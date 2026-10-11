@@ -268,7 +268,7 @@ foreach($categories as $cat) {
                 <div id="sauceOptions" class="row g-2"></div>
                 <div id="sauceSelectionCount" class="small fw-bold text-end mt-2">0 seleccionados</div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer justify-content-start">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-warning fw-bold" onclick="confirmSauceChoices()">Agregar al pedido</button>
             </div>
