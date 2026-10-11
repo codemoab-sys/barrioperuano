@@ -1445,9 +1445,9 @@ foreach($categories as $cat) {
 
 {{-- Mobile FAB: Ver Carrito --}}
 <div id="mobileCartFab" style="display:none; position:fixed; bottom:20px; right:20px; z-index:1100;">
-    <button type="button" class="btn btn-primary shadow-lg fw-bold d-flex align-items-center gap-2 rounded-pill px-4 py-3"
-            onclick="toggleMobileCart()" id="fabCartBtn" style="font-size:1rem;">
-        <i class="bi bi-cart3 fs-5"></i>
+    <button type="button" class="btn btn-primary shadow-lg fw-bold d-flex align-items-center gap-2 rounded-pill px-3 py-2"
+            onclick="toggleMobileCart()" id="fabCartBtn" style="font-size:.9rem;">
+        <i class="bi bi-cart3 fs-6"></i>
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fabCartCount" style="font-size:.7rem; display:none;">
             0
         </span>
@@ -1464,11 +1464,11 @@ foreach($categories as $cat) {
         var fab = document.getElementById('fabCartBtn');
         if (fab) {
             if (cart.classList.contains('mobile-open')) {
-                fab.innerHTML = '<i class="bi bi-x-lg fs-5"></i> Cerrar';
+                fab.innerHTML = '<i class="bi bi-x-lg fs-6"></i> Cerrar';
                 fab.classList.remove('btn-primary');
                 fab.classList.add('btn-danger');
             } else {
-                fab.innerHTML = '<i class="bi bi-cart3 fs-5"></i> Ver Carrito <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fabCartCount" style="font-size:.7rem;"></span>';
+                fab.innerHTML = '<i class="bi bi-cart3 fs-6"></i> Ver Carrito <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fabCartCount" style="font-size:.7rem;"></span>';
                 fab.classList.remove('btn-danger');
                 fab.classList.add('btn-primary');
                 updateFabCount();
