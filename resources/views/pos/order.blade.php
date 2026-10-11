@@ -370,17 +370,17 @@ foreach($categories as $cat) {
                 </div>
                 <div id="selectedSeries" class="form-text mb-3">Selecciona el documento para ver la serie.</div>
                 <div class="mb-3 text-center">
-                    <div class="btn-group w-100" role="group">
+                    <div class="btn-group w-100 checkout-payment-options" role="group">
                         <input type="radio" class="btn-check" name="payment_method" id="payCash" value="cash" checked onclick="toggleCashInput(true)">
-                        <label class="btn btn-outline-success fw-bold" for="payCash">Efectivo</label>
+                        <label class="btn btn-outline-success fw-bold checkout-payment-option" for="payCash">Efectivo</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payCard" value="card" onclick="toggleCashInput(false)">
-                        <label class="btn btn-outline-primary fw-bold" for="payCard">Tarjeta</label>
+                        <label class="btn btn-outline-primary fw-bold checkout-payment-option" for="payCard">Tarjeta</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payTransfer" value="transfer" onclick="toggleCashInput(false)">
-                        <label class="btn btn-outline-info fw-bold" for="payTransfer">Transferencia</label>
+                        <label class="btn btn-outline-info fw-bold checkout-payment-option" for="payTransfer">Transferencia</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payYape" value="yape" onclick="toggleCashInput(false)">
-                        <label class="btn btn-outline-dark fw-bold" for="payYape">Yape</label>
+                        <label class="btn btn-outline-dark fw-bold checkout-payment-option" for="payYape">Yape</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payPlin" value="plin" onclick="toggleCashInput(false)">
-                        <label class="btn btn-outline-warning fw-bold" for="payPlin">Plin</label>
+                        <label class="btn btn-outline-warning fw-bold checkout-payment-option" for="payPlin">Plin</label>
                     </div>
                 </div>
                 <div id="cashInputGroup">
@@ -1294,6 +1294,10 @@ foreach($categories as $cat) {
     .pos-add-overlay span { font-size: .8rem; font-weight: 700; letter-spacing: .06em; }
     .pos-product-card:hover .pos-add-overlay { opacity: 1; }
 
+    .checkout-payment-option {
+        white-space: nowrap;
+    }
+
     /* ── MOBILE: ≤900px ──────────────────────────────────────────── */
     @media (max-width: 900px) {
         .pos-alert-fixed {
@@ -1362,6 +1366,17 @@ foreach($categories as $cat) {
 
         .pos-product-img-wrap {
             height: 90px;
+        }
+
+        .checkout-payment-options {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .checkout-payment-option {
+            border-radius: .375rem !important;
+            width: 100%;
         }
 
         .pos-cart-col {
