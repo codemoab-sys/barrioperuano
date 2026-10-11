@@ -1371,7 +1371,6 @@ foreach($categories as $cat) {
         .checkout-payment-options {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px;
         }
 
         .checkout-payment-option {
