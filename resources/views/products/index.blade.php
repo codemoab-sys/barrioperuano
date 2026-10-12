@@ -100,7 +100,7 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm {{ $product->is_active ? 'btn-outline-success' : 'btn-outline-secondary' }} rounded-pill px-3 fw-bold" style="font-size: 0.75rem;" onclick="toggleProduct({{ $product->id }})">
+                                <button type="button" class="btn btn-sm {{ $product->is_active ? 'btn-outline-success' : 'btn-outline-secondary' }} rounded-pill px-3 fw-bold" style="font-size: 0.75rem;" onclick="toggleProduct({{ $product->id }}, {{ $product->is_active ? 'true' : 'false' }})">
                                     {{ $product->is_active ? 'ACTIVO' : 'INACTIVO' }}
                                 </button>
                             </td>
@@ -197,14 +197,29 @@
         });
     }
 
-    function toggleProduct(id) {
-        fetch('{{ url("/products") }}/' + id + '/toggle', {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
-        }).then(r => r.json()).then(data => {
-            showToast('success', 'Estado actualizado', data.message || 'Listo');
-            setTimeout(() => location.reload(), 800);
-        }).catch(() => location.reload());
+    function toggleProduct(id, isActive) {
+        Swal.fire({
+            title: '¿Cambiar estado del producto?',
+            text: isActive ? 'El producto pasará a inactivo.' : 'El producto pasará a activo.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            fetch('{{ url("/products") }}/' + id + '/toggle', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(r => r.json()).then(data => {
+                showToast('success', 'Estado actualizado', data.message || 'Listo');
+                setTimeout(() => location.reload(), 800);
+            }).catch(() => location.reload());
+        });
     }
 
     function adjustStock(e, form) {
