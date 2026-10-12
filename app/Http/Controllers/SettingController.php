@@ -221,6 +221,18 @@ class SettingController extends Controller
 
         $serie = strtoupper(trim($serie));
         $current = DocumentSeries::whereNull('area_id')->where('document_type', $documentType)->first();
+        if (!$current) {
+            $current = DocumentSeries::where('document_type', $documentType)
+                ->where('serie', $serie)
+                ->orderByDesc('last_number')
+                ->first();
+
+            if ($current) {
+                $current->area_id = null;
+                $current->save();
+            }
+        }
+
         $lastNumber = $current && $current->serie === $serie
             ? $current->last_number
             : max(
