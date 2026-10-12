@@ -87,7 +87,7 @@ class DeliveryController extends Controller
             'client_name'    => 'required|string|max:255',
             'client_phone'   => 'required|string|max:30',
             'address'        => 'required|string',
-            'payment_method' => 'required|in:cash,card,transfer,yape,plin',
+            'payment_method' => 'required|in:transfer,yape,plin',
             'delivery_fee'   => 'nullable|numeric|min:0|max:999999.99',
             'products'       => 'required|array|min:1',
             'products.*.id'  => 'required|exists:bape_products,id',

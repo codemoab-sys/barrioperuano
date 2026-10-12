@@ -55,8 +55,6 @@
                         <div class="col-6 mb-3">
                             <label class="form-label small fw-bold">Método Pago *</label>
                             <select name="payment_method" class="form-select" required>
-                                <option value="cash">Efectivo</option>
-                                <option value="card">Tarjeta</option>
                                 <option value="transfer">Transferencia</option>
                                 <option value="yape">Yape</option>
                                 <option value="plin">Plin</option>
