@@ -23,7 +23,7 @@ class SaleController extends Controller
                        ->whereDate('created_at', '<=', $endDate)
                        ->where('status', 'completed')
                        ->orderBy('created_at', 'desc')
-                       ->with(['user', 'table'])
+                       ->with(['user', 'table.area'])
                        ->get();
 
         // 2. Totales Ventas

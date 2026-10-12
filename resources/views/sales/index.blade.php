@@ -103,6 +103,7 @@
                                     <th class="ps-4">Fecha / Hora</th>
                                     <th>Folio</th>
                                     <th>Cliente</th>
+                                    <th>Zona</th>
                                     <th>Mesa</th>
                                     <th>Método</th>
                                     <th class="text-end">Total</th>
@@ -118,6 +119,11 @@
                                     </td>
                                     <td class="fw-bold">#{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ $order->client_name }} <br><small class="text-muted">{{ $order->document_type }}</small></td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info-emphasis border">
+                                            {{ $order->table?->area?->name ?? 'Delivery' }}
+                                        </span>
+                                    </td>
                                     <td><span class="badge bg-light text-dark border">{{ $order->table->name ?? 'Barra' }}</span></td>
                                     <td>
                                         @php

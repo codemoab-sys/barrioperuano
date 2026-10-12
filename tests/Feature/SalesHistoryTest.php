@@ -80,5 +80,6 @@ class SalesHistoryTest extends TestCase
         $response->assertViewHas('orders', function ($orders) {
             return $orders->count() === 3;
         });
+        $response->assertSee('Salón');
     }
 }
