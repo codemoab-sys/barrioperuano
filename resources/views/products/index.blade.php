@@ -25,6 +25,9 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="search" name="search" id="inventorySearch" class="form-control" value="{{ request('search') }}" placeholder="Producto, código de barras o categoría" autocomplete="off">
+                        <span class="input-group-text d-none" id="inventorySearchSpinner" aria-label="Buscando">
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                        </span>
                         @if(request()->filled('search'))
                             <a href="{{ route('products.index') }}" class="btn btn-outline-secondary" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">
                                 <i class="bi bi-x-lg"></i>
@@ -48,7 +51,7 @@
                         <th class="text-end pe-4 text-uppercase text-muted small fw-bold">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="inventoryProductsBody">
                     @forelse($products as $product)
                         <tr>
                             <td class="ps-4">
@@ -152,7 +155,7 @@
             </table>
         </div>
     </div>
-    <div class="card-footer bg-white border-0 py-3">
+    <div class="card-footer bg-white border-0 py-3" id="inventoryPagination">
         {{ $products->links() }}
     </div>
 </div>
@@ -163,6 +166,60 @@
 @push('scripts')
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const inventorySearch = document.getElementById('inventorySearch');
+    const inventoryProductsBody = document.getElementById('inventoryProductsBody');
+    const inventoryPagination = document.getElementById('inventoryPagination');
+    const inventorySearchSpinner = document.getElementById('inventorySearchSpinner');
+    let inventorySearchTimer;
+    let inventorySearchRequest;
+
+    inventorySearch.addEventListener('input', function() {
+        clearTimeout(inventorySearchTimer);
+        inventorySearchTimer = setTimeout(() => {
+            searchInventoryProducts(inventorySearch.value);
+        }, 300);
+    });
+
+    async function searchInventoryProducts(search) {
+        if (inventorySearchRequest) {
+            inventorySearchRequest.abort();
+        }
+
+        inventorySearchRequest = new AbortController();
+        inventorySearchSpinner.classList.remove('d-none');
+        const url = new URL(inventorySearch.form.action, window.location.origin);
+        if (search.trim() !== '') {
+            url.searchParams.set('search', search.trim());
+        }
+
+        try {
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: inventorySearchRequest.signal
+            });
+            if (!response.ok) {
+                throw new Error('No se pudo buscar el inventario.');
+            }
+
+            const html = await response.text();
+            const documentResponse = new DOMParser().parseFromString(html, 'text/html');
+            const body = documentResponse.querySelector('#inventoryProductsBody');
+            const pagination = documentResponse.querySelector('#inventoryPagination');
+            if (!body || !pagination) {
+                throw new Error('La respuesta de búsqueda no tiene el formato esperado.');
+            }
+
+            inventoryProductsBody.innerHTML = body.innerHTML;
+            inventoryPagination.innerHTML = pagination.innerHTML;
+            window.history.replaceState({}, '', url);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                showToast('error', 'Error', error.message);
+            }
+        } finally {
+            inventorySearchSpinner.classList.add('d-none');
+        }
+    }
 
     function showToast(icon, title, text) {
         Swal.fire({ icon, title, text, confirmButtonColor: '#0d6efd', timer: 2500, timerProgressBar: true });

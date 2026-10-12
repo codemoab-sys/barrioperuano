@@ -41,12 +41,19 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label fw-bold small text-muted">Stock Actual</label>
-                        <input type="text" class="form-control bg-light" value="{{ $product->stock }}" readonly>
+                        <input type="text" class="form-control bg-light" value="{{ is_null($product->stock) ? '---' : $product->stock }}" readonly>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold small text-muted">Código de Barras</label>
                         <input type="text" name="barcode" class="form-control" value="{{ $product->barcode }}" placeholder="Opcional">
                     </div>
+                </div>
+
+                <div class="form-check form-switch mb-4 bg-light p-3 rounded border">
+                    <input class="form-check-input" type="checkbox" name="control_stock" id="controlStockCheck" {{ !is_null($product->stock) ? 'checked' : '' }}>
+                    <label class="form-check-label fw-bold ms-2" for="controlStockCheck">
+                        Controlar stock
+                    </label>
                 </div>
 
                 <div class="form-check form-switch mb-4 bg-light p-3 rounded border">

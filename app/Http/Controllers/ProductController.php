@@ -74,6 +74,7 @@ class ProductController extends Controller
         $data['is_new'] = $request->has('is_new');
         $data['is_active'] = true;
         $data['cost'] = $request->cost ?? 0;
+        $data['stock'] = $request->boolean('control_stock') ? ($request->input('stock') ?? 0) : null;
 
         // 3. Crear Producto
         $product = Product::create($data);
@@ -85,14 +86,14 @@ class ProductController extends Controller
         }
 
         // 5. Registro inicial en Kardex si hay stock
-        if($request->stock > 0) {
+        if($data['stock'] > 0) {
             InventoryLog::create([
                 'product_id' => $product->id,
                 'user_id' => Auth::id(),
                 'type' => 'entry',
-                'quantity' => $request->stock,
+                'quantity' => $data['stock'],
                 'old_stock' => 0,
-                'new_stock' => $request->stock,
+                'new_stock' => $data['stock'],
                 'note' => 'Inventario Inicial'
             ]);
         }
@@ -139,6 +140,7 @@ class ProductController extends Controller
         $data['is_chef_recommendation'] = $request->has('is_chef_recommendation');
         $data['is_new'] = $request->has('is_new');
         $data['cost'] = $request->cost ?? 0;
+        $data['stock'] = $request->boolean('control_stock') ? $product->stock : null;
 
         // 3. Actualizar
         $product->update($data);

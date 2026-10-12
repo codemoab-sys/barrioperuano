@@ -43,13 +43,20 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Stock Inicial</label>
-                                <input type="number" name="stock" class="form-control" placeholder="0">
+                                <input type="number" name="stock" id="productStock" class="form-control" placeholder="0" min="0">
                                 <small class="text-muted" style="font-size: 0.75rem;">Se registrará en el inventario si se indica.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Código de Barras</label>
                                 <input type="text" name="barcode" class="form-control" placeholder="Opcional">
                             </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-4 bg-light p-3 rounded border">
+                            <input class="form-check-input" type="checkbox" name="control_stock" id="controlStockCheck" checked>
+                            <label class="form-check-label fw-bold ms-2" for="controlStockCheck">
+                                Controlar stock
+                            </label>
                         </div>
 
                         <div class="form-check form-switch mb-4 bg-light p-3 rounded border">
@@ -77,6 +84,15 @@
 </div>
 
 <script>
+    const controlStockCheck = document.getElementById('controlStockCheck');
+    const productStock = document.getElementById('productStock');
+    controlStockCheck?.addEventListener('change', function () {
+        productStock.disabled = !this.checked;
+        if (!this.checked) {
+            productStock.value = '';
+        }
+    });
+
     document.getElementById('productCreateForm')?.addEventListener('submit', function (event) {
         if (this.dataset.submitting === 'true') {
             event.preventDefault();
