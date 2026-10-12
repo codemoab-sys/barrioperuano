@@ -11,11 +11,11 @@
         </a>
     </div>
 
-    <form action="{{ route('delivery.store') }}" method="POST" id="deliveryForm" class="row g-3 flex-grow-1 overflow-hidden" style="min-height: 0;">
+    <form action="{{ route('delivery.store') }}" method="POST" id="deliveryForm" class="row g-3 flex-grow-1 overflow-hidden delivery-form" style="min-height: 0;">
         @csrf
         
         {{-- PANEL IZQUIERDO: Datos del Cliente --}}
-        <div class="col-12 col-md-4 h-100 d-flex flex-column">
+        <div class="col-12 col-md-4 h-100 d-flex flex-column delivery-panel">
             <div class="card shadow-sm border-0 h-100 flex-column d-flex">
                 <div class="card-header bg-white border-bottom py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill me-2"></i>Datos de Entrega</h6>
@@ -87,7 +87,7 @@
         </div>
 
         {{-- PANEL DERECHO: Productos y Carrito --}}
-        <div class="col-12 col-md-8 h-100 d-flex flex-column">
+        <div class="col-12 col-md-8 h-100 d-flex flex-column delivery-panel">
             <div class="card shadow-sm border-0 h-100 flex-column d-flex">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Productos</h6>
@@ -146,6 +146,68 @@
         </div>
     </form>
 </div>
+
+<style>
+    @media (max-width: 767.98px) {
+        .delivery-form {
+            display: block;
+            height: auto;
+            overflow: visible !important;
+        }
+
+        .delivery-panel {
+            height: auto !important;
+            min-height: 0;
+            margin-bottom: 1rem;
+        }
+
+        .delivery-panel .card {
+            height: auto !important;
+        }
+
+        .delivery-panel .card-body {
+            max-height: none;
+        }
+
+        .delivery-panel .card-body.d-flex {
+            display: block !important;
+            overflow: visible !important;
+            width: 100%;
+            padding: 0 !important;
+        }
+
+        .delivery-panel #productGrid,
+        .delivery-panel #deliveryCartContainer {
+            width: 100% !important;
+            max-width: 100%;
+            flex: none !important;
+        }
+
+        .delivery-panel .w-50 {
+            width: 100% !important;
+        }
+
+        .delivery-panel #productGrid {
+            max-height: 42vh;
+            border-right: 0 !important;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+
+        .delivery-panel #productGrid .product-card {
+            width: 100%;
+            flex: 0 0 100%;
+        }
+
+        .delivery-panel #deliveryCartContainer {
+            min-height: 120px;
+            max-height: none;
+        }
+
+        .delivery-panel #deliveryCartContainer table {
+            width: 100% !important;
+        }
+    }
+</style>
 
 <div class="modal fade" id="deliverySauceModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
