@@ -131,7 +131,9 @@ class CashRegisterTest extends TestCase
     public function test_waiter_can_only_show_the_precheck_and_cannot_charge(): void
     {
         $waiter = User::factory()->create(['role' => 'waiter']);
+        $otherUser = User::factory()->create(['role' => 'waiter']);
         $area = Area::create(['name' => 'Salon']);
+        $waiter->areas()->sync([$area->id]);
         $table = Table::create([
             'area_id' => $area->id,
             'name' => 'Mesa 1',
@@ -139,10 +141,14 @@ class CashRegisterTest extends TestCase
         ]);
         $order = Order::create([
             'table_id' => $table->id,
-            'user_id' => $waiter->id,
+            'user_id' => $otherUser->id,
             'status' => 'pending',
             'total' => 25,
         ]);
+
+        $this->actingAs($waiter)
+            ->get(route('pos.precheck', $order))
+            ->assertOk();
 
         $this->actingAs($waiter)
             ->get(route('pos.checkout.modal', $order))

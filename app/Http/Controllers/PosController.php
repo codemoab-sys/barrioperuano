@@ -495,7 +495,13 @@ class PosController extends Controller
         })->all();
     }
     public function processSplit(Request $request, Order $order) { $this->authorizePendingOrder($order); return redirect()->back(); }
-    public function precheck(Order $order) { $this->authorizeOrder($order); $settings = Setting::pluck('value', 'key')->toArray(); return view('sales.ticket', compact('order', 'settings')); }
+    public function precheck(Order $order)
+    {
+        $this->authorizePrecheck($order);
+        $settings = Setting::pluck('value', 'key')->toArray();
+
+        return view('sales.ticket', compact('order', 'settings'));
+    }
     public function kitchenTicket(Order $order) { $this->authorizeOrder($order); return view('sales.kitchen_ticket', compact('order')); }
 
     public function checkout(Request $request, Order $order)
@@ -666,6 +672,22 @@ class PosController extends Controller
         $user = Auth::user();
         $canManageAll = in_array($user?->role, ['admin', 'cashier', 'cashier_waiter'], true);
         abort_unless($canManageAll || (int) $order->user_id === (int) $user?->id, 403);
+    }
+
+    private function authorizePrecheck(Order $order): void
+    {
+        $user = Auth::user();
+
+        if (in_array($user?->role, ['admin', 'cashier', 'cashier_waiter'], true)) {
+            return;
+        }
+
+        abort_unless(
+            $user?->role === 'waiter'
+            && $order->table
+            && $user->canAccessArea((int) $order->table->area_id),
+            403
+        );
     }
 
     private function getCartHtml(Table $table)
