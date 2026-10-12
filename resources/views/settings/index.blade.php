@@ -378,40 +378,36 @@
                             El primer comprobante de cada serie productiva comenzará en el correlativo <strong>1</strong>.
                         </div>
 
-                        @foreach($areas as $area)
-                            @php
-                                $areaSeries = \App\Models\DocumentSeries::where('area_id', $area->id)->where('is_active', true)->get()->keyBy('document_type');
-                                $seriesFields = [
-                                    'factura' => ['label' => 'Serie Factura', 'placeholder' => 'F001'],
-                                    'boleta' => ['label' => 'Serie Boleta', 'placeholder' => 'B001'],
-                                    'nota_credito_factura' => ['label' => 'Serie NC Factura', 'placeholder' => 'F001'],
-                                    'nota_credito_boleta' => ['label' => 'Serie NC Boleta', 'placeholder' => 'B001'],
-                                    'nota_debito_factura' => ['label' => 'Serie ND Factura', 'placeholder' => 'F001'],
-                                    'nota_debito_boleta' => ['label' => 'Serie ND Boleta', 'placeholder' => 'B001'],
-                                ];
-                            @endphp
-                            <div class="card border shadow-sm mb-3">
-                                <div class="card-header bg-light fw-bold">
-                                    <i class="bi bi-shop me-2"></i>{{ $area->name }}
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        @foreach($seriesFields as $type => $field)
-                                            @php $series = $areaSeries->get($type); @endphp
-                                            <div class="col-md-3">
-                                                <label class="form-label fw-bold">{{ $field['label'] }} <span class="text-danger">*</span></label>
-                                                <input type="text" name="area_series[{{ $area->id }}][{{ $type }}]" class="form-control" value="{{ $series?->serie ?? '' }}" maxlength="4" placeholder="{{ $field['placeholder'] }}" required>
-                                                <small class="text-muted">Próximo: {{ $series ? $series->serie . '-' . ($series->last_number + 1) : '1' }}</small>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                        @php
+                            $globalSeries = \App\Models\DocumentSeries::whereNull('area_id')->where('is_active', true)->get()->keyBy('document_type');
+                            $legacySeries = \App\Models\DocumentSeries::whereNotNull('area_id')->where('is_active', true)->orderBy('area_id')->get()->keyBy('document_type');
+                            $seriesFields = [
+                                'factura' => ['label' => 'Serie Factura', 'placeholder' => 'F001'],
+                                'boleta' => ['label' => 'Serie Boleta', 'placeholder' => 'B001'],
+                                'nota_credito_factura' => ['label' => 'Serie NC Factura', 'placeholder' => 'F001'],
+                                'nota_credito_boleta' => ['label' => 'Serie NC Boleta', 'placeholder' => 'B001'],
+                                'nota_debito_factura' => ['label' => 'Serie ND Factura', 'placeholder' => 'F001'],
+                                'nota_debito_boleta' => ['label' => 'Serie ND Boleta', 'placeholder' => 'B001'],
+                            ];
+                        @endphp
+                        <div class="alert alert-info py-2 mb-3 small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Estas series son únicas y se utilizan para todas las zonas del restaurante.
+                        </div>
+                        <div class="card border shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    @foreach($seriesFields as $type => $field)
+                                        @php $series = $globalSeries->get($type) ?? $legacySeries->get($type); @endphp
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold">{{ $field['label'] }} <span class="text-danger">*</span></label>
+                                            <input type="text" name="serie_{{ $type === 'nota_credito_factura' ? 'nc_factura' : ($type === 'nota_credito_boleta' ? 'nc_boleta' : ($type === 'nota_debito_factura' ? 'nd_factura' : ($type === 'nota_debito_boleta' ? 'nd_boleta' : $type))) }}" class="form-control" value="{{ $series?->serie ?? '' }}" maxlength="4" placeholder="{{ $field['placeholder'] }}" required>
+                                            <small class="text-muted">Próximo: {{ $series ? $series->serie . '-' . ($series->last_number + 1) : '1' }}</small>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        @endforeach
-
-                        @if($areas->isEmpty())
-                            <div class="alert alert-info">Crea al menos una zona para configurar sus series de comprobantes.</div>
-                        @endif
+                        </div>
 
                         <div class="mt-5 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-5 fw-bold shadow" id="saveSettingsButton">
