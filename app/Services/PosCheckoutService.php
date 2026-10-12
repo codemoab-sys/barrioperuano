@@ -17,6 +17,19 @@ class PosCheckoutService
 {
     public function __construct(protected \App\Services\SalesService $salesService) {}
 
+    public function cardSurcharge(float $total): float
+    {
+        $igvFactor = (new SunatConfig())->igvFactor();
+        $totalGravada = round($total / (1 + $igvFactor), 2);
+
+        return round($totalGravada * 0.05, 2);
+    }
+
+    public function totalForPayment(float $total, string $paymentMethod): float
+    {
+        return round($total + ($paymentMethod === 'card' ? $this->cardSurcharge($total) : 0), 2);
+    }
+
     public function completeCheckout(Order $order, array $payload): Order
     {
         $cashRegister = CashRegister::current();
@@ -51,12 +64,17 @@ class PosCheckoutService
             $config = new SunatConfig();
             $igvFactor = $config->igvFactor();
             $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
+            $baseTotal = round((float) $order->total, 2);
+            $cardSurcharge = $method === 'card'
+                ? round(round($baseTotal / (1 + $igvFactor), 2) * 0.05, 2)
+                : 0;
+            $finalTotal = round($baseTotal + $cardSurcharge, 2);
 
             $totalGravada = 0;
             $igv = 0;
             if ($isElectronic) {
-                $totalGravada = round((float) $order->total / (1 + $igvFactor), 2);
-                $igv = round((float) $order->total - $totalGravada, 2);
+                $totalGravada = round($baseTotal / (1 + $igvFactor), 2);
+                $igv = round($baseTotal - $totalGravada, 2);
             }
 
             $serie = null;
@@ -74,6 +92,7 @@ class PosCheckoutService
                 'issued_at' => now(),
                 'issued_by_user_id' => Auth::id(),
                 'payment_method' => $method,
+                'total' => $finalTotal,
                 'received_amount' => $received,
                 'change_amount' => $change,
                 'document_type' => $documentType,

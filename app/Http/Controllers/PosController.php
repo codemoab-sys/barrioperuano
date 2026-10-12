@@ -103,6 +103,7 @@ class PosController extends Controller
             'document' => (string) ($c->document_number ?? ''),
         ])->values();
         $availableSeries = $this->availableSeriesForArea($table->area_id);
+        $igvFactor = (new SunatConfig())->igvFactor();
 
         $lastSales = Order::where('status', 'completed')
             ->with('client')
@@ -110,7 +111,7 @@ class PosController extends Controller
             ->take(5)
             ->get();
 
-        return view('pos.order', compact('table', 'categories', 'order', 'freeTables', 'clients', 'currency', 'lastSales', 'clientsData', 'reservedMap', 'availableSeries'));
+        return view('pos.order', compact('table', 'categories', 'order', 'freeTables', 'clients', 'currency', 'lastSales', 'clientsData', 'reservedMap', 'availableSeries', 'igvFactor'));
     }
 
     // --- AGREGAR POR CLIC (Normal) ---
@@ -474,8 +475,9 @@ class PosController extends Controller
             'document' => (string) ($client->document_number ?? ''),
         ])->values();
         $availableSeries = $this->availableSeriesForArea($order->table()->value('area_id'));
+        $igvFactor = (new SunatConfig())->igvFactor();
 
-        return view('pos.partials.checkout_modal', compact('order', 'clientsData', 'availableSeries'));
+        return view('pos.partials.checkout_modal', compact('order', 'clientsData', 'availableSeries', 'igvFactor'));
     }
 
     private function availableSeriesForArea(?int $areaId): array
@@ -515,11 +517,12 @@ class PosController extends Controller
         ]);
 
         $method = $request->input('payment_method');
-        $received = $method === 'cash' ? (float) $request->input('received_amount') : (float) $order->total;
-        if ($method === 'cash' && $received < (float) $order->total) {
+        $totalToCollect = $this->posCheckoutService->totalForPayment((float) $order->total, $method);
+        $received = $method === 'cash' ? (float) $request->input('received_amount') : $totalToCollect;
+        if ($method === 'cash' && $received < $totalToCollect) {
             return back()->with('error', 'El monto recibido es insuficiente.');
         }
-        $change = max(0, $received - $order->total);
+        $change = max(0, $received - $totalToCollect);
         $clientId = $request->input('client_id');
         $client = $clientId ? Client::findOrFail($clientId) : null;
         $clientName = $client?->name ?: ($request->input('client_name') ?? 'Público');

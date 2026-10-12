@@ -50,7 +50,7 @@
                         <h4 class="fw-bold mb-0 text-secondary" id="changeAmount">0.00</h4>
                     </div>
                 </div>
-                <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}">
+                <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}" data-base-total="{{ number_format($order->total, 2, '.', '') }}" data-igv-factor="{{ $igvFactor ?? 0.18 }}">
             </div>
             <div class="modal-footer p-2 bg-light">
                 <button type="button" id="confirmPayBtn" class="btn btn-success w-100 btn-lg fw-bold">CONFIRMAR PAGO</button>

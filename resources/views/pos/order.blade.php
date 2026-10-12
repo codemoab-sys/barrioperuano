@@ -395,7 +395,7 @@ foreach($categories as $cat) {
                         <h4 class="fw-bold mb-0 text-secondary" id="changeAmount">0.00</h4>
                     </div>
                 </div>
-                <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}">
+                <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}" data-base-total="{{ number_format($order->total, 2, '.', '') }}" data-igv-factor="{{ $igvFactor ?? 0.18 }}">
             </div>
             <div class="modal-footer p-2 bg-light">
                 <button type="button" id="confirmPayBtn" class="btn btn-success w-100 btn-lg fw-bold">CONFIRMAR PAGO</button>
@@ -791,7 +791,20 @@ foreach($categories as $cat) {
         var series = select.options[select.selectedIndex].dataset.serie || 'Sin serie activa';
         label.innerHTML = '<span class="text-muted">Serie asignada:</span> <span class="badge bg-light text-dark border fw-semibold">' + series + '</span>';
     }
-    window.toggleCashInput = function(show) { document.getElementById('cashInputGroup').style.display = show ? 'block' : 'none'; }
+    window.toggleCashInput = function(show) {
+        document.getElementById('cashInputGroup').style.display = show ? 'block' : 'none';
+        var hiddenTotal = document.getElementById('hiddenTotal');
+        var received = document.getElementById('receivedAmount');
+        var baseTotal = parseFloat(hiddenTotal.dataset.baseTotal) || 0;
+        var igvFactor = parseFloat(hiddenTotal.dataset.igvFactor) || 0.18;
+        var total = show ? baseTotal : baseTotal;
+        if (document.getElementById('payCard').checked) {
+            total = baseTotal + Math.round((baseTotal / (1 + igvFactor) * 0.05) * 100) / 100;
+        }
+        hiddenTotal.value = total.toFixed(2);
+        if (received && !show) received.value = total.toFixed(2);
+        calculateChange();
+    }
     window.calculateChange = function() {
         var total = parseFloat(document.getElementById('hiddenTotal').value) || 0;
         var received = parseFloat(document.getElementById('receivedAmount').value) || 0;

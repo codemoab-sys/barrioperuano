@@ -117,7 +117,10 @@ class NubeFactInvoiceBuilder
         // ═══ TOTALES ════════════════════════════════════════════════
         $totalGravada = round($totalGravada, 2);
         $totalIgv     = round($totalIgv, 2);
-        $totalVenta   = round($totalGravada + $totalIgv, 2);
+        $totalOtrosCargos = $order->payment_method === 'card'
+            ? round($totalGravada * 0.05, 2)
+            : 0;
+        $totalVenta   = round($totalGravada + $totalIgv + $totalOtrosCargos, 2);
 
         // ═══ TIPO DE MONEDA ═════════════════════════════════════════
         $monedaCodigo = 1; // 1 = Soles
@@ -180,7 +183,7 @@ class NubeFactInvoiceBuilder
             'total_exonerada'            => $totalExonerada,
             'total_igv'                  => $totalIgv,
             'total_gratuita'             => '',
-            'total_otros_cargos'         => '',
+            'total_otros_cargos'         => $totalOtrosCargos ?: '',
             'total'                      => $totalVenta,
             'percepcion_tipo'            => '',
             'percepcion_base_imponible'  => '',
