@@ -204,7 +204,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Comprobante</label>
                         <select name="document_type" class="form-select form-select-lg">
-                            <option value="Ticket">Ticket de Venta</option>
+                            <option value="Ticket">Ticket Nota V.</option>
                             <option value="Boleta">Boleta Electrónica</option>
                             <option value="Factura">Factura Electrónica</option>
                         </select>

@@ -366,7 +366,7 @@ foreach($categories as $cat) {
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-8"><input type="text" name="client_document" id="clientDoc" class="form-control bg-light" placeholder="RUC/DNI" readonly></div>
-                    <div class="col-4"><select name="document_type" id="documentType" class="form-select fw-bold" required onchange="showSelectedSeries(this)"><option value="" selected disabled>Selecciona documento</option><option value="Ticket">Ticket</option><option value="Boleta" data-serie="{{ $availableSeries['boleta'] ?? '' }}">Boleta</option><option value="Factura" data-serie="{{ $availableSeries['factura'] ?? '' }}">Factura</option></select></div>
+                    <div class="col-4"><select name="document_type" id="documentType" class="form-select fw-bold" required onchange="showSelectedSeries(this)"><option value="" selected disabled>Selecciona documento</option><option value="Ticket">Ticket Nota V.</option><option value="Boleta" data-serie="{{ $availableSeries['boleta'] ?? '' }}">Boleta</option><option value="Factura" data-serie="{{ $availableSeries['factura'] ?? '' }}">Factura</option></select></div>
                 </div>
                 <div id="selectedSeries" class="form-text mb-3">Selecciona el documento para ver la serie.</div>
                 <div class="mb-3 text-center">
