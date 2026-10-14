@@ -43,14 +43,14 @@ class WingSauceSelectionTest extends TestCase
             'name' => 'Barco Grande (70 alitas, papas fritas y arroz chaufa, cualquier sabor)',
             'price' => 1,
             'stock' => null,
-            'required_sauce_count' => 1,
+            'required_sauce_count' => 10,
             'is_active' => true,
             'is_saleable' => true,
         ]);
         $this->actingAs($cashier)->postJson($endpoint, ['product_id' => $barcoGrande->id])
             ->assertOk()
             ->assertJsonPath('requires_sauces', true)
-            ->assertJsonPath('max_sauces', 1);
+            ->assertJsonPath('max_sauces', 10);
 
         $this->actingAs($cashier)->postJson($endpoint, ['product_id' => $product->id])
             ->assertOk()

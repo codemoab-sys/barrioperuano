@@ -75,7 +75,7 @@ class BarrioPeruanoMenuSeeder extends Seeder
             'El Respetado (40 alas, 8 sabores)' => 8,
             'El Padrino (50 alas, 10 sabores)' => 10,
             'El Intocable (70 alas, 10 sabores)' => 10,
-            'Barco Grande (70 alitas, papas fritas y arroz chaufa, cualquier sabor)' => 1,
+            'Barco Grande (70 alitas, papas fritas y arroz chaufa, cualquier sabor)' => 10,
         ];
 
         DB::transaction(function () use ($menu, $requiredSauceCounts): void {

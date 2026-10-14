@@ -52,6 +52,12 @@
                             </div>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted">Máximo de sabores</label>
+                            <input type="number" name="required_sauce_count" class="form-control" min="1" max="10" value="{{ old('required_sauce_count') }}" placeholder="Opcional">
+                            <small class="text-muted" style="font-size: 0.75rem;">Solo para categorías Alitas o Barcos. Déjalo vacío si no permite elegir sabores.</small>
+                        </div>
+
                         <div class="form-check form-switch mb-4 bg-light p-3 rounded border">
                             <input class="form-check-input" type="checkbox" name="control_stock" id="controlStockCheck" checked>
                             <label class="form-check-label fw-bold ms-2" for="controlStockCheck">
