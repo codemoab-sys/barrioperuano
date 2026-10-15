@@ -852,6 +852,11 @@
         <a href="{{ route('kitchen.index') }}" class="nav-link {{ request()->routeIs('kitchen.*') ? 'active' : '' }}">
             <i class="bi bi-fire"></i> Cocina (KDS)
         </a>
+        @if(in_array($role, ['admin', 'kitchen']))
+            <a href="{{ route('kitchen_inventory.supplies.index') }}" class="nav-link {{ request()->routeIs('kitchen_inventory.*') ? 'active' : '' }}">
+                <i class="bi bi-box-seam"></i> Inventario Cocina
+            </a>
+        @endif
 
         <div class="menu-category">Gestión</div>
         @if(in_array($role, ['admin', 'cashier', 'cashier_waiter', 'waiter']))

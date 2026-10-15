@@ -3,6 +3,7 @@
 namespace App\Models\Kitchen;
 
 use App\Models\Kitchen\Concerns\PreventsKitchenInventoryDeletion;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,5 +25,10 @@ class KitchenInventoryMovement extends Model
     public function operation(): BelongsTo
     {
         return $this->belongsTo(KitchenInventoryOperation::class, 'operation_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

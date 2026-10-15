@@ -7,7 +7,10 @@ use App\Http\Controllers\TableController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\KitchenCatalogController;
 use App\Http\Controllers\KitchenController;
+use App\Http\Controllers\KitchenMovementController;
+use App\Http\Controllers\KitchenRecipeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\SettingController;
@@ -227,6 +230,51 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/tables/table/{table}', [TableController::class, 'updateTable'])->name('tables.updateTable');
         Route::delete('/tables/table/{table}', [TableController::class, 'destroyTable'])->name('tables.destroyTable');
         Route::post('/tables/update-positions', [TableController::class, 'updatePositions'])->name('tables.updatePositions');
+    });
+
+    // =========================================================
+    // INVENTARIO DE COCINA — Lectura (admin + cocina)
+    // =========================================================
+    Route::middleware(['role:admin,kitchen'])->prefix('kitchen-inventory')->name('kitchen_inventory.')->group(function () {
+        Route::get('/', [KitchenCatalogController::class, 'index'])->name('supplies.index');
+        Route::get('/recipes', [KitchenRecipeController::class, 'index'])->name('recipes.index');
+    });
+
+    // =========================================================
+    // INVENTARIO DE COCINA — Administración (solo admin)
+    // =========================================================
+    Route::middleware(['role:admin'])->prefix('kitchen-inventory')->name('kitchen_inventory.')->group(function () {
+        // Categorías de insumos
+        Route::get('/categories', [KitchenCatalogController::class, 'categoriesIndex'])->name('categories.index');
+        Route::post('/categories', [KitchenCatalogController::class, 'categoryStore'])->name('categories.store');
+        Route::put('/categories/{category}', [KitchenCatalogController::class, 'categoryUpdate'])->name('categories.update');
+        Route::delete('/categories/{category}', [KitchenCatalogController::class, 'categoryDestroy'])->name('categories.destroy');
+
+        // Insumos y existencias
+        Route::get('/supplies/create', [KitchenCatalogController::class, 'create'])->name('supplies.create');
+        Route::post('/supplies', [KitchenCatalogController::class, 'store'])->name('supplies.store');
+        Route::get('/supplies/{supply}/edit', [KitchenCatalogController::class, 'edit'])->name('supplies.edit');
+        Route::put('/supplies/{supply}', [KitchenCatalogController::class, 'update'])->name('supplies.update');
+        Route::delete('/supplies/{supply}', [KitchenCatalogController::class, 'destroy'])->name('supplies.destroy');
+        Route::get('/supplies/{supply}/adjust', [KitchenCatalogController::class, 'adjustForm'])->name('supplies.adjust.form');
+        Route::post('/supplies/{supply}/adjust', [KitchenCatalogController::class, 'adjust'])->name('supplies.adjust');
+
+        // Recetas, versiones y publicación
+        Route::get('/recipes/create', [KitchenRecipeController::class, 'create'])->name('recipes.create');
+        Route::post('/recipes', [KitchenRecipeController::class, 'store'])->name('recipes.store');
+        Route::get('/recipes/{recipe}', [KitchenRecipeController::class, 'show'])->name('recipes.show');
+        Route::put('/recipes/{recipe}', [KitchenRecipeController::class, 'update'])->name('recipes.update');
+        Route::post('/recipes/{recipe}/versions', [KitchenRecipeController::class, 'storeVersion'])->name('recipes.versions.store');
+        Route::post('/recipes/{recipe}/deactivate', [KitchenRecipeController::class, 'deactivate'])->name('recipes.deactivate');
+        Route::post('/recipes/{recipe}/activate', [KitchenRecipeController::class, 'activate'])->name('recipes.activate');
+        Route::get('/versions/{version}/edit', [KitchenRecipeController::class, 'versionEdit'])->name('versions.edit');
+        Route::put('/versions/{version}', [KitchenRecipeController::class, 'versionUpdate'])->name('versions.update');
+        Route::post('/versions/{version}/publish', [KitchenRecipeController::class, 'publish'])->name('versions.publish');
+
+        // Kardex y regularizaciones
+        Route::get('/movements', [KitchenMovementController::class, 'movements'])->name('movements.index');
+        Route::get('/regularizations', [KitchenMovementController::class, 'regularizations'])->name('regularizations.index');
+        Route::post('/regularizations', [KitchenMovementController::class, 'regularizationStore'])->name('regularizations.store');
     });
 
 });

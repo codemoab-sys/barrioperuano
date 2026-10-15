@@ -420,6 +420,20 @@ class KitchenInventoryServiceTest extends TestCase
         }
     }
 
+    public function test_adjust_stock_persists_optional_note_on_movement(): void
+    {
+        $category = KitchenCategory::create(['name' => 'Ajustes']);
+        $supply = KitchenSupply::create(['category_id' => $category->id, 'name' => 'Sal', 'unit' => 'kg', 'stock_current' => 4]);
+
+        $operation = app(KitchenInventoryService::class)->adjustStock('adjust-note-1', 'entry', $supply->id, 6, null, 'Entrada con motivo de auditoría');
+
+        $this->assertSame('10.0000', $supply->fresh()->stock_current);
+        $this->assertSame('Entrada con motivo de auditoría', $operation->movements->first()->note);
+
+        $withoutNote = app(KitchenInventoryService::class)->adjustStock('adjust-note-2', 'waste', $supply->id, 1);
+        $this->assertNull($withoutNote->movements->first()->note);
+    }
+
     private function supplyAndVersion(float $stock, float $recipeQuantity = 2): array
     {
         $category = KitchenCategory::create(['name' => 'Pruebas']);

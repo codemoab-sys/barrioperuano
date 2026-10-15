@@ -256,15 +256,15 @@ class KitchenInventoryService
         }, self::TRANSACTION_ATTEMPTS);
     }
 
-    public function adjustStock(string $eventKey, string $type, int $supplyId, float $quantity, ?int $userId = null): KitchenInventoryOperation
+    public function adjustStock(string $eventKey, string $type, int $supplyId, float $quantity, ?int $userId = null, ?string $note = null): KitchenInventoryOperation
     {
         if (! in_array($type, ['entry', 'adjustment_in', 'adjustment_out', 'waste'], true) || ! is_finite($quantity) || $quantity <= 0) {
             throw ValidationException::withMessages(['quantity' => 'El movimiento o la cantidad no son válidos.']);
         }
 
-        $payload = ['quantity' => $quantity, 'supplyId' => $supplyId, 'type' => $type];
+        $payload = ['quantity' => $quantity, 'supplyId' => $supplyId, 'type' => $type, 'note' => $note];
 
-        return DB::transaction(function () use ($eventKey, $type, $supplyId, $quantity, $userId, $payload): KitchenInventoryOperation {
+        return DB::transaction(function () use ($eventKey, $type, $supplyId, $quantity, $userId, $note, $payload): KitchenInventoryOperation {
             $operation = $this->operation($eventKey, $type, $payload, $userId);
             if ($operation->wasRecentlyCreated === false) {
                 return $operation->load(['movements']);
@@ -288,6 +288,7 @@ class KitchenInventoryService
                 'stock_after' => $after,
                 'idempotency_key' => $eventKey.':movement:'.$supplyId,
                 'user_id' => $userId,
+                'note' => $note,
             ]);
 
             return $operation->load(['movements']);
