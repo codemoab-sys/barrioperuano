@@ -164,6 +164,11 @@ class DeliveryController extends Controller
             $order->update(['total' => $subtotal]);
             $this->salesService->applyStockReductionForOrder($order, 'Delivery');
 
+            // Control de stock de cocina (kitchen_stock_control): consume los ingredientes
+            // publicados en la receta dentro de esta misma transacción (SAVEPOINT anidado).
+            // Un insumo faltante revierte también la orden, el delivery y el stock comercial.
+            $this->deliveryService->consumeKitchenForOrder($order);
+
             // 3. Crear el Delivery
             Delivery::create([
                 'order_id'        => $order->id,
@@ -312,8 +317,17 @@ class DeliveryController extends Controller
 
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        DB::transaction(function () use ($delivery, $documentType, $client, $receivedAmount, $totalToCollect, $nubefactConfigured, $seriesAreaId) {
-            $order = $delivery->order;
+        $closed = DB::transaction(function () use ($delivery, $documentType, $client, $receivedAmount, $totalToCollect, $nubefactConfigured, $seriesAreaId) {
+            // Orden de bloqueo común Order → Delivery (idéntico al de cancel). Revalida los
+            // estados bajo candado: un checkout nunca puede resucitar un delivery cancelado
+            // ni completar dos veces la misma orden. Sin re-check, una cancelación que ya
+            // restauró inventario comercial y de cocina sería sobrescrita por este flujo.
+            $order = Order::whereKey($delivery->order_id)->lockForUpdate()->firstOrFail();
+            $delivery = Delivery::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
+
+            if ($order->status !== 'pending' || in_array($delivery->status, ['delivered', 'cancelled'], true)) {
+                return false;
+            }
 
             $isElectronic = in_array($documentType, ['Boleta', 'Factura'], true);
             $total = round((float) $order->total + (float) $delivery->delivery_fee, 2);
@@ -351,7 +365,13 @@ class DeliveryController extends Controller
                 'status'       => 'delivered',
                 'delivered_at' => now(),
             ]);
+
+            return true;
         });
+
+        if (!$closed) {
+            return redirect()->route('delivery.show', $delivery)->with('error', 'Este pedido ya fue cerrado.');
+        }
 
         if ($documentType !== 'Ticket' && $nubefactConfigured) {
             $order = $delivery->order->fresh('details.product');
@@ -382,13 +402,34 @@ class DeliveryController extends Controller
             return redirect()->back()->with('error', 'No se puede cancelar este pedido.');
         }
 
-        $order = $delivery->order()->with('details.product.ingredients')->first();
+        $order = $delivery->order()->with('details.product.ingredients')->firstOrFail();
 
-        DB::transaction(function () use ($delivery, $order) {
-            $this->deliveryService->restoreInventoryForOrder($order);
-            $delivery->update(['status' => 'cancelled']);
-            $order->update(['status' => 'cancelled']);
+        $cancelled = DB::transaction(function () use ($delivery, $order) {
+            // Orden de bloqueo consistente Order → Delivery (mismo orden relativo que checkout,
+            // cuyo primer candado sobre estas entidades es el update de la orden antes que el
+            // del delivery). Revalida los estados bajo candado: una cancelación nunca debe
+            // restaurar inventario comercial ni de cocina de un pedido ya entregado/completado.
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $lockedDelivery = Delivery::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
+
+            if (
+                in_array($lockedDelivery->status, ['delivered', 'cancelled'], true)
+                || $lockedOrder->status !== 'pending'
+            ) {
+                return false;
+            }
+
+            $this->deliveryService->restoreInventoryForOrder($lockedOrder);
+            $this->deliveryService->returnKitchenForOrderIfConsumed($lockedOrder);
+            $lockedDelivery->update(['status' => 'cancelled']);
+            $lockedOrder->update(['status' => 'cancelled']);
+
+            return true;
         });
+
+        if (!$cancelled) {
+            return redirect()->back()->with('error', 'No se puede cancelar este pedido.');
+        }
 
         return redirect()->route('delivery.index')->with('success', 'Pedido cancelado.');
     }

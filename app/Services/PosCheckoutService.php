@@ -15,7 +15,11 @@ use Illuminate\Validation\ValidationException;
 
 class PosCheckoutService
 {
-    public function __construct(protected \App\Services\SalesService $salesService) {}
+    public function __construct(
+        protected \App\Services\SalesService $salesService,
+        protected KitchenStockControl $kitchenStockControl,
+        protected KitchenInventoryService $kitchenInventoryService
+    ) {}
 
     public function cardSurcharge(float $total): float
     {
@@ -59,6 +63,17 @@ class PosCheckoutService
 
         return DB::transaction(function () use ($order, $method, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            // Revalidación bajo el lock: la verificación previa (fuera de la transacción)
+            // puede quedar obsoleta ante checkouts concurrentes. Sin este control, una
+            // segunda petición reescribiría importes, consumiría otro correlativo y
+            // reduciría el stock comercial una vez más.
+            if ($order->status !== 'pending') {
+                throw ValidationException::withMessages([
+                    'general' => ['Orden cerrada.'],
+                ]);
+            }
+
             $order->load('details.product.ingredients');
 
             $config = new SunatConfig();
@@ -110,6 +125,22 @@ class PosCheckoutService
 
             $this->salesService->validateOrderForStock($order);
             $this->salesService->applyStockReductionForOrder($order, 'Venta POS');
+
+            // Control de stock de cocina (kitchen_stock_control): recordSale usa DB::transaction
+            // sobre la misma conexión por lo que anida vía SAVEPOINT dentro de esta transacción;
+            // cualquier excepción (p. ej. insumo faltante) revierte aquí también el descuento
+            // comercial, la orden y el movimiento de caja: todo o nada.
+            if ($this->kitchenStockControl->enabled()) {
+                $kitchenLines = $this->kitchenStockControl->consumptionLinesFor($order);
+                if ($kitchenLines !== []) {
+                    $this->kitchenInventoryService->recordSale(
+                        'sale:order:'.$order->id,
+                        $kitchenLines,
+                        true,
+                        Auth::id()
+                    );
+                }
+            }
 
             return $order->fresh();
         });

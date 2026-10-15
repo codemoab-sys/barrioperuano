@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\DocumentSeries;
 use App\Models\CashRegister;
 use App\Services\PosCheckoutService;
+use App\Services\KitchenStockControl;
 use App\Services\StockValidationService;
 use App\Services\WingSauceMenu;
 use App\Services\Sunat\SunatConfig;
@@ -31,7 +32,8 @@ class PosController extends Controller
 {
     public function __construct(
         protected PosCheckoutService $posCheckoutService,
-        protected StockValidationService $stockValidationService
+        protected StockValidationService $stockValidationService,
+        protected KitchenStockControl $kitchenStockControl
     ) {}
 
     public function index()
@@ -315,6 +317,22 @@ class PosController extends Controller
             }
         }
 
+        if ($this->kitchenStockControl->enabled()) {
+            $pendingOrder = Order::where('table_id', $table->id)->where('status', 'pending')->first();
+            $currentQuantity = $pendingOrder
+                ? (int) $pendingOrder->details()->where('product_id', $product->id)->sum('quantity')
+                : 0;
+
+            $kitchenError = $this->kitchenStockControl->availabilityError(
+                $product,
+                $currentQuantity + 1,
+                $pendingOrder?->id
+            );
+            if ($kitchenError !== null) {
+                return $kitchenError;
+            }
+        }
+
         return null;
     }
 
@@ -356,29 +374,63 @@ class PosController extends Controller
         $request->validate(['quantity' => ['required', 'integer', 'min:0']]);
         $newQty = $request->quantity;
         $order = $detail->order;
+        $orderId = $order->id;
+        $detailId = $detail->id;
 
-        if ($newQty < 1) {
-            $detail->delete();
-            $this->cleanupEmptyOrder($order);
-        } else {
-            $product = $detail->product;
-            if (!is_null($product->stock)) {
-                $reserved = DB::table('bape_order_details')
-                    ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
-                    ->where('bape_orders.status', 'pending')
-                    ->whereNotNull('bape_orders.table_id')
-                    ->where('bape_order_details.product_id', $product->id)
-                    ->sum('bape_order_details.quantity');
+        // Transacción con bloqueo de la orden: serializa contra completeCheckout para que
+        // una actualización posterior al cobro no altere cantidades, totales ni reservas.
+        $error = DB::transaction(function () use ($orderId, $detailId, $newQty) {
+            $lockedOrder = Order::whereKey($orderId)->lockForUpdate()->firstOrFail();
 
-                $available = $product->stock - $reserved + $detail->quantity;
-                if ($newQty > $available) {
-                    return response()->json(['error' => 'Stock insuficiente. Disponible: ' . $available], 422);
-                }
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
             }
-            $detail->update(['quantity' => $newQty]);
+
+            $detail = $lockedOrder->details()->whereKey($detailId)->firstOrFail();
+
+            if ($newQty < 1) {
+                $detail->delete();
+                $this->cleanupEmptyOrder($lockedOrder);
+            } else {
+                $product = $detail->product;
+                if (!is_null($product->stock)) {
+                    $reserved = DB::table('bape_order_details')
+                        ->join('bape_orders', 'bape_orders.id', '=', 'bape_order_details.order_id')
+                        ->where('bape_orders.status', 'pending')
+                        ->whereNotNull('bape_orders.table_id')
+                        ->where('bape_order_details.product_id', $product->id)
+                        ->sum('bape_order_details.quantity');
+
+                    $available = $product->stock - $reserved + $detail->quantity;
+                    if ($newQty > $available) {
+                        return 'Stock insuficiente. Disponible: ' . $available;
+                    }
+                }
+
+                // Control de stock de cocina: proyecta la demanda total del producto en esta
+                // orden (todas sus líneas) manteniendo las reservas de otras órdenes pendientes.
+                // Sólo valida aumentos; disminuciones y eliminaciones liberan reservas.
+                if ($this->kitchenStockControl->enabled()) {
+                    $currentProductQuantity = (int) $lockedOrder->details()->where('product_id', $product->id)->sum('quantity');
+                    $prospectiveQuantity = $currentProductQuantity - (int) $detail->quantity + (int) $newQty;
+                    $kitchenError = $this->kitchenStockControl->availabilityError($product, $prospectiveQuantity, $lockedOrder->id);
+                    if ($kitchenError !== null) {
+                        return $kitchenError;
+                    }
+                }
+
+                $detail->update(['quantity' => $newQty]);
+            }
+
+            $this->recalculateTotal($lockedOrder);
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return response()->json(['error' => $error], 422);
         }
 
-        $this->recalculateTotal($order);
         return $this->getCartHtml($order->table()->firstOrFail());
     }
 
@@ -396,8 +448,22 @@ class PosController extends Controller
             ], 422);
         }
 
-        $detail->update(['price' => round((float) $request->input('price'), 2)]);
-        $this->recalculateTotal($detail->order);
+        $error = DB::transaction(function () use ($detail, $request) {
+            $lockedOrder = Order::whereKey($detail->order_id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
+            }
+
+            $lockedDetail = $lockedOrder->details()->whereKey($detail->id)->firstOrFail();
+            $lockedDetail->update(['price' => round((float) $request->input('price'), 2)]);
+            $this->recalculateTotal($lockedOrder);
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return response()->json(['error' => $error], 422);
+        }
 
         return $this->getCartHtml($detail->order->table()->firstOrFail());
     }
@@ -407,7 +473,23 @@ class PosController extends Controller
     {
         $this->authorizePendingDetail($detail);
         $request->validate(['note' => ['nullable', 'string', 'max:1000']]);
-        $detail->update(['note' => $request->note]);
+
+        $error = DB::transaction(function () use ($detail, $request) {
+            $lockedOrder = Order::whereKey($detail->order_id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
+            }
+
+            $lockedOrder->details()->whereKey($detail->id)->firstOrFail()
+                ->update(['note' => $request->note]);
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return response()->json(['error' => $error], 422);
+        }
+
         return $this->getCartHtml($detail->order->table()->firstOrFail());
     }
 
@@ -416,18 +498,39 @@ class PosController extends Controller
     {
         $this->authorizePendingDetail($detail);
         $order = $detail->order;
-        $detail->delete();
-        $this->cleanupEmptyOrder($order);
-        $this->recalculateTotal($order);
+
+        $error = DB::transaction(function () use ($detail, $order) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
+            }
+
+            $lockedDetail = $lockedOrder->details()->whereKey($detail->id)->firstOrFail();
+            $lockedDetail->delete();
+            $this->cleanupEmptyOrder($lockedOrder);
+            $this->recalculateTotal($lockedOrder);
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return response()->json(['error' => $error], 422);
+        }
+
         return $this->getCartHtml($order->table()->firstOrFail());
     }
 
     /**
      * Elimina la orden y libera la mesa si no quedan items.
      * Reactiva productos que tengan stock disponible.
+     * Sólo actúa sobre órdenes pendientes: una orden completada nunca se elimina.
      */
     private function cleanupEmptyOrder(Order $order): void
     {
+        if ($order->status !== 'pending') {
+            return;
+        }
+
         if ($order->details()->count() === 0) {
             $tableId = $order->table_id;
             $order->delete();
@@ -450,18 +553,60 @@ class PosController extends Controller
         if ((float) $request->discount > $subtotal) {
             return back()->with('error', 'El descuento no puede superar el subtotal.');
         }
-        $order->discount = $request->input('discount', 0);
-        $order->save();
-        $this->recalculateTotal($order);
+
+        $error = DB::transaction(function () use ($order, $request) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
+            }
+
+            $lockedOrder->discount = $request->input('discount', 0);
+            $lockedOrder->save();
+            $this->recalculateTotal($lockedOrder);
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return response()->json(['error' => $error], 422);
+        }
+
         return $this->getCartHtml($order->table()->firstOrFail());
     }
 
     public function moveTable(Request $request, Order $order) {
         $this->authorizePendingOrder($order);
         $request->validate(['target_table_id' => 'required|exists:bape_tables,id']);
-        if (Order::where('table_id', $request->target_table_id)->where('status', 'pending')->exists()) return redirect()->back()->with('error', 'Ocupada.');
-        $order->table_id = $request->target_table_id; $order->save();
-        return redirect()->route('pos.order', $request->target_table_id);
+        $targetTableId = (int) $request->input('target_table_id');
+
+        $error = DB::transaction(function () use ($order, $targetTableId) {
+            $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrder->status !== 'pending') {
+                return 'Orden cerrada.';
+            }
+
+            // Serializa movimientos concurrentes hacia la misma mesa destino bloqueando
+            // la fila de la mesa; no requiere restricciones nuevas de base de datos.
+            Table::whereKey($targetTableId)->lockForUpdate()->first();
+
+            $occupied = Order::where('table_id', $targetTableId)
+                ->where('status', 'pending')
+                ->exists();
+            if ($occupied) {
+                return 'Ocupada.';
+            }
+
+            $lockedOrder->table_id = $targetTableId;
+            $lockedOrder->save();
+
+            return null;
+        });
+
+        if ($error !== null) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        return redirect()->route('pos.order', $targetTableId);
     }
 
     public function getSplitContent(Order $order) { $this->authorizePendingOrder($order); return view('pos.partials.split_content', compact('order')); }
