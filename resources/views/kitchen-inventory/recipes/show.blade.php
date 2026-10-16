@@ -82,7 +82,21 @@
                                         <span class="badge bg-warning text-dark">Borrador</span>
                                     @endif
                                 </td>
-                                <td class="text-center">{{ $version->items_count }}</td>
+                                <td class="text-center">
+                                    @php
+                                        $itemsJson = json_encode($version->items->map(fn ($i) => [
+                                            'name' => $i->supply->name ?? '---',
+                                            'qty' => rtrim(rtrim(number_format($i->quantity, 4, '.', ''), '0'), '.'),
+                                            'unit' => $i->supply->unit ?? '',
+                                        ])->values());
+                                    @endphp
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" title="Ver insumos"
+                                            data-bs-toggle="modal" data-bs-target="#versionItemsModal"
+                                            data-version="{{ $version->version }}"
+                                            data-items="{{ $itemsJson }}">
+                                        {{ $version->items_count }} <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
                                 <td class="small text-muted">{{ $version->published_at?->format('d/m/Y H:i') ?? '---' }}</td>
                                 <td class="text-end pe-4">
                                     @if($version->status === 'draft')
@@ -123,5 +137,72 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="versionItemsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-list-ul me-2"></i>Insumos de la versión #<span id="vItemsVersion"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Insumo</th>
+                                <th class="text-end pe-4">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vItemsBody"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('versionItemsModal');
+            if (!modalEl) {
+                return;
+            }
+            modalEl.addEventListener('show.bs.modal', function (event) {
+                var btn = event.relatedTarget;
+                document.getElementById('vItemsVersion').textContent = btn.getAttribute('data-version');
+                var body = document.getElementById('vItemsBody');
+                body.innerHTML = '';
+                var items = [];
+                try {
+                    items = JSON.parse(btn.getAttribute('data-items') || '[]');
+                } catch (e) {
+                    items = [];
+                }
+                if (!items.length) {
+                    var empty = document.createElement('tr');
+                    var emptyTd = document.createElement('td');
+                    emptyTd.colSpan = 2;
+                    emptyTd.className = 'text-center text-muted py-3';
+                    emptyTd.textContent = 'Sin insumos registrados en esta versión.';
+                    empty.appendChild(emptyTd);
+                    body.appendChild(empty);
+                    return;
+                }
+                items.forEach(function (item) {
+                    var tr = document.createElement('tr');
+                    var tdName = document.createElement('td');
+                    tdName.textContent = item.name;
+                    var tdQty = document.createElement('td');
+                    tdQty.className = 'text-end pe-4';
+                    tdQty.textContent = item.qty + ' ' + item.unit;
+                    tr.appendChild(tdName);
+                    tr.appendChild(tdQty);
+                    body.appendChild(tr);
+                });
+            });
+        });
+    </script>
 </div>
 @endsection

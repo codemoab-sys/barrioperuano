@@ -79,6 +79,7 @@ class KitchenRecipeController extends Controller
     public function show(KitchenRecipe $recipe)
     {
         $recipe->load(['product', 'versions' => fn ($q) => $q->orderByDesc('version')]);
+        $recipe->versions->each->load('items.supply');
         $recipe->versions->each->loadCount('items');
 
         $pending = $this->pendingOrderCounts([$recipe->product_id])[$recipe->product_id] ?? 0;

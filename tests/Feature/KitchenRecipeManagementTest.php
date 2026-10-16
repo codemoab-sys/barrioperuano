@@ -309,6 +309,23 @@ class KitchenRecipeManagementTest extends TestCase
         $this->assertDatabaseHas('bape_kitchen_recipe_versions', ['id' => $version->id]);
     }
 
+    public function test_recipe_show_exposes_version_items_for_modal(): void
+    {
+        [$recipe, $version, $harina] = $this->draftRecipe();
+
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.versions.update', $version), [
+                'items' => [['kitchen_supply_id' => $harina->id, 'quantity' => 2.5]],
+            ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.recipes.show', $recipe))
+            ->assertOk()
+            ->assertSee('versionItemsModal', false)
+            ->assertSee('Ver insumos')
+            ->assertSee($harina->name);
+    }
+
     private function product(string $name): Product
     {
         return Product::create([
