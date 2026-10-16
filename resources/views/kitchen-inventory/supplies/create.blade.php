@@ -29,7 +29,12 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Unidad <span class="text-danger">*</span></label>
-                    <input type="text" name="unit" value="{{ old('unit') }}" class="form-control @error('unit') is-invalid @enderror" maxlength="30" placeholder="kg, l, und, caja..." required>
+                    <select name="unit" class="form-select @error('unit') is-invalid @enderror" required>
+                        <option value="">Seleccione...</option>
+                        @foreach(['kg' => 'Kilogramo (kg)', 'g' => 'Gramo (g)', 'l' => 'Litro (l)', 'ml' => 'Mililitro (ml)', 'und' => 'Unidad (und)', 'docena' => 'Docena', 'caja' => 'Caja', 'bandeja' => 'Bandeja', 'frasco' => 'Frasco', 'bolsa' => 'Bolsa'] as $unitValue => $unitLabel)
+                            <option value="{{ $unitValue }}" @selected(old('unit') === $unitValue)>{{ $unitLabel }}</option>
+                        @endforeach
+                    </select>
                     @error('unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="d-flex gap-2">

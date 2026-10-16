@@ -28,7 +28,18 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Unidad <span class="text-danger">*</span></label>
-                    <input type="text" name="unit" value="{{ old('unit', $supply->unit) }}" class="form-control @error('unit') is-invalid @enderror" maxlength="30" required>
+                    @php
+                        $units = ['kg' => 'Kilogramo (kg)', 'g' => 'Gramo (g)', 'l' => 'Litro (l)', 'ml' => 'Mililitro (ml)', 'und' => 'Unidad (und)', 'docena' => 'Docena', 'caja' => 'Caja', 'bandeja' => 'Bandeja', 'frasco' => 'Frasco', 'bolsa' => 'Bolsa'];
+                        $unit = old('unit', $supply->unit);
+                        if (! array_key_exists($unit, $units)) {
+                            $units[$unit] = $unit;
+                        }
+                    @endphp
+                    <select name="unit" class="form-select @error('unit') is-invalid @enderror" required>
+                        @foreach($units as $unitValue => $unitLabel)
+                            <option value="{{ $unitValue }}" @selected($unit === $unitValue)>{{ $unitLabel }}</option>
+                        @endforeach
+                    </select>
                     @error('unit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
