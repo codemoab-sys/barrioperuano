@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Kitchen\KitchenCategory;
+use App\Models\Kitchen\KitchenInventoryOperation;
+use App\Models\Kitchen\KitchenOrderConsumption;
 use App\Models\Kitchen\KitchenRecipe;
 use App\Models\Kitchen\KitchenRecipeItem;
 use App\Models\Kitchen\KitchenRecipeVersion;
@@ -224,6 +226,87 @@ class KitchenRecipeManagementTest extends TestCase
         $this->actingAs($kitchen)
             ->post(route('kitchen_inventory.recipes.store'), ['product_id' => $product->id, 'name' => 'X'])
             ->assertForbidden();
+    }
+
+    public function test_admin_can_delete_draft_version_with_its_items(): void
+    {
+        [$recipe, $version, $harina] = $this->draftRecipe();
+
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.versions.update', $version), [
+                'items' => [['kitchen_supply_id' => $harina->id, 'quantity' => 2]],
+            ]);
+        $this->assertDatabaseCount('bape_kitchen_recipe_items', 1);
+
+        $this->actingAs($this->admin)
+            ->delete(route('kitchen_inventory.versions.destroy', $version))
+            ->assertRedirect(route('kitchen_inventory.recipes.show', $recipe));
+
+        $this->assertDatabaseMissing('bape_kitchen_recipe_versions', ['id' => $version->id]);
+        $this->assertDatabaseCount('bape_kitchen_recipe_items', 0);
+    }
+
+    public function test_admin_can_delete_published_version_without_consumption_history(): void
+    {
+        [, $version, $harina] = $this->draftRecipe();
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.versions.update', $version), [
+                'items' => [['kitchen_supply_id' => $harina->id, 'quantity' => 1]],
+            ]);
+        $this->actingAs($this->admin)->post(route('kitchen_inventory.versions.publish', $version));
+
+        $this->actingAs($this->admin)
+            ->delete(route('kitchen_inventory.versions.destroy', $version))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('bape_kitchen_recipe_versions', ['id' => $version->id]);
+    }
+
+    public function test_published_version_with_consumption_history_cannot_be_deleted(): void
+    {
+        [, $version, $harina] = $this->draftRecipe();
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.versions.update', $version), [
+                'items' => [['kitchen_supply_id' => $harina->id, 'quantity' => 1]],
+            ]);
+        $this->actingAs($this->admin)->post(route('kitchen_inventory.versions.publish', $version));
+
+        $operation = KitchenInventoryOperation::create([
+            'event_key' => 'evt-'.uniqid(),
+            'operation_type' => 'sale',
+            'request_hash' => str_repeat('a', 64),
+            'status' => 'confirmed',
+        ]);
+        KitchenOrderConsumption::create([
+            'operation_id' => $operation->id,
+            'recipe_version_id' => $version->id,
+            'kitchen_supply_id' => $harina->id,
+            'sold_quantity' => 1,
+            'recipe_quantity' => 0.2,
+            'theoretical_quantity' => 0.2,
+            'consumed_quantity' => 0.2,
+            'covered_quantity' => 0.2,
+            'shortage_quantity' => 0,
+            'idempotency_key' => 'key-'.uniqid(),
+        ]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('kitchen_inventory.versions.destroy', $version))
+            ->assertSessionHasErrors('version');
+
+        $this->assertDatabaseHas('bape_kitchen_recipe_versions', ['id' => $version->id]);
+    }
+
+    public function test_kitchen_role_cannot_delete_version(): void
+    {
+        [, $version] = $this->draftRecipe();
+        $kitchen = User::factory()->create(['role' => 'kitchen']);
+
+        $this->actingAs($kitchen)
+            ->delete(route('kitchen_inventory.versions.destroy', $version))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('bape_kitchen_recipe_versions', ['id' => $version->id]);
     }
 
     private function product(string $name): Product

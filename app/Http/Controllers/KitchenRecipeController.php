@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kitchen\KitchenOrderConsumption;
 use App\Models\Kitchen\KitchenRecipe;
 use App\Models\Kitchen\KitchenRecipeItem;
 use App\Models\Kitchen\KitchenRecipeVersion;
 use App\Models\Kitchen\KitchenSupply;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -207,6 +209,35 @@ class KitchenRecipeController extends Controller
             ->with('success', $published
                 ? 'Versión publicada. A partir de ahora el consumo usará esta versión.'
                 : 'La versión ya estaba publicada.');
+    }
+
+    public function destroyVersion(KitchenRecipeVersion $version)
+    {
+        try {
+            DB::transaction(function () use ($version) {
+                $locked = KitchenRecipeVersion::query()->lockForUpdate()->findOrFail($version->id);
+
+                if ($locked->status === 'published'
+                    && KitchenOrderConsumption::query()->where('recipe_version_id', $locked->id)->exists()) {
+                    throw ValidationException::withMessages([
+                        'version' => 'La versión publicada ya se usó en consumos de pedidos y no puede eliminarse (historial auditable).',
+                    ]);
+                }
+
+                KitchenRecipeItem::query()->where('recipe_version_id', $locked->id)->delete();
+                $locked->delete();
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (QueryException) {
+            throw ValidationException::withMessages([
+                'version' => 'No se pudo eliminar la versión: está referenciada por consumos registrados.',
+            ]);
+        }
+
+        return redirect()
+            ->route('kitchen_inventory.recipes.show', $version->recipe_id)
+            ->with('success', "Versión #{$version->version} eliminada.");
     }
 
     public function deactivate(KitchenRecipe $recipe)

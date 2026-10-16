@@ -96,8 +96,22 @@
                                                 <i class="bi bi-upload"></i>
                                             </button>
                                         </form>
+                                        <form action="{{ route('kitchen_inventory.versions.destroy', $version) }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('¿Eliminar el borrador #{{ $version->version }}? Se borrarán sus insumos. Esta acción no se puede deshacer.');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar borrador">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     @else
-                                        <span class="text-muted small">Inmutable</span>
+                                        <span class="text-muted small me-1">Inmutable</span>
+                                        <form action="{{ route('kitchen_inventory.versions.destroy', $version) }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('¿Eliminar la versión publicada #{{ $version->version }}? Solo es posible si nunca se usó en consumos de pedidos. Esta acción no se puede deshacer.');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar versión">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     @endif
                                 </td>
                             </tr>
