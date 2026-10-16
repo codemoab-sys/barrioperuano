@@ -269,6 +269,8 @@
         [data-theme="dark"] .alert-success { background-color: #0f2e1a !important; border-color: #1a5c2e !important; color: #86efac !important; }
         [data-theme="dark"] .alert-warning { background-color: #2e2200 !important; border-color: #7c5c00 !important; color: #fde68a !important; }
         [data-theme="dark"] .alert-danger { background-color: #2e0f0f !important; border-color: #7c1a1a !important; color: #fca5a5 !important; }
+        [data-theme="dark"] .alert-secondary { background-color: #242539 !important; border-color: #33344d !important; color: var(--text-main) !important; }
+        [data-theme="dark"] .alert-light { background-color: #1b1c2e !important; border-color: #2a2b40 !important; color: var(--text-main) !important; }
 
         .theme-toggle-btn {
             width: 38px; height: 38px;
