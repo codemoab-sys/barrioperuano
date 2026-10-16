@@ -24,6 +24,7 @@ Laravel 12 restaurant POS system ("Restaurante Barrio Peruano"). Handles orders,
 - Only touch files necessary for the requested change. Avoid unrelated refactors.
 - Apply good practices for both frontend and backend code at every step.
 - After each change, verify no unrelated files were affected. If everything is correct, commit and push.
+- Write commit messages in Spanish (e.g. `feat: añadir select de unidad en insumos de cocina`).
 - Always preserve the user's manual changes. Never overwrite or revert customizations the user has made.
 
 ## Database
