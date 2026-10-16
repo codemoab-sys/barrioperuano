@@ -334,9 +334,55 @@ class KitchenRecipeManagementTest extends TestCase
             ->get(route('kitchen_inventory.recipes.show', $recipe))
             ->assertOk()
             ->assertSee('versionItemsModal', false)
-            ->assertSee('newVersionModal', false)
+            ->assertSee('draftEditorModal', false)
+            ->assertSee('itemModal', false)
+            ->assertDontSee('newVersionModal', false)
             ->assertSee('Ver insumos')
             ->assertSee($harina->name);
+    }
+
+    public function test_store_version_redirects_to_recipe_with_open_draft(): void
+    {
+        $product = $this->product('Jalea');
+        $recipe = KitchenRecipe::create(['product_id' => $product->id, 'name' => 'Jalea Mixta']);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('kitchen_inventory.recipes.versions.store', $recipe));
+
+        $version = KitchenRecipeVersion::query()->where('recipe_id', $recipe->id)->firstOrFail();
+        $response
+            ->assertRedirect(route('kitchen_inventory.recipes.show', ['recipe' => $recipe, 'open_draft' => $version->id]))
+            ->assertSessionHas('success');
+    }
+
+    public function test_version_data_endpoint_serves_draft_and_rejects_published(): void
+    {
+        [$recipe, $version, $harina] = $this->draftRecipe();
+
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.versions.update', $version), [
+                'items' => [['kitchen_supply_id' => $harina->id, 'quantity' => 2.5]],
+            ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.versions.data', $version))
+            ->assertOk()
+            ->assertJsonPath('id', $version->id)
+            ->assertJsonPath('version', 1)
+            ->assertJsonPath('update_url', route('kitchen_inventory.versions.update', $version))
+            ->assertJsonPath('items.0.supply_id', $harina->id)
+            ->assertJsonPath('items.0.name', $harina->name);
+
+        $kitchen = User::factory()->create(['role' => 'kitchen']);
+        $this->actingAs($kitchen)
+            ->getJson(route('kitchen_inventory.versions.data', $version))
+            ->assertForbidden();
+
+        $this->actingAs($this->admin)->post(route('kitchen_inventory.versions.publish', $version));
+
+        $this->actingAs($this->admin)
+            ->getJson(route('kitchen_inventory.versions.data', $version))
+            ->assertStatus(422);
     }
 
     private function product(string $name): Product

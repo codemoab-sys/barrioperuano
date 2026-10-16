@@ -116,8 +116,33 @@ class KitchenRecipeController extends Controller
         });
 
         return redirect()
-            ->route('kitchen_inventory.versions.edit', $version)
+            ->route('kitchen_inventory.recipes.show', ['recipe' => $recipe, 'open_draft' => $version->id])
             ->with('success', "Versión borrador #{$version->version} creada. Agregue al menos un insumo antes de publicarla.");
+    }
+
+    public function versionData(KitchenRecipeVersion $version)
+    {
+        if ($version->status !== 'draft') {
+            throw ValidationException::withMessages(['version' => 'Solo los borradores pueden editarse. Las versiones publicadas son inmutables.']);
+        }
+
+        $version->load(['recipe.product', 'items.supply']);
+        $supplies = KitchenSupply::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'unit']);
+
+        return response()->json([
+            'id' => $version->id,
+            'version' => $version->version,
+            'recipe_name' => $version->recipe->name,
+            'product_name' => $version->recipe->product->name ?? '',
+            'update_url' => route('kitchen_inventory.versions.update', $version),
+            'supplies' => $supplies->map(fn ($s) => ['id' => (int) $s->id, 'name' => $s->name, 'unit' => $s->unit])->values(),
+            'items' => $version->items->map(fn ($i) => [
+                'supply_id' => (int) $i->kitchen_supply_id,
+                'name' => $i->supply->name ?? '---',
+                'unit' => $i->supply->unit ?? '',
+                'quantity' => $i->quantity,
+            ])->values(),
+        ]);
     }
 
     public function versionEdit(KitchenRecipeVersion $version)
