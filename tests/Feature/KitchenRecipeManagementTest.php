@@ -309,6 +309,18 @@ class KitchenRecipeManagementTest extends TestCase
         $this->assertDatabaseHas('bape_kitchen_recipe_versions', ['id' => $version->id]);
     }
 
+    public function test_draft_edit_shows_item_modal(): void
+    {
+        [, $version] = $this->draftRecipe();
+
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.versions.edit', $version))
+            ->assertOk()
+            ->assertSee('itemModal', false)
+            ->assertSee('Agregar insumo')
+            ->assertSee('Guardar Borrador');
+    }
+
     public function test_recipe_show_exposes_version_items_for_modal(): void
     {
         [$recipe, $version, $harina] = $this->draftRecipe();
