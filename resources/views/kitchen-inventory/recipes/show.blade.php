@@ -25,12 +25,9 @@
                     </button>
                 </form>
             @endif
-            <form action="{{ route('kitchen_inventory.recipes.versions.store', $recipe) }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-primary fw-bold shadow-sm">
-                    <i class="bi bi-plus-lg me-1"></i> Nueva Versión
-                </button>
-            </form>
+            <button type="button" class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#newVersionModal">
+                <i class="bi bi-plus-lg me-1"></i> Nueva Versión
+            </button>
         </div>
     </div>
 
@@ -134,6 +131,36 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newVersionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg me-2"></i>Nueva versión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    @php $nextVersion = (int) ($recipe->versions->max('version') ?? 0) + 1; @endphp
+                    <p class="mb-2">
+                        Se creará la <strong>versión #{{ $nextVersion }}</strong>
+                        como <span class="badge bg-warning text-dark">Borrador</span>
+                        de "<strong>{{ $recipe->name }}</strong>".
+                    </p>
+                    <p class="text-muted small mb-0">
+                        Después podrás agregar sus insumos y publicarla. Las versiones publicadas son inmutables;
+                        el sistema siempre usa la publicada de número más alto.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ route('kitchen_inventory.recipes.versions.store', $recipe) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-check-lg me-1"></i> Crear borrador</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

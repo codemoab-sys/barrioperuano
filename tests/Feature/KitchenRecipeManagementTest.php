@@ -322,6 +322,7 @@ class KitchenRecipeManagementTest extends TestCase
             ->get(route('kitchen_inventory.recipes.show', $recipe))
             ->assertOk()
             ->assertSee('versionItemsModal', false)
+            ->assertSee('newVersionModal', false)
             ->assertSee('Ver insumos')
             ->assertSee($harina->name);
     }
