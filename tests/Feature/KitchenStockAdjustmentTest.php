@@ -171,4 +171,15 @@ class KitchenStockAdjustmentTest extends TestCase
 
         $this->assertSame(0, KitchenInventoryOperation::query()->count());
     }
+
+    public function test_supplies_index_opens_adjustment_in_a_modal(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.supplies.index'))
+            ->assertOk()
+            ->assertSee('adjustStockModal', false)
+            ->assertSee('data-adjust-stock', false)
+            ->assertSee('adjustSubmit', false)
+            ->assertSee(route('kitchen_inventory.supplies.adjust', ['supply' => '__SUPPLY__']), false);
+    }
 }
