@@ -46,6 +46,43 @@ class KitchenCatalogTest extends TestCase
         $this->assertDatabaseCount('bape_kitchen_categories', 1);
     }
 
+    public function test_categories_index_renders_edit_modal_for_admin(): void
+    {
+        KitchenCategory::create(['name' => 'Secos']);
+
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.categories.index'))
+            ->assertOk()
+            ->assertSee('Secos')
+            ->assertSee('editCategoryModal', false)
+            ->assertSee('createCategoryModal', false);
+    }
+
+    public function test_category_update_persists_changes_and_rejects_duplicates(): void
+    {
+        $category = KitchenCategory::create(['name' => 'Legumbres']);
+        $other = KitchenCategory::create(['name' => 'Lácteos']);
+
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.categories.update', $category), ['name' => 'Granos', 'is_active' => '1'])
+            ->assertRedirect(route('kitchen_inventory.categories.index'));
+
+        $this->assertDatabaseHas('bape_kitchen_categories', ['id' => $category->id, 'name' => 'Granos']);
+
+        $this->actingAs($this->admin)
+            ->from(route('kitchen_inventory.categories.index'))
+            ->put(route('kitchen_inventory.categories.update', $category), ['name' => 'lácteos'])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame('Granos', $category->fresh()->name);
+
+        $this->actingAs($this->admin)
+            ->put(route('kitchen_inventory.categories.update', $other), ['name' => 'Lácteos', 'is_active' => '0'])
+            ->assertRedirect();
+
+        $this->assertFalse((bool) $other->fresh()->is_active);
+    }
+
     public function test_category_with_supplies_cannot_be_deleted(): void
     {
         $category = KitchenCategory::create(['name' => 'Lácteos']);
