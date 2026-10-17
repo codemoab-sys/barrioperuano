@@ -148,9 +148,15 @@ class KitchenCatalogController extends Controller
             'is_active' => true,
         ]);
 
+        $message = 'Insumo creado con stock 0. Registre la entrada inicial desde "Ajustar stock".';
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message]);
+        }
+
         return redirect()
             ->route('kitchen_inventory.supplies.index')
-            ->with('success', 'Insumo creado con stock 0. Registre la entrada inicial desde "Ajustar stock".');
+            ->with('success', $message);
     }
 
     public function edit(KitchenSupply $supply)

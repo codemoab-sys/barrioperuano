@@ -225,4 +225,27 @@ class KitchenCatalogTest extends TestCase
         $this->get(route('kitchen_inventory.supplies.index'))
             ->assertRedirect(route('login'));
     }
+
+    public function test_new_supply_modal_is_in_index_and_json_creation_works(): void
+    {
+        $category = KitchenCategory::create(['name' => 'Lácteos']);
+
+        $this->actingAs($this->admin)
+            ->get(route('kitchen_inventory.supplies.index'))
+            ->assertOk()
+            ->assertSee('newSupplyModal', false)
+            ->assertSee('data-new-supply', false)
+            ->assertSee('nsSubmit', false);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('kitchen_inventory.supplies.store'), [
+                'category_id' => $category->id,
+                'name' => 'Queso fresco',
+                'unit' => 'kg',
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseHas('bape_kitchen_supplies', ['name' => 'Queso fresco', 'stock_current' => 0]);
+    }
 }

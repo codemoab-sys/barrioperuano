@@ -20,7 +20,7 @@
                 <i class="bi bi-journal-bookmark me-1"></i> Recetas
             </a>
             @if(auth()->user()->role === 'admin')
-                <a href="{{ route('kitchen_inventory.supplies.create') }}" class="btn btn-primary fw-bold shadow-sm">
+                <a href="{{ route('kitchen_inventory.supplies.create') }}" class="btn btn-primary fw-bold shadow-sm" data-new-supply>
                     <i class="bi bi-plus-lg me-1"></i> Nuevo Insumo
                 </a>
             @endif
@@ -135,6 +135,59 @@
     </div>
 
     @if(auth()->user()->role === 'admin')
+        <div class="modal fade" id="newSupplyModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-lg me-2"></i>Nuevo Insumo de Cocina
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">
+                            El insumo se crea con stock 0. Registre la existencia inicial con una entrada auditable.
+                        </p>
+                        <div id="newSupplyErrors" class="alert alert-danger" style="display: none;"></div>
+                        <div id="newSupplySuccess" class="alert alert-success" style="display: none;">
+                            <i class="bi bi-check-circle me-1"></i><span id="newSupplySuccessText"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="nsCategory">Categoría <span class="text-danger">*</span></label>
+                            <select id="nsCategory" class="form-select">
+                                <option value="">Seleccione...</option>
+                                @foreach($categories->where('is_active', true) as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="text-danger small mt-1" id="nsCategoryError"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="nsName">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" id="nsName" class="form-control" maxlength="100" placeholder="Ej. Aceite vegetal">
+                            <div class="text-danger small mt-1" id="nsNameError"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="nsUnit">Unidad <span class="text-danger">*</span></label>
+                            <select id="nsUnit" class="form-select">
+                                <option value="">Seleccione...</option>
+                                @foreach(['kg' => 'Kilogramo (kg)', 'g' => 'Gramo (g)', 'l' => 'Litro (l)', 'ml' => 'Mililitro (ml)', 'und' => 'Unidad (und)', 'docena' => 'Docena', 'caja' => 'Caja', 'bandeja' => 'Bandeja', 'frasco' => 'Frasco', 'bolsa' => 'Bolsa'] as $unitValue => $unitLabel)
+                                    <option value="{{ $unitValue }}">{{ $unitLabel }}</option>
+                                @endforeach
+                            </select>
+                            <div class="text-danger small mt-1" id="nsUnitError"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary fw-bold" id="nsSubmit">
+                            <i class="bi bi-check-lg me-1"></i> Crear Insumo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="adjustStockModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -338,6 +391,127 @@
                     elQuantity.value = '';
                     elNote.value = '';
                     elSuccess.style.display = 'block';
+                });
+            })();
+        </script>
+
+        <script>
+            (function () {
+                var modalEl = document.getElementById('newSupplyModal');
+                if (!modalEl) {
+                    return;
+                }
+                var storeUrl = '{{ route('kitchen_inventory.supplies.store') }}';
+                var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                var elCategory = document.getElementById('nsCategory');
+                var elName = document.getElementById('nsName');
+                var elUnit = document.getElementById('nsUnit');
+                var elErrors = document.getElementById('newSupplyErrors');
+                var elSuccess = document.getElementById('newSupplySuccess');
+                var elSuccessText = document.getElementById('newSupplySuccessText');
+                var elCategoryError = document.getElementById('nsCategoryError');
+                var elNameError = document.getElementById('nsNameError');
+                var elUnitError = document.getElementById('nsUnitError');
+                var pendingReload = false;
+
+                function clearFeedback() {
+                    elErrors.style.display = 'none';
+                    elErrors.innerHTML = '';
+                    elSuccess.style.display = 'none';
+                    elCategoryError.textContent = '';
+                    elNameError.textContent = '';
+                    elUnitError.textContent = '';
+                }
+
+                document.querySelectorAll('a[data-new-supply]').forEach(function (link) {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        pendingReload = false;
+                        clearFeedback();
+                        elCategory.value = '';
+                        elName.value = '';
+                        elUnit.value = '';
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    });
+                });
+
+                modalEl.addEventListener('hidden.bs.modal', function () {
+                    if (pendingReload) {
+                        window.location.reload();
+                    }
+                });
+
+                document.getElementById('nsSubmit').addEventListener('click', async function () {
+                    clearFeedback();
+
+                    var body = new URLSearchParams();
+                    body.set('category_id', elCategory.value);
+                    body.set('name', elName.value);
+                    body.set('unit', elUnit.value);
+
+                    var response;
+                    try {
+                        response = await fetch(storeUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                            },
+                            body: body,
+                        });
+                    } catch (e) {
+                        elErrors.textContent = 'Error de conexión. No se pudo crear el insumo.';
+                        elErrors.style.display = 'block';
+                        return;
+                    }
+
+                    if (response.status === 422) {
+                        var data = {};
+                        try {
+                            data = await response.json();
+                        } catch (e) {}
+                        var fieldMap = { category_id: elCategoryError, name: elNameError, unit: elUnitError };
+                        var messages = [];
+                        if (data.message) {
+                            messages.push(data.message);
+                        }
+                        Object.entries(data.errors || {}).forEach(function (entry) {
+                            var list = entry[1] || [];
+                            if (fieldMap[entry[0]]) {
+                                fieldMap[entry[0]].textContent = list[0] || '';
+                            }
+                            list.forEach(function (message) { messages.push(message); });
+                        });
+                        if (messages.length) {
+                            elErrors.innerHTML = '';
+                            messages.forEach(function (message) {
+                                var div = document.createElement('div');
+                                div.textContent = message;
+                                elErrors.appendChild(div);
+                            });
+                            elErrors.style.display = 'block';
+                        }
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        elErrors.textContent = 'No se pudo crear el insumo.';
+                        elErrors.style.display = 'block';
+                        return;
+                    }
+
+                    var result = {};
+                    try {
+                        result = await response.json();
+                    } catch (e) {}
+                    elSuccessText.textContent = result.message || 'Insumo creado con stock 0.';
+                    elSuccess.style.display = 'block';
+                    pendingReload = true;
+                    elCategory.value = '';
+                    elName.value = '';
+                    elUnit.value = '';
                 });
             })();
         </script>
