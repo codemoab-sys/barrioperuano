@@ -190,7 +190,6 @@
                 if (!modalEl) {
                     return;
                 }
-                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 var adjustUrlTemplate = '{{ route('kitchen_inventory.supplies.adjust', ['supply' => '__SUPPLY__']) }}';
                 var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -250,7 +249,7 @@
                         elType.value = 'entry';
                         elQuantity.value = '';
                         elNote.value = '';
-                        modal.show();
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
                     });
                 });
 

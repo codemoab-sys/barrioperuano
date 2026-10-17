@@ -291,9 +291,15 @@
             var versionDataUrl = '{{ route('kitchen_inventory.versions.data', ['version' => '__VERSION__']) }}';
 
             var editorModalEl = document.getElementById('draftEditorModal');
-            var editorModal = window.bootstrap.Modal.getOrCreateInstance(editorModalEl);
             var itemModalEl = document.getElementById('itemModal');
-            var itemModal = window.bootstrap.Modal.getOrCreateInstance(itemModalEl);
+
+            function editorModal() {
+                return window.bootstrap.Modal.getOrCreateInstance(editorModalEl);
+            }
+
+            function itemModal() {
+                return window.bootstrap.Modal.getOrCreateInstance(itemModalEl);
+            }
             var editorTitle = document.getElementById('editorTitle');
             var editorSubtitle = document.getElementById('editorSubtitle');
             var editorBody = document.getElementById('editorBody');
@@ -436,7 +442,7 @@
                     itemModalTitle.textContent = 'Agregar insumo';
                     modalConfirmText.textContent = 'Agregar';
                 }
-                itemModal.show();
+                itemModal().show();
             }
 
             async function openDraftEditor(versionId) {
@@ -471,7 +477,7 @@
                 editorSubtitle.textContent = data.recipe_name + (data.product_name ? ' — ' + data.product_name : '');
                 rebuildSupplyOptions();
                 renderEditor();
-                editorModal.show();
+                editorModal().show();
             }
 
             modalConfirm.addEventListener('click', function () {
@@ -529,7 +535,7 @@
                     editorState.items.push(entry);
                 }
                 renderEditor();
-                itemModal.hide();
+                itemModal().hide();
             });
 
             document.getElementById('editorAddItem').addEventListener('click', function () { openItemModal(-1); });

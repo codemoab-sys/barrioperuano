@@ -101,7 +101,9 @@
     const empty = document.getElementById('itemsEmpty');
     const tableWrap = document.getElementById('itemsTableWrap');
     const modalEl = document.getElementById('itemModal');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    function getModal() {
+        return bootstrap.Modal.getOrCreateInstance(modalEl);
+    }
     const modalTitle = document.getElementById('itemModalTitle');
     const modalSupply = document.getElementById('modalSupply');
     const modalQuantity = document.getElementById('modalQuantity');
@@ -201,7 +203,7 @@
             modalSupply.value = '';
             modalQuantity.value = '';
         }
-        modal.show();
+        getModal().show();
     }
 
     document.getElementById('addItemBtn').addEventListener('click', function () {
@@ -264,7 +266,7 @@
         }
 
         render();
-        modal.hide();
+        getModal().hide();
     });
 
     modalEl.addEventListener('hidden.bs.modal', function () {
