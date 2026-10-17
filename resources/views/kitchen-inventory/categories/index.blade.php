@@ -42,10 +42,10 @@
                                     @endif
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick='editCategory({!! json_encode(["id" => $category->id, "name" => $category->name, "is_active" => (bool) $category->is_active]) !!})' title="Editar">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick='editCategory(@js(["id" => $category->id, "name" => $category->name, "is_active" => (bool) $category->is_active]))' title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form action="{{ route('kitchen_inventory.categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar la categoría {{ $category->name }}? Solo es posible si no tiene insumos.')">
+                                    <form action="{{ route('kitchen_inventory.categories.destroy', $category) }}" method="POST" class="d-inline" onsubmit='return confirm(@js("¿Eliminar la categoría " . $category->name . "? Solo es posible si no tiene insumos."))'>
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
                                     </form>

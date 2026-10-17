@@ -8,6 +8,9 @@
             <h2 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2"></i>Kardex de Cocina</h2>
             <p class="text-muted mb-0">Auditoría de movimientos del inventario de cocina</p>
         </div>
+        <a href="{{ route('kitchen_inventory.regularizations.index') }}" class="btn btn-outline-warning fw-bold shadow-sm">
+            <i class="bi bi-clipboard-check me-1"></i> Regularizaciones
+        </a>
     </div>
 
     <div class="card border-0 shadow-sm mb-4">

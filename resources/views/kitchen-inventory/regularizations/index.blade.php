@@ -48,12 +48,12 @@
                                     <span class="badge bg-warning text-dark">{{ rtrim(rtrim(number_format($pending, 4, '.', ''), '0'), '.') }}</span>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-primary" onclick='regularize({!! json_encode([
+                                    <button class="btn btn-sm btn-outline-primary" onclick='regularize(@js([
                                         "id" => $consumption->id,
                                         "supply" => $consumption->supply->name ?? '',
                                         "unit" => $consumption->supply->unit ?? '',
                                         "pending" => $pending,
-                                    ]) !!})' title="Regularizar">
+                                    ]))' title="Regularizar">
                                         <i class="bi bi-clipboard-check"></i>
                                     </button>
                                 </td>

@@ -27,12 +27,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
-        </div>
-    @endif
-
     @if($errors->any())
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
@@ -111,7 +105,7 @@
                                         <a href="{{ route('kitchen_inventory.supplies.edit', $supply) }}" class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('kitchen_inventory.supplies.destroy', $supply) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar el insumo {{ $supply->name }}? Solo es posible si no tiene historial.')">
+                                        <form action="{{ route('kitchen_inventory.supplies.destroy', $supply) }}" method="POST" class="d-inline" onsubmit='return confirm(@js("¿Eliminar el insumo " . $supply->name . "? Solo es posible si no tiene historial."))'>
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>
                                         </form>

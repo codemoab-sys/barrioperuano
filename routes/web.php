@@ -263,7 +263,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/recipes/create', [KitchenRecipeController::class, 'create'])->name('recipes.create');
         Route::post('/recipes', [KitchenRecipeController::class, 'store'])->name('recipes.store');
         Route::get('/recipes/{recipe}', [KitchenRecipeController::class, 'show'])->name('recipes.show');
-        Route::put('/recipes/{recipe}', [KitchenRecipeController::class, 'update'])->name('recipes.update');
         Route::post('/recipes/{recipe}/versions', [KitchenRecipeController::class, 'storeVersion'])->name('recipes.versions.store');
         Route::post('/recipes/{recipe}/deactivate', [KitchenRecipeController::class, 'deactivate'])->name('recipes.deactivate');
         Route::post('/recipes/{recipe}/activate', [KitchenRecipeController::class, 'activate'])->name('recipes.activate');

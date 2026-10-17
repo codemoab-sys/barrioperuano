@@ -87,19 +87,6 @@ class KitchenRecipeController extends Controller
         return view('kitchen-inventory.recipes.show', compact('recipe', 'pending'));
     }
 
-    public function update(Request $request, KitchenRecipe $recipe)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-        ], [], ['name' => 'nombre']);
-
-        $recipe->update(['name' => trim($data['name'])]);
-
-        return redirect()
-            ->route('kitchen_inventory.recipes.show', $recipe)
-            ->with('success', 'Receta actualizada.');
-    }
-
     public function storeVersion(KitchenRecipe $recipe)
     {
         $version = DB::transaction(function () use ($recipe) {
