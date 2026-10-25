@@ -42,6 +42,8 @@ class PrecheckTicketTest extends TestCase
         $response->assertOk();
         $response->assertSee('font-size: 16px');
         $response->assertSee('font-size: 21px');
+        $response->assertSee('font-weight: bold');
+        $response->assertDontSee('font-weight: normal');
     }
 
     public function test_sale_ticket_keeps_default_font_size(): void
@@ -50,6 +52,7 @@ class PrecheckTicketTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('font-size: 12px');
+        $response->assertSee('font-weight: normal');
         $response->assertDontSee('font-size: 21px');
     }
 }

@@ -11,6 +11,7 @@
         $fsName = $bigText ? 18 : 14;
         $fsMesa = $bigText ? 16 : 13;
         $fsTotal = $bigText ? 21 : 16;
+        $fontWeight = $bigText ? 'bold' : 'normal';
     @endphp
     <style>
         /* CONFIGURACIÓN EXACTA PARA IMPRESORA TÉRMICA */
@@ -22,6 +23,7 @@
         body {
             font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada para alinear columnas */
             font-size: {{ $fsBody }}px;
+            font-weight: {{ $fontWeight }};
             margin: 0;
             padding: 5px;
             width: 78mm; /* Ancho estándar de papel térmico (80mm menos márgenes de seguridad) */
