@@ -115,7 +115,14 @@
         </div>
 
         <div class="row" style="margin-top: 5px; font-size: 10px;">
-            <span>F. PAGO: {{ strtoupper($order->payment_method) }}</span>
+            <span>F. PAGO: {{ match ($order->payment_method) {
+                'cash' => 'EFECTIVO',
+                'card' => 'TARJETA',
+                'transfer' => 'TRANSFERENCIA',
+                'yape' => 'YAPE',
+                'plin' => 'PLIN',
+                default => strtoupper((string) $order->payment_method),
+            } }}</span>
         </div>
         <div class="row" style="font-size: 10px;">
             <span>RECIBIDO: {{ number_format($order->received_amount, 2) }}</span>
