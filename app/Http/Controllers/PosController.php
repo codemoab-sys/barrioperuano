@@ -645,7 +645,11 @@ class PosController extends Controller
         $this->authorizePrecheck($order);
         $settings = Setting::pluck('value', 'key')->toArray();
 
-        return view('sales.ticket', compact('order', 'settings'));
+        return view('sales.ticket', [
+            'order' => $order,
+            'settings' => $settings,
+            'precheck' => true,
+        ]);
     }
     public function kitchenTicket(Order $order) { $this->authorizeOrder($order); return view('sales.kitchen_ticket', compact('order')); }
 

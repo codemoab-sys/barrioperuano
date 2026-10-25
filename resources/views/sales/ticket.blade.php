@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket #{{ $order->id }}</title>
+    @php
+        $bigText = !empty($precheck);
+        $fsBody = $bigText ? 16 : 12;
+        $fsSmall = $bigText ? 13 : 10;
+        $fsName = $bigText ? 18 : 14;
+        $fsMesa = $bigText ? 16 : 13;
+        $fsTotal = $bigText ? 21 : 16;
+    @endphp
     <style>
         /* CONFIGURACIÓN EXACTA PARA IMPRESORA TÉRMICA */
         @page {
@@ -13,7 +21,7 @@
         }
         body {
             font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada para alinear columnas */
-            font-size: 12px;
+            font-size: {{ $fsBody }}px;
             margin: 0;
             padding: 5px;
             width: 78mm; /* Ancho estándar de papel térmico (80mm menos márgenes de seguridad) */
@@ -26,7 +34,7 @@
         .uppercase { text-transform: uppercase; }
 
         .header { margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
-        .footer { margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px; font-size: 10px; }
+        .footer { margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px; font-size: {{ $fsSmall }}px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         td, th { vertical-align: top; padding: 2px 0; }
@@ -56,7 +64,7 @@
             <br>
         @endif
 
-        <div class="fw-bold fs-5 uppercase" style="font-size: 14px;">{{ $settings['company_name'] ?? 'MI RESTAURANTE' }}</div>
+        <div class="fw-bold fs-5 uppercase" style="font-size: {{ $fsName }}px;">{{ $settings['company_name'] ?? 'MI RESTAURANTE' }}</div>
         <div>{{ $settings['company_address'] ?? 'Dirección del Local' }}</div>
         <div>Tel: {{ $settings['company_phone'] ?? '---' }}</div>
         <div style="margin-top: 5px;">{{ now()->format('d/m/Y H:i') }}</div>
@@ -66,7 +74,7 @@
             <div style="margin-top: 3px; font-weight: bold;">Cli: {{ Str::limit($order->client_name, 20) }}</div>
         @endif
 
-        <div class="fw-bold" style="margin-top: 3px; font-size: 13px;">MESA: {{ $order->table->name ?? 'BARRA' }}</div>
+        <div class="fw-bold" style="margin-top: 3px; font-size: {{ $fsMesa }}px;">MESA: {{ $order->table->name ?? 'BARRA' }}</div>
     </div>
 
     <table>
@@ -84,10 +92,10 @@
                     <td class="desc">
                         {{ $detail->product->name }}
                         @if($detail->note)
-                            <br><i style="font-size: 10px;">({{ $detail->note }})</i>
+                            <br><i style="font-size: {{ $fsSmall }}px;">({{ $detail->note }})</i>
                         @endif
                         @if($detail->sauce_choices)
-                            <br><i style="font-size: 10px;">Sabores: {{ implode(', ', $detail->sauce_choices) }}</i>
+                            <br><i style="font-size: {{ $fsSmall }}px;">Sabores: {{ implode(', ', $detail->sauce_choices) }}</i>
                         @endif
                     </td>
                     <td class="price">{{ number_format($detail->quantity * $detail->price, 2) }}</td>
@@ -109,12 +117,12 @@
         </div>
         @endif
 
-        <div class="row fw-bold" style="font-size: 16px; margin-top: 5px; border-top: 1px dashed #000; padding-top: 5px;">
+        <div class="row fw-bold" style="font-size: {{ $fsTotal }}px; margin-top: 5px; border-top: 1px dashed #000; padding-top: 5px;">
             <span>TOTAL A PAGAR:</span>
             <span>{{ $settings['currency_symbol'] ?? 'S/' }} {{ number_format($order->total, 2) }}</span>
         </div>
 
-        <div class="row" style="margin-top: 5px; font-size: 10px;">
+        <div class="row" style="margin-top: 5px; font-size: {{ $fsSmall }}px;">
             <span>F. PAGO: {{ match ($order->payment_method) {
                 'cash' => 'EFECTIVO',
                 'card' => 'TARJETA',
@@ -124,7 +132,7 @@
                 default => strtoupper((string) $order->payment_method),
             } }}</span>
         </div>
-        <div class="row" style="font-size: 10px;">
+        <div class="row" style="font-size: {{ $fsSmall }}px;">
             <span>RECIBIDO: {{ number_format($order->received_amount, 2) }}</span>
             <span>VUELTO: {{ number_format($order->change_amount, 2) }}</span>
         </div>
