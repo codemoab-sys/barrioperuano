@@ -169,6 +169,16 @@
             @php
                 $clientName = $sale->client ? $sale->client->name : ($sale->client_name ?: 'Público');
                 $badge = $docBadges[$sale->document_type] ?? 'secondary';
+
+                $isElectronicSale = in_array($sale->document_type, ['Boleta', 'Factura']);
+                $annulled = in_array($sale->anulacion_status, ['ACCEPTED', 'CANCELLED'], true);
+                $canAnnul = !$annulled
+                    && ($isElectronicSale ? $sale->sunat_status === 'ACCEPTED' : $sale->status === 'completed')
+                    && in_array(auth()->user()->role, ['admin', 'cashier', 'cashier_waiter'], true);
+                $cancelUrl = $isElectronicSale ? route('billing.cancel', $sale) : route('sales.cancel', $sale);
+                $cancelHint = $isElectronicSale
+                    ? 'Comprobante electrónico: la anulación se envía al proveedor (NubeFact) y debe estar aceptado por SUNAT.'
+                    : 'Nota de venta interna: no se envía a SUNAT. La venta dejará de aparecer en el historial y no contará en los totales de caja.';
             @endphp
             <div class="card border-0 shadow-sm mb-2">
                 <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between gap-2">
@@ -191,6 +201,17 @@
                                 <i class="bi bi-printer"></i> Imprimir
                             </a>
                         @endif
+                        @if($annulled)
+                            <span class="badge bg-danger">ANULADA</span>
+                        @elseif($canAnnul)
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#cancelSaleModal"
+                                    data-cancel-url="{{ $cancelUrl }}"
+                                    data-cancel-title="Anular {{ $sale->document_type }} #{{ str_pad($sale->id, 6, '0', STR_PAD_LEFT) }}"
+                                    data-cancel-hint="{{ $cancelHint }}">
+                                <i class="bi bi-x-circle"></i> Anular
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -202,6 +223,32 @@
         @endforelse
     </div>
 </div>
+
+{{-- Anulación de la venta seleccionada en Últimas Ventas --}}
+@if(in_array(auth()->user()->role, ['admin', 'cashier', 'cashier_waiter'], true))
+<div class="modal fade" id="cancelSaleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white py-2">
+                <h6 class="modal-title fw-bold" id="cancelSaleTitle">Anular venta</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="cancelSaleForm" action="">
+                @csrf
+                <div class="modal-body">
+                    <p class="small text-muted mb-2" id="cancelSaleHint"></p>
+                    <label class="form-label small fw-bold">Motivo de anulación</label>
+                    <textarea name="motivo" class="form-control" maxlength="100" required placeholder="Ej: ERROR DE SISTEMA"></textarea>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Anular</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 
 <style>
     .pos-table-card:hover {
@@ -233,4 +280,25 @@
         .nav-tabs .nav-link { padding: 8px 14px; font-size: 0.85rem; white-space: nowrap; }
     }
 </style>
+
+@if(in_array(auth()->user()->role, ['admin', 'cashier', 'cashier_waiter'], true))
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.getElementById('cancelSaleModal');
+        if (!modal) return;
+
+        modal.addEventListener('show.bs.modal', function (event) {
+            var trigger = event.relatedTarget;
+            if (!trigger) return;
+
+            modal.querySelector('#cancelSaleForm').action = trigger.dataset.cancelUrl;
+            modal.querySelector('#cancelSaleTitle').textContent = trigger.dataset.cancelTitle;
+            modal.querySelector('#cancelSaleHint').textContent = trigger.dataset.cancelHint;
+            modal.querySelector('#cancelSaleForm textarea[name="motivo"]').value = '';
+        });
+    });
+</script>
+@endpush
+@endif
 @endsection

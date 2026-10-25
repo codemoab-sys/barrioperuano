@@ -59,6 +59,31 @@ class SaleController extends Controller
         return view('sales.ticket', compact('order', 'settings'));
     }
 
+    /**
+     * Anula un Ticket (nota de venta). Al no ser un comprobante electrónico
+     * no se envía a NubeFact: se marca localmente como cancelado.
+     * Boletas y Facturas se anulan desde BillingController::cancel.
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        abort_unless($order->document_type === 'Ticket', 404);
+
+        $request->validate(['motivo' => 'required|string|max:100']);
+
+        if ($order->status === 'cancelled') {
+            return back()->with('error', 'Esta venta ya figura como anulada.');
+        }
+
+        $order->status = 'cancelled';
+        $order->anulacion_status = 'CANCELLED';
+        $order->anulacion_description = $request->input('motivo');
+        $order->save();
+
+        $message = 'Ticket anulado. La venta ya no aparece en el historial ni cuenta en los totales de caja.';
+
+        return back()->with('success', $message);
+    }
+
     public function dailyReport(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::today()->format('Y-m-d'));
