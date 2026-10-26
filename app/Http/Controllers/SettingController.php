@@ -152,6 +152,11 @@ class SettingController extends Controller
                     Setting::updateOrCreate(['key' => $key], ['value' => $value]);
                 }
 
+                Setting::updateOrCreate(
+                    ['key' => 'kitchen_stock_control'],
+                    ['value' => $request->boolean('kitchen_stock_control') ? '1' : '0']
+                );
+
                 if ($request->filled('nubefact_token')) {
                     Setting::updateOrCreate(
                         ['key' => 'nubefact_token'],

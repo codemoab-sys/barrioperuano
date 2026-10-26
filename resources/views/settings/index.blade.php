@@ -409,6 +409,47 @@
                             </div>
                         </div>
 
+                        {{-- ═══ INSUMOS DE COCINA ═══ --}}
+                        <hr class="text-muted opacity-25">
+
+                        <h5 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-box-seam me-2"></i>Insumos de Cocina
+                        </h5>
+                        <p class="text-muted small mb-3">
+                            Si está activo, cada venta descuenta automáticamente el stock de los insumos
+                            según la receta publicada de cada producto.
+                        </p>
+
+                        @php
+                            $kitchenStockControl = old('kitchen_stock_control', $settings['kitchen_stock_control'] ?? '0');
+                            $kitchenStockEnabled = in_array(strtolower(trim((string) $kitchenStockControl)), ['1', 'true', 'yes'], true);
+                        @endphp
+
+                        <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                            <div>
+                                <label class="form-label fw-bold mb-1" for="kitchen_stock_control">
+                                    Control automático de stock de cocina
+                                </label>
+                                <small class="text-muted d-block">
+                                    Los productos sin receta publicada no consumen insumos. Si el stock no alcanza,
+                                    el POS avisará antes de completar la venta.
+                                </small>
+                            </div>
+                            <div class="form-check form-switch form-switch-lg flex-shrink-0">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       id="kitchen_stock_control" name="kitchen_stock_control" value="1"
+                                       style="cursor:pointer;"
+                                       {{ $kitchenStockEnabled ? 'checked' : '' }}>
+                            </div>
+                        </div>
+
+                        <div id="kitchenStockState" class="alert py-2 mb-4 small {{ $kitchenStockEnabled ? 'alert-success' : 'alert-secondary' }}">
+                            <i class="bi {{ $kitchenStockEnabled ? 'bi-check-circle-fill' : 'bi-pause-circle-fill' }} me-1"></i>
+                            {{ $kitchenStockEnabled
+                                ? 'Activado: el stock de insumos de cocina se descontará en cada venta.'
+                                : 'Desactivado: el stock de insumos de cocina no se modificará al vender.' }}
+                        </div>
+
                         <div class="mt-5 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-5 fw-bold shadow" id="saveSettingsButton">
                                 <i class="bi bi-save me-2"></i> Guardar Configuración
@@ -486,6 +527,19 @@
                         if (hex) hex.textContent = suggested[name].toUpperCase();
                     }
                 });
+            });
+        }
+
+        // ── Insumos de cocina: refleja el estado del interruptor ──
+        const kitchenToggle = document.getElementById('kitchen_stock_control');
+        const kitchenState = document.getElementById('kitchenStockState');
+        if (kitchenToggle && kitchenState) {
+            kitchenToggle.addEventListener('change', function () {
+                kitchenState.classList.toggle('alert-success', this.checked);
+                kitchenState.classList.toggle('alert-secondary', !this.checked);
+                kitchenState.innerHTML = this.checked
+                    ? '<i class="bi bi-check-circle-fill me-1"></i> Activado: el stock de insumos de cocina se descontará en cada venta.'
+                    : '<i class="bi bi-pause-circle-fill me-1"></i> Desactivado: el stock de insumos de cocina no se modificará al vender.';
             });
         }
 
