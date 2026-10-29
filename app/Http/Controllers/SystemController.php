@@ -105,49 +105,4 @@ class SystemController extends Controller
             return back()->with('error', 'Error al generar la copia de seguridad: ' . $e->getMessage());
         }
     }
-
-    public function restore(Request $request)
-    {
-        $request->validate([
-            'backup_file' => 'required|file',
-            'password' => 'required'
-        ]);
-
-        if (!password_verify($request->password, $request->user()->password)) {
-            return back()->with('error', 'Contraseña incorrecta. No se restauró el sistema.');
-        }
-
-        try {
-            $file = $request->file('backup_file');
-
-            // Verificación simple de que es un archivo SQL
-            if ($file->getClientOriginalExtension() !== 'sql') {
-                return back()->with('error', 'El archivo debe ser un .sql válido.');
-            }
-
-            $dbName = env('DB_DATABASE');
-            $dbUser = env('DB_USERNAME');
-            $dbPass = env('DB_PASSWORD');
-            $dbHost = env('DB_HOST', '127.0.0.1');
-
-            $filePath = $file->getRealPath();
-
-            $passwordParam = empty($dbPass) ? '' : '--password="' . $dbPass . '"';
-            // Usa < para inyectar el archivo SQL en la BD
-            $command = "mysql --user=\"{$dbUser}\" {$passwordParam} --host=\"{$dbHost}\" {$dbName} < \"{$filePath}\"";
-
-            $output = [];
-            $returnVar = null;
-            exec($command, $output, $returnVar);
-
-            if ($returnVar !== 0) {
-                return back()->with('error', 'Ocurrió un error al ejecutar la restauración en la base de datos.');
-            }
-
-            return back()->with('success', '¡El sistema ha sido restaurado exitosamente desde la copia de seguridad!');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error al restaurar el sistema: ' . $e->getMessage());
-        }
-    }
 }

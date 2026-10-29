@@ -8,7 +8,7 @@
 
 <div class="row g-4">
     <!-- COPIA DE SEGURIDAD -->
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100 transition-hover">
             <div class="card-header bg-primary bg-opacity-10 border-0 pt-4 px-4 pb-0">
                 <div class="bg-primary text-white rounded-4 d-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
@@ -30,37 +30,8 @@
         </div>
     </div>
 
-    <!-- RESTAURAR SISTEMA -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100 transition-hover">
-            <div class="card-header bg-warning bg-opacity-10 border-0 pt-4 px-4 pb-0">
-                <div class="bg-warning text-dark rounded-4 d-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
-                    <i class="bi bi-cloud-upload-fill fs-3"></i>
-                </div>
-                <h5 class="fw-bold text-warning-emphasis mb-1">Restaurar Sistema</h5>
-                <p class="text-muted small">Cargar datos desde un respaldo.</p>
-            </div>
-            <div class="card-body px-4 pb-4">
-                <p class="small text-muted mb-4">Sube un archivo .sql generado previamente para volver a un estado anterior. <strong>Advertencia:</strong> Esto reemplazará todos los datos actuales.</p>
-
-                <form action="{{ route('system.restore') }}" method="POST" enctype="multipart/form-data" id="restoreSystemForm">
-                    @csrf
-                    <div class="mb-3">
-                        <input type="file" name="backup_file" class="form-control form-control-sm border-warning border-opacity-25" accept=".sql" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="password" name="password" class="form-control form-control-sm border-warning border-opacity-25" placeholder="Confirma tu contraseña" required>
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100 fw-bold py-2 rounded-3 text-dark">
-                        <i class="bi bi-arrow-repeat me-2"></i>Ejecutar Restauración
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- REINICIAR SISTEMA -->
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100 transition-hover">
             <div class="card-header bg-danger bg-opacity-10 border-0 pt-4 px-4 pb-0">
                 <div class="bg-danger text-white rounded-4 d-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
@@ -139,16 +110,6 @@
                 });
             });
         };
-
-        const restoreForm = document.getElementById('restoreSystemForm');
-        if (restoreForm) {
-            confirmDangerousAction(restoreForm, {
-                title: '¿Restaurar el sistema?',
-                text: 'Se reemplazarán todos los datos actuales por el respaldo seleccionado.',
-                confirmButtonColor: '#ffc107',
-                confirmButtonText: 'Sí, restaurar'
-            });
-        }
 
         const resetForm = document.getElementById('resetSystemForm');
         if (resetForm) {

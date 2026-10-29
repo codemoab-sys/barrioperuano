@@ -220,7 +220,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/system', [SystemController::class, 'index'])->name('system.index');
         Route::post('/system/reset', [SystemController::class, 'resetData'])->name('system.reset');
         Route::post('/system/backup', [SystemController::class, 'backup'])->name('system.backup');
-        Route::post('/system/restore', [SystemController::class, 'restore'])->name('system.restore');
 
         // Mapa de Mesas
         Route::get('/tables', [TableController::class, 'index'])->name('tables.index');
