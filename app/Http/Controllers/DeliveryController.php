@@ -7,13 +7,11 @@ use App\Models\Client;
 use App\Models\Delivery;
 use App\Models\DeliveryDriver;
 use App\Models\DocumentSeries;
-use App\Models\InventoryLog;
 use App\Models\Order;
-use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Services\DeliveryDirectService;
 use App\Services\DeliveryService;
-use App\Services\SalesService;
 use App\Services\StockValidationService;
 use App\Services\WingSauceMenu;
 use App\Services\Sunat\SunatConfig;
@@ -31,7 +29,7 @@ class DeliveryController extends Controller
     public function __construct(
         protected DeliveryService $deliveryService,
         protected StockValidationService $stockValidationService,
-        protected SalesService $salesService
+        protected DeliveryDirectService $deliveryDirectService
     ) {}
 
     /* ══════════════════════════════════════════════
@@ -65,7 +63,37 @@ class DeliveryController extends Controller
     ══════════════════════════════════════════════ */
     public function directo()
     {
-        return view('delivery.directo');
+        $categories = Category::with(['products' => function ($q) {
+            $q->where('is_active', true)->where('is_saleable', true);
+        }])->where('is_active', true)->get();
+
+        $currency = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
+
+        $clientsData = Client::select('id', 'name', 'document_number')->orderBy('name')->get()
+            ->map(fn ($client) => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'document' => (string) ($client->document_number ?? ''),
+            ])->values();
+
+        $availableSeries = collect(['boleta', 'factura'])->mapWithKeys(function (string $documentType) {
+            $serie = DocumentSeries::where('document_type', $documentType)
+                ->whereNull('area_id')
+                ->where('is_active', true)
+                ->value('serie');
+
+            return [$documentType => $serie];
+        })->all();
+
+        $igvFactor = (new SunatConfig())->igvFactor();
+        $varios = $this->deliveryDirectService->variosClient();
+        $variosData = $varios ? [
+            'id' => $varios->id,
+            'name' => $varios->name,
+            'document' => (string) ($varios->document_number ?? ''),
+        ] : null;
+
+        return view('delivery.directo', compact('categories', 'currency', 'clientsData', 'availableSeries', 'igvFactor', 'variosData'));
     }
 
     /* ══════════════════════════════════════════════
@@ -102,7 +130,121 @@ class DeliveryController extends Controller
             'products.*.qty' => 'required|integer|min:1',
         ]);
 
-        $products = $request->input('products');
+        $products = $this->validateSauceChoices($request->input('products'));
+
+        $this->stockValidationService->validateItems($products);
+
+        DB::transaction(function () use ($request, $products) {
+            $this->deliveryService->createPendingDelivery($products, [
+                'client_id'      => $request->client_id ?: null,
+                'client_name'    => $request->client_name,
+                'client_phone'   => $request->client_phone,
+                'address'        => $request->address,
+                'reference'      => $request->reference,
+                'driver_id'      => $request->driver_id ?: null,
+                'payment_method' => $request->payment_method,
+                'delivery_fee'   => (float) ($request->delivery_fee ?? 0),
+                'notes'          => $request->notes,
+                'scheduled_at'   => $request->scheduled_at ?: null,
+            ]);
+        });
+
+        return redirect()->route('delivery.index')->with('success', '¡Pedido de delivery creado correctamente!');
+    }
+
+    /* ══════════════════════════════════════════════
+       STORE DIRECTO — Pedido de delivery cobrado al instante
+    ══════════════════════════════════════════════ */
+    public function storeDirecto(Request $request)
+    {
+        $this->deliveryService->ensureCashRegisterIsOpen();
+
+        $validated = $request->validate([
+            'client_phone'    => ['required', 'string', 'max:30'],
+            'client_name'     => ['nullable', 'string', 'max:255'],
+            'address'         => ['nullable', 'string'],
+            'delivery_fee'    => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'products'        => ['required', 'array', 'min:1'],
+            'products.*.id'   => ['required', 'exists:bape_products,id'],
+            'products.*.qty'  => ['required', 'integer', 'min:1'],
+            'payment_mode'    => ['required', 'in:now,later'],
+            'document_type'   => ['required_if:payment_mode,now', 'nullable', 'in:Ticket,Boleta,Factura'],
+            'payment_method'  => ['required', 'in:cash,card,transfer,yape,plin'],
+            'received_amount' => ['nullable', 'numeric', 'min:0'],
+            'client_id'       => ['nullable', 'integer', 'exists:bape_clients,id'],
+        ], [
+            'client_phone.required'    => 'Ingresa el celular del cliente.',
+            'products.required'        => 'Agrega al menos un producto al pedido.',
+            'products.min'             => 'Agrega al menos un producto al pedido.',
+            'document_type.required_if' => 'Selecciona el tipo de documento.',
+        ]);
+
+        $products = $this->validateSauceChoices($request->input('products'));
+
+        $this->stockValidationService->validateItems($products);
+
+        $clientName = trim((string) ($validated['client_name'] ?? '')) ?: 'Cliente - Varios';
+
+        $deliveryData = [
+            'client_id'      => $validated['client_id'] ?? null,
+            'client_name'    => $clientName,
+            'client_phone'   => $validated['client_phone'],
+            'address'        => (string) ($validated['address'] ?? ''),
+            'reference'      => null,
+            'driver_id'      => null,
+            'delivery_fee'   => (float) ($validated['delivery_fee'] ?? 0),
+            'notes'          => null,
+            'scheduled_at'   => null,
+            'payment_method' => $validated['payment_method'],
+        ];
+
+        // ── Cobrar después: el pedido queda pendiente de cobro ──
+        if ($validated['payment_mode'] === 'later') {
+            $delivery = $this->deliveryDirectService->createPending($products, $deliveryData);
+            $message = '¡Pedido de delivery directo creado! Queda pendiente de cobro.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success'       => true,
+                    'message'       => $message,
+                    'order_id'      => $delivery->order_id,
+                    'delivery_id'   => $delivery->id,
+                    'pending'       => true,
+                    'pre_order_url' => route('delivery.pre-order', $delivery),
+                ]);
+            }
+
+            return redirect()->route('delivery.index')->with('success', $message);
+        }
+
+        // ── Cobrar ahora ──
+        [$delivery, $order] = $this->deliveryDirectService->createAndCharge($products, $deliveryData, [
+            'document_type'   => $validated['document_type'],
+            'payment_method'  => $validated['payment_method'],
+            'received_amount' => $validated['received_amount'] ?? null,
+            'client_id'       => $validated['client_id'] ?? null,
+        ]);
+
+        $message = '¡Pedido de delivery directo creado y cobrado correctamente!';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success'       => true,
+                'message'       => $message,
+                'order_id'      => $order->id,
+                'delivery_id'   => $delivery->id,
+                'pre_order_url' => route('delivery.pre-order', $delivery),
+            ]);
+        }
+
+        return redirect()->route('delivery.index')->with('success', $message);
+    }
+
+    /**
+     * Valida (y normaliza) los sabores de los combos de alitas de cada producto.
+     */
+    private function validateSauceChoices(array $products): array
+    {
         foreach ($products as $index => &$item) {
             $product = Product::with('category')->findOrFail($item['id']);
             $flavorLimit = WingSauceMenu::flavorLimit($product);
@@ -136,67 +278,7 @@ class DeliveryController extends Controller
         }
         unset($item);
 
-        $this->stockValidationService->validateItems($products);
-
-        DB::transaction(function () use ($request, $products) {
-            // 1. Crear la Orden (sin mesa — delivery)
-            $order = Order::create([
-                'table_id'       => null,
-                'user_id'        => Auth::id(),
-                'client_id'      => $request->client_id ?: null,
-                'client_name'    => $request->client_name,
-                'status'         => 'pending',
-                'total'          => 0,
-                'cash_register_id' => $this->deliveryService->getCashRegisterId(),
-            ]);
-
-            // 2. Agregar productos a la orden
-            $subtotal = 0;
-            foreach ($products as $item) {
-                $product = Product::findOrFail($item['id']);
-                $line    = $product->price * $item['qty'];
-                $subtotal += $line;
-
-                OrderDetail::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $product->id,
-                    'quantity'   => $item['qty'],
-                    'price'      => $product->price,
-                    'status'     => 'pending',
-                    'note'       => $item['note'] ?? null,
-                    'sauce_choices' => $item['sauce_choices'] ?: null,
-                ]);
-            }
-
-            $deliveryFee = (float) ($request->delivery_fee ?? 0);
-            $order->update(['total' => $subtotal]);
-            $this->salesService->applyStockReductionForOrder($order, 'Delivery');
-
-            // Control de stock de cocina (kitchen_stock_control): consume los ingredientes
-            // publicados en la receta dentro de esta misma transacción (SAVEPOINT anidado).
-            // Un insumo faltante revierte también la orden, el delivery y el stock comercial.
-            $this->deliveryService->consumeKitchenForOrder($order);
-
-            // 3. Crear el Delivery
-            Delivery::create([
-                'order_id'        => $order->id,
-                'client_id'       => $request->client_id ?: null,
-                'client_name'     => $request->client_name,
-                'client_phone'    => $request->client_phone,
-                'address'         => $request->address,
-                'reference'       => $request->reference,
-                'driver_id'       => $request->driver_id ?: null,
-                'user_id'         => Auth::id(),
-                'cash_register_id'=> $this->deliveryService->getCashRegisterId(),
-                'status'          => 'pending',
-                'payment_method'  => $request->payment_method,
-                'delivery_fee'    => $deliveryFee,
-                'notes'           => $request->notes,
-                'scheduled_at'    => $request->scheduled_at ?: null,
-            ]);
-        });
-
-        return redirect()->route('delivery.index')->with('success', '¡Pedido de delivery creado correctamente!');
+        return $products;
     }
 
     /* ══════════════════════════════════════════════
@@ -213,6 +295,17 @@ class DeliveryController extends Controller
     }
 
     /* ══════════════════════════════════════════════
+       PRE-ORDER — Pre-orden imprimible para cocina
+    ══════════════════════════════════════════════ */
+    public function preOrder(Delivery $delivery)
+    {
+        $delivery->load(['order.details.product', 'driver']);
+        $settings = Setting::pluck('value', 'key')->toArray();
+
+        return view('delivery.pre_order', compact('delivery', 'settings'));
+    }
+
+    /* ══════════════════════════════════════════════
        UPDATE STATUS — AJAX
     ══════════════════════════════════════════════ */
     public function updateStatus(Request $request, Delivery $delivery)
@@ -222,10 +315,17 @@ class DeliveryController extends Controller
         ])['status'];
 
         if ($status === 'delivered') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Un delivery solo se marca como entregado al completar el cobro.',
-            ], 422);
+            $order = $delivery->order;
+
+            // Solo se marca como entregado si el pedido ya está cobrado: en el flujo
+            // normal el cobro ocurre en el checkout, y en "delivery directo" el pedido
+            // nace pagado (queda pendiente solo la entrega).
+            if (!$order || $order->status !== 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Un delivery solo se marca como entregado al completar el cobro.',
+                ], 422);
+            }
         }
 
         if ($status === 'cancelled') {

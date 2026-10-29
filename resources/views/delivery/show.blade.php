@@ -13,6 +13,9 @@
             <a href="{{ route('delivery.index') }}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
+            <a href="{{ route('delivery.pre-order', $delivery) }}" target="_blank" rel="noopener" class="btn btn-primary me-2">
+                <i class="bi bi-printer me-1"></i> Pre-orden
+            </a>
             @if(!in_array($delivery->status, ['delivered', 'cancelled']))
                 <button class="btn btn-danger me-2" id="cancelBtn">
                     <i class="bi bi-x-circle me-1"></i> Cancelar

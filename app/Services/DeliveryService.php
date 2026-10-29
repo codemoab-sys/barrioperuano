@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\CashRegister;
+use App\Models\Delivery;
 use App\Models\Kitchen\KitchenInventoryOperation;
 use App\Models\Kitchen\KitchenOrderConsumption;
 use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -33,6 +36,74 @@ class DeliveryService
     public function getCashRegisterId(): ?int
     {
         return CashRegister::current()?->id;
+    }
+
+    /**
+     * Crea la orden con sus detalles, descuenta el inventario comercial y de cocina
+     * y registra el delivery en estado "pending".
+     *
+     * No abre transacción: el llamador la envuelve, de modo que la creación y el
+     * cobro (delivery directo) se confirmen como una sola unidad atómica.
+     *
+     * @param  array<int, array{id:int, qty:int, sauce_choices?:array, note?:string|null}>  $products
+     * @param  array<string, mixed>  $data
+     */
+    public function createPendingDelivery(array $products, array $data): Delivery
+    {
+        // 1. Crear la Orden (sin mesa — delivery)
+        $order = Order::create([
+            'table_id'       => null,
+            'user_id'        => Auth::id(),
+            'client_id'      => $data['client_id'] ?? null,
+            'client_name'    => $data['client_name'],
+            'status'         => 'pending',
+            'total'          => 0,
+            'cash_register_id' => $this->getCashRegisterId(),
+        ]);
+
+        // 2. Agregar productos a la orden
+        $subtotal = 0;
+        foreach ($products as $item) {
+            $product = Product::findOrFail($item['id']);
+            $line    = $product->price * $item['qty'];
+            $subtotal += $line;
+
+            OrderDetail::create([
+                'order_id'   => $order->id,
+                'product_id' => $product->id,
+                'quantity'   => $item['qty'],
+                'price'      => $product->price,
+                'status'     => 'pending',
+                'note'       => $item['note'] ?? null,
+                'sauce_choices' => ! empty($item['sauce_choices']) ? $item['sauce_choices'] : null,
+            ]);
+        }
+
+        $order->update(['total' => $subtotal]);
+        $this->salesService->applyStockReductionForOrder($order, 'Delivery');
+
+        // Control de stock de cocina (kitchen_stock_control): consume los ingredientes
+        // publicados en la receta dentro de esta misma transacción (SAVEPOINT anidado).
+        // Un insumo faltante revierte también la orden, el delivery y el stock comercial.
+        $this->consumeKitchenForOrder($order);
+
+        // 3. Crear el Delivery
+        return Delivery::create([
+            'order_id'        => $order->id,
+            'client_id'       => $data['client_id'] ?? null,
+            'client_name'     => $data['client_name'],
+            'client_phone'    => $data['client_phone'],
+            'address'         => $data['address'] ?? '',
+            'reference'       => $data['reference'] ?? null,
+            'driver_id'       => $data['driver_id'] ?? null,
+            'user_id'         => Auth::id(),
+            'cash_register_id'=> $this->getCashRegisterId(),
+            'status'          => 'pending',
+            'payment_method'  => $data['payment_method'],
+            'delivery_fee'    => (float) ($data['delivery_fee'] ?? 0),
+            'notes'           => $data['notes'] ?? null,
+            'scheduled_at'    => $data['scheduled_at'] ?? null,
+        ]);
     }
 
     public function restoreInventoryForOrder(Order $order): void

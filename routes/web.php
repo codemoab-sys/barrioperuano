@@ -126,6 +126,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/delivery/create',                   [DeliveryController::class, 'create'])->name('delivery.create');
         Route::post('/delivery',                         [DeliveryController::class, 'store'])->name('delivery.store');
         Route::get('/delivery/{delivery}',               [DeliveryController::class, 'show'])->name('delivery.show');
+        Route::get('/delivery/{delivery}/pre-order',     [DeliveryController::class, 'preOrder'])->name('delivery.pre-order');
         Route::post('/delivery/{delivery}/status',       [DeliveryController::class, 'updateStatus'])->name('delivery.status');
         Route::post('/delivery/{delivery}/driver',       [DeliveryController::class, 'assignDriver'])->name('delivery.driver');
         Route::post('/delivery/{delivery}/checkout',     [DeliveryController::class, 'checkout'])->middleware('role:admin,cashier,cashier_waiter')->name('delivery.checkout');
@@ -135,8 +136,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/delivery-drivers',                 [DeliveryController::class, 'driversStore'])->name('delivery.drivers.store');
         Route::put('/delivery-drivers/{driver}',         [DeliveryController::class, 'driversUpdate'])->name('delivery.drivers.update');
         Route::delete('/delivery-drivers/{driver}',      [DeliveryController::class, 'driversDestroy'])->name('delivery.drivers.destroy');
-        // Delivery directo (módulo en construcción)
-        Route::get('/delivery-directo',                  [DeliveryController::class, 'directo'])->name('delivery-direct.index');
+        // Delivery directo (módulo en construcción) — solo roles que cobran
+        Route::get('/delivery-directo',                  [DeliveryController::class, 'directo'])
+            ->middleware('role:admin,cashier,cashier_waiter')
+            ->name('delivery-direct.index');
+        Route::post('/delivery-directo',                 [DeliveryController::class, 'storeDirecto'])
+            ->middleware(['role:admin,cashier,cashier_waiter', 'cash_register'])
+            ->name('delivery-direct.store');
     });
 
 
