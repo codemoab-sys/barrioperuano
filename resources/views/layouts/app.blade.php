@@ -483,6 +483,41 @@
 
         .sidebar .nav-link.active i { opacity: 1; }
 
+        /* --- Submenú desplegable --- */
+        .sidebar .nav-link.nav-parent {
+            width: 100%;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .sidebar .nav-link.nav-chevron {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar .nav-link.nav-chevron.rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-submenu {
+            margin: 2px 0 8px 20px;
+            padding-left: 10px;
+            border-left: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .sidebar-submenu .nav-link {
+            padding: 9px 12px;
+            font-size: 0.82rem;
+        }
+
+        .sidebar-submenu .nav-link i {
+            font-size: 0.95rem;
+        }
+
         /* =============================================
            MAIN CONTENT
         ============================================= */
@@ -810,9 +845,25 @@
             <i class="bi bi-bag-check-fill"></i> Punto de Venta
         </a>
         @if(in_array($role, ['admin', 'cashier', 'cashier_waiter']))
-            <a href="{{ route('delivery.index') }}" class="nav-link {{ request()->routeIs('delivery.*') ? 'active' : '' }}">
+            @php
+                $deliveryMenuOpen = request()->routeIs('delivery.*', 'delivery-direct.*');
+            @endphp
+            <button type="button" class="nav-link nav-parent {{ $deliveryMenuOpen ? 'active' : '' }}"
+                    data-bs-toggle="collapse" data-bs-target="#sidebarDeliveryMenu"
+                    aria-expanded="{{ $deliveryMenuOpen ? 'true' : 'false' }}" aria-controls="sidebarDeliveryMenu">
                 <i class="bi bi-bicycle"></i> Delivery
-            </a>
+                <i class="bi bi-chevron-down ms-auto nav-chevron {{ $deliveryMenuOpen ? 'rotate-180' : '' }}"></i>
+            </button>
+            <div class="collapse {{ $deliveryMenuOpen ? 'show' : '' }}" id="sidebarDeliveryMenu">
+                <div class="sidebar-submenu">
+                    <a href="{{ route('delivery.index') }}" class="nav-link {{ request()->routeIs('delivery.*') ? 'active' : '' }}">
+                        <i class="bi bi-list-ul"></i> Delivery
+                    </a>
+                    <a href="{{ route('delivery-direct.index') }}" class="nav-link {{ request()->routeIs('delivery-direct.*') ? 'active' : '' }}">
+                        <i class="bi bi-lightning-charge-fill"></i> Delivery directo
+                    </a>
+                </div>
+            </div>
         @endif
         <a href="{{ route('reservations.index') }}" class="nav-link {{ request()->routeIs('reservations.*') ? 'active' : '' }}">
             <i class="bi bi-calendar-event-fill"></i> Reservas

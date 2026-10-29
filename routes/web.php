@@ -135,6 +135,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/delivery-drivers',                 [DeliveryController::class, 'driversStore'])->name('delivery.drivers.store');
         Route::put('/delivery-drivers/{driver}',         [DeliveryController::class, 'driversUpdate'])->name('delivery.drivers.update');
         Route::delete('/delivery-drivers/{driver}',      [DeliveryController::class, 'driversDestroy'])->name('delivery.drivers.destroy');
+        // Delivery directo (módulo en construcción)
+        Route::get('/delivery-directo',                  [DeliveryController::class, 'directo'])->name('delivery-direct.index');
     });
 
 

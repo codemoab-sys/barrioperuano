@@ -61,6 +61,14 @@ class DeliveryController extends Controller
     }
 
     /* ══════════════════════════════════════════════
+       DIRECTO — Módulo en construcción (vacío)
+    ══════════════════════════════════════════════ */
+    public function directo()
+    {
+        return view('delivery.directo');
+    }
+
+    /* ══════════════════════════════════════════════
        CREATE — Formulario nuevo pedido
     ══════════════════════════════════════════════ */
     public function create()
