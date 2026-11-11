@@ -36,16 +36,16 @@ Laravel 12 restaurant POS system ("Restaurante Barrio Peruano"). Handles orders,
 
 ### Migration rules (CRITICAL)
 
-The database manages real restaurant data. Respect these constraints:
+The configured database may be production and may differ from the migration files. Treat it as production unless the user explicitly confirms otherwise. Protect existing restaurant data:
 
-| Allowed | Prohibited |
-|---------|-----------|
-| `php artisan migrate` | `php artisan migrate:fresh` |
-| `php artisan db:seed --class=SettingSeeder` (config values only) | `php artisan migrate:refresh` |
-| | `php artisan db:seed` (empty seeder by design) |
-| | `php artisan db:seed --class=DemoDataSeeder` (requires `ALLOW_DEMO_DATA=true`) |
+| Allowed | Prohibited without explicit, operation-specific user approval |
+|---------|---------------------------------------------------------------|
+| Read-only inspection only when authorized by the user | Running any migration against the configured database |
+| Tests only when their database is confirmed isolated from production | `migrate:fresh`, `migrate:refresh`, rollback, reset, or any destructive schema command |
+| | Running seeders or other commands that insert, update, or delete database records |
+| | Direct SQL or application commands that write to the configured database |
 
-Before any destructive operation: generate a backup and confirm the connection points to a test database.
+Never assume `.env`, `phpunit.xml`, or migration files accurately identify the live database schema or make it safe to write. Do not execute migrations, seeds, resets, rollbacks, or database writes as part of implementation or verification unless the user explicitly approves the exact operation and confirms its target is a non-production database. A backup alone does not authorize a production database change. Creating migration files for later review does not authorize running them.
 
 ## Auth & roles
 
