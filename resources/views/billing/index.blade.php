@@ -77,7 +77,15 @@
                            class="form-control form-control-sm">
                 </div>
                 <div class="col-12 col-md-auto">
-                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel"></i></button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill" title="Filtrar resultados">
+                            <i class="bi bi-funnel me-1"></i> Filtrar
+                        </button>
+                        <button type="submit" formaction="{{ route('billing.export') }}" formmethod="GET"
+                                class="btn btn-success btn-sm flex-fill text-nowrap" title="Exportar resultados filtrados a Excel">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

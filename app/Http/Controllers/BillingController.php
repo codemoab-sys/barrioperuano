@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Carbon\Carbon;
+use App\Services\BillingExcelExportService;
 
 /**
  * Módulo de Comprobantes Electrónicos (SUNAT - Perú).
@@ -31,6 +32,34 @@ class BillingController extends Controller
      */
     public function index(Request $request)
     {
+        [$query, $from, $to] = $this->filteredOrdersQuery($request);
+        $orders = $query->with('user')->paginate(25)->withQueryString();
+
+        // Totales rápidos por estado (sin filtros)
+        $stats = Order::whereIn('document_type', ['Boleta', 'Factura'])
+            ->selectRaw('sunat_status, COUNT(*) as total')
+            ->groupBy('sunat_status')
+            ->pluck('total', 'sunat_status')
+            ->toArray();
+
+        return view('billing.index', compact('orders', 'stats', 'from', 'to'));
+    }
+
+    public function exportExcel(Request $request, BillingExcelExportService $exporter)
+    {
+        [$query, $from, $to, $filters] = $this->filteredOrdersQuery($request);
+        $path = $exporter->create($query->get(), $from, $to, $filters);
+        $filename = "comprobantes_{$from}_{$to}.xlsx";
+
+        return response()->download(
+            $path,
+            $filename,
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        )->deleteFileAfterSend(true);
+    }
+
+    private function filteredOrdersQuery(Request $request): array
+    {
         $validated = $request->validate([
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
@@ -42,7 +71,7 @@ class BillingController extends Controller
         $from = $validated['from'] ?? Carbon::now()->startOfMonth()->format('Y-m-d');
         $to = $validated['to'] ?? Carbon::now()->endOfMonth()->format('Y-m-d');
 
-        $query = Order::with('user')
+        $query = Order::query()
             ->whereIn('document_type', ['Boleta', 'Factura'])
             ->whereNotNull('serie')
             ->whereNotNull('correlativo')
@@ -65,16 +94,7 @@ class BillingController extends Controller
             });
         }
 
-        $orders = $query->paginate(25)->withQueryString();
-
-        // Totales rápidos por estado (sin filtros)
-        $stats = Order::whereIn('document_type', ['Boleta', 'Factura'])
-            ->selectRaw('sunat_status, COUNT(*) as total')
-            ->groupBy('sunat_status')
-            ->pluck('total', 'sunat_status')
-            ->toArray();
-
-        return view('billing.index', compact('orders', 'stats', 'from', 'to'));
+        return [$query, $from, $to, $validated];
     }
 
     /**

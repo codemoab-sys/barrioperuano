@@ -159,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
     // COMPROBANTES: Admin, Cajero y Cajero/Mozo
     // =========================================================
     Route::middleware(['role:admin,cashier,cashier_waiter'])->group(function () {
+        Route::get('/billing/export', [BillingController::class, 'exportExcel'])->name('billing.export');
         Route::get('/billing',                    [BillingController::class, 'index'])->name('billing.index');
         Route::get('/billing/{order}',            [BillingController::class, 'show'])->name('billing.show');
         Route::post('/billing/{order}/retry',     [BillingController::class, 'retry'])->name('billing.retry');
