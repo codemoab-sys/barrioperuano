@@ -117,6 +117,11 @@ protected $fillable = [
         return $this->hasMany(CreditNote::class);
     }
 
+    public function billingDocument()
+    {
+        return $this->hasOne(OrderDocument::class);
+    }
+
     /**
      * "B001-15" / "F001-3" / null si aÃƒÂºn no se ha numerado.
      */

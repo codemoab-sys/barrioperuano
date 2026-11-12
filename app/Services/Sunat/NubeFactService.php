@@ -4,7 +4,9 @@ namespace App\Services\Sunat;
 
 use App\Models\CreditNote;
 use App\Models\DebitNote;
+use App\Models\Client;
 use App\Models\Order;
+use App\Models\OrderDocument;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -46,68 +48,110 @@ class NubeFactService
         }
 
         $json = $this->invoiceBuilder->build($order);
+        $this->transmitInvoice($json, $order);
 
+        return $order;
+    }
+
+    public function sendOrderDocument(OrderDocument $document, Order $order): OrderDocument
+    {
+        if (!$document->serie || !$document->correlativo) {
+            throw new \RuntimeException('El comprobante no tiene serie/correlativo asignados.');
+        }
+
+        if (!$this->config->isNubefactConfigured()) {
+            throw new \RuntimeException('Configure RUTA, TOKEN y datos reales del emisor en Configuración SUNAT.');
+        }
+
+        $order->loadMissing(['details.product.category', 'delivery']);
+        $invoiceOrder = clone $order;
+        $invoiceOrder->setAttribute('document_type', $document->document_type);
+        $invoiceOrder->setAttribute('client_id', $document->client_id);
+        $invoiceOrder->setAttribute('client_name', $document->client_name);
+        $invoiceOrder->setAttribute('client_document', $document->client_document);
+        $invoiceOrder->setAttribute('serie', $document->serie);
+        $invoiceOrder->setAttribute('correlativo', $document->correlativo);
+        $invoiceOrder->setAttribute('issued_at', $document->issued_at);
+        $invoiceOrder->setRelation('details', $order->details);
+        $invoiceOrder->setRelation('delivery', $order->delivery);
+
+        $client = new Client();
+        $client->forceFill([
+            'name' => $document->client_name,
+            'document_number' => $document->client_document,
+            'address' => $document->client_address,
+            'email' => $document->client_email,
+        ]);
+        $invoiceOrder->setRelation('client', $client);
+
+        $json = $this->invoiceBuilder->build($invoiceOrder);
+        $this->transmitInvoice($json, $document);
+
+        return $document;
+    }
+
+    private function transmitInvoice(array $json, Order|OrderDocument $record): void
+    {
         try {
             $response = $this->send($json);
 
-            $order->sent_at = now();
+            $record->sent_at = now();
 
             if (isset($response['errors'])) {
                 // Error de validación de NubeFact
                 $isAlreadyRegistered = (int) ($response['codigo'] ?? 0) === 23
                     || str_contains((string) $response['errors'], 'Este documento ya existe');
-                $order->sunat_status      = $isAlreadyRegistered ? 'PENDING' : 'REJECTED';
-                $order->sunat_code        = $isAlreadyRegistered ? '23' : ($response['codigo'] ?? '400');
-                $order->sunat_description = $response['errors'];
+                $record->sunat_status      = $isAlreadyRegistered ? 'PENDING' : 'REJECTED';
+                $record->sunat_code        = $isAlreadyRegistered ? '23' : ($response['codigo'] ?? '400');
+                $record->sunat_description = $response['errors'];
             } elseif (isset($response['aceptada_por_sunat'])) {
                 // Respuesta válida de NubeFact
-                $order->sunat_code        = $response['sunat_responsecode'] ?? null;
-                $order->sunat_description = $response['sunat_description'] ?? '';
+                $record->sunat_code        = $response['sunat_responsecode'] ?? null;
+                $record->sunat_description = $response['sunat_description'] ?? '';
 
                 if ($response['aceptada_por_sunat'] === true) {
-                    $order->sunat_status = 'ACCEPTED';
+                    $record->sunat_status = 'ACCEPTED';
                 } else {
-                    $order->sunat_status = !empty($response['sunat_ticket_numero']) || empty($response['sunat_responsecode'])
+                    $record->sunat_status = !empty($response['sunat_ticket_numero']) || empty($response['sunat_responsecode'])
                         ? 'PENDING'
                         : 'OBSERVED';
-                    $order->sunat_description = $response['sunat_description']
-                        ?? ($order->sunat_status === 'PENDING' ? 'Pendiente de generación. Consulta el estado más tarde.' : 'Observada por SUNAT');
+                    $record->sunat_description = $response['sunat_description']
+                        ?? ($record->sunat_status === 'PENDING' ? 'Pendiente de generación. Consulta el estado más tarde.' : 'Observada por SUNAT');
                 }
 
                 // Guardar enlace del PDF/XML/CDR si existen
                 if (!empty($response['enlace_del_pdf'])) {
-                    $order->pdf_path = $response['enlace_del_pdf'];
+                    $record->pdf_path = $response['enlace_del_pdf'];
                 } elseif (!empty($response['enlace'])) {
-                    $order->pdf_path = rtrim($response['enlace'], '/') . '.pdf';
+                    $record->pdf_path = rtrim($response['enlace'], '/') . '.pdf';
                 }
                 if (!empty($response['enlace_del_xml'])) {
-                    $order->xml_path = $response['enlace_del_xml'];
+                    $record->xml_path = $response['enlace_del_xml'];
                 } elseif (!empty($response['enlace'])) {
-                    $order->xml_path = rtrim($response['enlace'], '/') . '.xml';
+                    $record->xml_path = rtrim($response['enlace'], '/') . '.xml';
                 }
                 if (!empty($response['enlace_del_cdr'])) {
-                    $order->cdr_path = $response['enlace_del_cdr'];
+                    $record->cdr_path = $response['enlace_del_cdr'];
                 } elseif (!empty($response['enlace'])) {
-                    $order->cdr_path = rtrim($response['enlace'], '/') . '.cdr';
+                    $record->cdr_path = rtrim($response['enlace'], '/') . '.cdr';
                 }
 
                 // Hash y código QR
-                $order->hash = $response['codigo_hash'] ?? null;
+                $record->hash = $response['codigo_hash'] ?? null;
             }
         } catch (Exception $e) {
             Log::error('NubeFact sendInvoice error', [
-                'order_id' => $order->id,
+                'order_id' => $record instanceof OrderDocument ? $record->order_id : $record->id,
                 'msg'      => $e->getMessage(),
             ]);
             $isAlreadyRegistered = (int) $e->getCode() === 23
                 || str_contains($e->getMessage(), 'Este documento ya existe');
-            $order->sunat_status      = $isAlreadyRegistered ? 'PENDING' : 'ERROR';
-            $order->sunat_code        = $isAlreadyRegistered ? '23' : '500';
-            $order->sunat_description = $e->getMessage();
+            $record->sunat_status      = $isAlreadyRegistered ? 'PENDING' : 'ERROR';
+            $record->sunat_code        = $isAlreadyRegistered ? '23' : '500';
+            $record->sunat_description = $e->getMessage();
         }
 
-        $order->save();
-        return $order;
+        $record->save();
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -332,41 +376,52 @@ class NubeFactService
 
     public function syncOrderStatusFromResponse(Order $order, array $response): Order
     {
+        $this->applyStatusFromResponse($order, $response);
 
-        $order->sent_at = $order->sent_at ?? now();
-        $order->sunat_code = $response['sunat_responsecode'] ?? $response['codigo'] ?? $order->sunat_code;
-        $order->sunat_description = $response['sunat_description'] ?? $response['errors'] ?? $order->sunat_description;
+        return $order;
+    }
+
+    public function syncOrderDocumentStatusFromResponse(OrderDocument $document, array $response): OrderDocument
+    {
+        $this->applyStatusFromResponse($document, $response);
+
+        return $document;
+    }
+
+    private function applyStatusFromResponse(Order|OrderDocument $record, array $response): void
+    {
+        $record->sent_at = $record->sent_at ?? now();
+        $record->sunat_code = $response['sunat_responsecode'] ?? $response['codigo'] ?? $record->sunat_code;
+        $record->sunat_description = $response['sunat_description'] ?? $response['errors'] ?? $record->sunat_description;
 
         if (array_key_exists('aceptada_por_sunat', $response)) {
             if ((bool) $response['aceptada_por_sunat'] === true) {
-                $order->sunat_status = 'ACCEPTED';
+                $record->sunat_status = 'ACCEPTED';
             } else {
-                $order->sunat_status = !empty($response['sunat_ticket_numero']) || empty($response['sunat_responsecode'])
+                $record->sunat_status = !empty($response['sunat_ticket_numero']) || empty($response['sunat_responsecode'])
                     ? 'PENDING'
                     : 'OBSERVED';
             }
         }
 
         if (!empty($response['enlace_del_pdf'])) {
-            $order->pdf_path = $response['enlace_del_pdf'];
+            $record->pdf_path = $response['enlace_del_pdf'];
         } elseif (!empty($response['enlace'])) {
-            $order->pdf_path = rtrim($response['enlace'], '/') . '.pdf';
+            $record->pdf_path = rtrim($response['enlace'], '/') . '.pdf';
         }
         if (!empty($response['enlace_del_xml'])) {
-            $order->xml_path = $response['enlace_del_xml'];
+            $record->xml_path = $response['enlace_del_xml'];
         } elseif (!empty($response['enlace'])) {
-            $order->xml_path = rtrim($response['enlace'], '/') . '.xml';
+            $record->xml_path = rtrim($response['enlace'], '/') . '.xml';
         }
         if (!empty($response['enlace_del_cdr'])) {
-            $order->cdr_path = $response['enlace_del_cdr'];
+            $record->cdr_path = $response['enlace_del_cdr'];
         } elseif (!empty($response['enlace'])) {
-            $order->cdr_path = rtrim($response['enlace'], '/') . '.cdr';
+            $record->cdr_path = rtrim($response['enlace'], '/') . '.cdr';
         }
 
-        $order->hash = $response['codigo_hash'] ?? $order->hash;
-        $order->save();
-
-        return $order;
+        $record->hash = $response['codigo_hash'] ?? $record->hash;
+        $record->save();
     }
 
     // ═══════════════════════════════════════════════════════════════

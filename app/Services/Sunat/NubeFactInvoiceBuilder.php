@@ -135,9 +135,13 @@ class NubeFactInvoiceBuilder
         } else {
             // Boleta
             $doc  = trim((string) ($order->client_document ?: $client?->document_number));
-            $tipo = (strlen($doc) === 8) ? 1 : '-'; // 1 = DNI, - = Varios
+            $tipo = match (strlen($doc)) {
+                8 => 1,
+                11 => 6,
+                default => '-',
+            }; // 1 = DNI, 6 = RUC, - = Varios
             $clienteTipoDoc = $tipo;
-            $clienteNumDoc  = $doc ?: '-';
+            $clienteNumDoc  = in_array($tipo, [1, 6], true) ? $doc : '-';
             $clienteNombre  = $order->client_name ?: ($client?->name ?? 'CLIENTE VARIOS');
         }
 

@@ -155,9 +155,50 @@
                                                 </a>
                                             </div>
                                         @else
-                                            <a href="{{ route('sales.ticket', $order) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark" title="Imprimir ticket">
-                                                <i class="bi bi-printer"></i>
-                                            </a>
+                                            <div class="d-flex flex-column align-items-center gap-1">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ route('sales.ticket', $order) }}" target="_blank" rel="noopener" class="btn btn-outline-dark" title="Imprimir ticket">
+                                                        <i class="bi bi-printer"></i>
+                                                    </a>
+                                                    @if($billingDocumentsAvailable && $order->billingDocument)
+                                                        @if($order->billingDocument->pdf_path)
+                                                            <a href="{{ $order->billingDocument->pdf_path }}" target="_blank" rel="noopener" class="btn btn-outline-primary" title="Abrir PDF oficial">
+                                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                            </a>
+                                                        @endif
+                                                        @if($order->billingDocument->sunat_status === 'PENDING')
+                                                            <form action="{{ route('sales.documents.sync', $order) }}" method="POST">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-outline-info" title="Consultar estado en NubeFact">
+                                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    @elseif(in_array(auth()->user()->role, ['admin', 'cashier', 'cashier_waiter'], true))
+                                                        <button type="button" class="btn btn-outline-success"
+                                                                data-bs-toggle="modal" data-bs-target="#issueOrderDocumentModal"
+                                                                data-issue-order="{{ $order->id }}"
+                                                                data-issue-total="{{ $currencySymbol }} {{ number_format($order->total, 2) }}"
+                                                                title="Emitir boleta o factura">
+                                                            <i class="bi bi-receipt"></i>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                                @if($billingDocumentsAvailable && $order->billingDocument)
+                                                    <small class="text-muted">
+                                                        {{ $order->billingDocument->document_type }}
+                                                        {{ $order->billingDocument->full_number }}
+                                                        · {{ $order->billingDocument->sunat_status }}
+                                                    </small>
+                                                    @if($order->billingDocument->sunat_status === 'ERROR'
+                                                        && $order->billingDocument->sunat_code !== '23')
+                                                        <form action="{{ route('sales.documents.retry', $order) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-sm btn-outline-warning">Reintentar envío</button>
+                                                        </form>
+                                                    @endif
+                                                @endif
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>
@@ -206,6 +247,10 @@
         </div>
     </div>
 </div>
+
+@if($billingDocumentsAvailable)
+    @include('sales.partials.issue_order_document_modal')
+@endif
 
 <div class="modal fade" id="expenseModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered expense-modal-dialog">

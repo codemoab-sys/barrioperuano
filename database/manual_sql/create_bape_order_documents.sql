@@ -1,0 +1,32 @@
+CREATE TABLE `bape_order_documents` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `order_id` BIGINT UNSIGNED NOT NULL,
+    `client_id` BIGINT UNSIGNED NULL,
+    `document_type` VARCHAR(20) NOT NULL,
+    `client_name` VARCHAR(255) NOT NULL,
+    `client_document` VARCHAR(20) NULL,
+    `client_address` VARCHAR(255) NULL,
+    `client_email` VARCHAR(255) NULL,
+    `serie` VARCHAR(4) NOT NULL,
+    `correlativo` INT UNSIGNED NOT NULL,
+    `issued_at` TIMESTAMP NOT NULL,
+    `total` DECIMAL(12, 2) NOT NULL,
+    `sunat_status` VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    `sunat_code` VARCHAR(10) NULL,
+    `sunat_description` TEXT NULL,
+    `xml_path` VARCHAR(255) NULL,
+    `cdr_path` VARCHAR(255) NULL,
+    `pdf_path` VARCHAR(255) NULL,
+    `hash` VARCHAR(100) NULL,
+    `sent_at` TIMESTAMP NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `order_documents_order_id_unique` (`order_id`),
+    UNIQUE KEY `order_documents_document_series_number_unique` (`document_type`, `serie`, `correlativo`),
+    KEY `order_documents_client_id_index` (`client_id`),
+    CONSTRAINT `order_documents_order_id_foreign`
+        FOREIGN KEY (`order_id`) REFERENCES `bape_orders` (`id`) ON DELETE RESTRICT,
+    CONSTRAINT `order_documents_client_id_foreign`
+        FOREIGN KEY (`client_id`) REFERENCES `bape_clients` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

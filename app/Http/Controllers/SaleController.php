@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Expense; // Importamos el modelo
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class SaleController extends Controller
 {
@@ -19,12 +21,25 @@ class SaleController extends Controller
         $currencySymbol = Setting::where('key', 'currency_symbol')->value('value') ?? 'S/';
 
         // 1. Obtener Ventas
-        $orders = Order::whereDate('created_at', '>=', $startDate)
+        $billingDocumentsAvailable = Schema::hasTable('bape_order_documents');
+        $ordersQuery = Order::whereDate('created_at', '>=', $startDate)
                        ->whereDate('created_at', '<=', $endDate)
                        ->where('status', 'completed')
-                       ->orderBy('created_at', 'desc')
-                       ->with(['user', 'table.area'])
-                       ->get();
+                       ->orderBy('created_at', 'desc');
+        $ordersQuery->with($billingDocumentsAvailable
+            ? ['user', 'table.area', 'billingDocument']
+            : ['user', 'table.area']);
+        $orders = $ordersQuery->get();
+        $clientsData = Client::query()
+            ->select('id', 'name', 'document_number')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Client $client) => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'document' => (string) ($client->document_number ?? ''),
+            ])
+            ->values();
 
         // 2. Totales Ventas
         $totalCash = $orders->where('payment_method', 'cash')->sum('total');
@@ -48,7 +63,7 @@ class SaleController extends Controller
 
         return view('sales.index', compact(
             'orders', 'expenses', 'startDate', 'endDate',
-            'totalCash', 'totalCard', 'totalTransfer', 'totalYape', 'totalPlin', 'totalSales', 'totalExpenses', 'balance', 'currencySymbol'
+            'totalCash', 'totalCard', 'totalTransfer', 'totalYape', 'totalPlin', 'totalSales', 'totalExpenses', 'balance', 'currencySymbol', 'clientsData', 'billingDocumentsAvailable'
         ));
     }
 

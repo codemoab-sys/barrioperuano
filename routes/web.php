@@ -115,6 +115,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
         Route::get('/sales/daily-report', [SaleController::class, 'dailyReport'])->name('sales.daily.report');
         Route::get('/sales/{order}/ticket', [SaleController::class, 'ticket'])->name('sales.ticket');
+        Route::post('/sales/{order}/documents', [App\Http\Controllers\OrderDocumentController::class, 'store'])
+            ->middleware('role:admin,cashier,cashier_waiter')
+            ->name('sales.documents.store');
+        Route::post('/sales/{order}/documents/sync', [App\Http\Controllers\OrderDocumentController::class, 'sync'])
+            ->middleware('role:admin,cashier,cashier_waiter')
+            ->name('sales.documents.sync');
+        Route::post('/sales/{order}/documents/retry', [App\Http\Controllers\OrderDocumentController::class, 'retry'])
+            ->middleware('role:admin,cashier,cashier_waiter')
+            ->name('sales.documents.retry');
         Route::post('/sales/{order}/cancel', [SaleController::class, 'cancel'])
             ->middleware('role:admin,cashier,cashier_waiter')
             ->name('sales.cancel');

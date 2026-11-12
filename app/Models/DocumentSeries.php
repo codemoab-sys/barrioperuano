@@ -30,10 +30,20 @@ use HasFactory;
      */
     public static function next(string $documentType, ?int $areaId = null): array
     {
-        return DB::transaction(function () use ($documentType) {
+        return DB::transaction(function () use ($documentType, $areaId) {
             $serie = static::where('document_type', $documentType)
-                ->whereNull('area_id')
-                ->where('is_active', true)
+                ->where('is_active', true);
+
+            if ($areaId !== null) {
+                $serie->where(function ($query) use ($areaId) {
+                    $query->where('area_id', $areaId)->orWhereNull('area_id');
+                });
+            } else {
+                $serie->whereNull('area_id');
+            }
+
+            $serie = $serie
+                ->orderByRaw('CASE WHEN area_id = ? THEN 0 ELSE 1 END', [$areaId])
                 ->lockForUpdate()
                 ->first();
 
