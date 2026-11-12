@@ -82,8 +82,9 @@
                             <i class="bi bi-funnel me-1"></i> Filtrar
                         </button>
                         <button type="submit" formaction="{{ route('billing.export') }}" formmethod="GET"
-                                class="btn btn-success btn-sm flex-fill text-nowrap" title="Exportar resultados filtrados a Excel">
-                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                                class="btn btn-success btn-sm flex-fill" title="Exportar resultados filtrados a Excel"
+                                aria-label="Exportar resultados filtrados a Excel">
+                            <i class="bi bi-file-earmark-excel"></i>
                         </button>
                     </div>
                 </div>
