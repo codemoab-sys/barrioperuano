@@ -223,7 +223,9 @@
                 .then(function (response) {
                     return response.json().then(function (data) {
                         if (!response.ok) {
-                            throw new Error(data.message || Object.values(data.errors || {}).flat().join(' '));
+                            const error = new Error(data.message || Object.values(data.errors || {}).flat().join(' '));
+                            error.validationErrors = data.errors || {};
+                            throw error;
                         }
                         return data;
                     });
@@ -239,7 +241,40 @@
                     bootstrap.Modal.getInstance(document.getElementById('issueQuickClientModal')).hide();
                 })
                 .catch(function (error) {
-                    window.alert(error.message || 'No se pudo registrar el cliente.');
+                    const documentNumber = document.getElementById('issueQuickDocument').value.replace(/\D/g, '');
+                    const duplicate = (error.validationErrors?.document_number || [])
+                        .some(function (message) {
+                            return message.includes('Ya existe un cliente registrado');
+                        });
+
+                    if (duplicate) {
+                        const existingClient = clients.find(function (client) {
+                            return client.document.replace(/\D/g, '') === documentNumber;
+                        });
+
+                        if (existingClient) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'El cliente ya existe',
+                                text: 'Al aceptar, se seleccionará para emitir el comprobante.',
+                                confirmButtonText: 'Aceptar',
+                                confirmButtonColor: '#0d6efd'
+                            }).then(function (result) {
+                                if (result.isConfirmed) {
+                                    selectClient(existingClient);
+                                    bootstrap.Modal.getInstance(document.getElementById('issueQuickClientModal')).hide();
+                                }
+                            });
+                            return;
+                        }
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo registrar el cliente',
+                        text: error.message || 'Inténtalo nuevamente.',
+                        confirmButtonColor: '#0d6efd'
+                    });
                 })
                 .finally(function () {
                     submitButton.disabled = false;

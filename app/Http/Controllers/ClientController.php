@@ -61,7 +61,10 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required', 'document_number' => 'nullable|unique:bape_clients']);
+        $request->validate(
+            ['name' => 'required', 'document_number' => 'nullable|unique:bape_clients'],
+            ['document_number.unique' => 'Ya existe un cliente registrado con este DNI/RUC. Selecciónelo de la lista.']
+        );
         $client = Client::create($request->all());
 
         if ($request->expectsJson()) {
