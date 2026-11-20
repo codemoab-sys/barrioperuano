@@ -65,7 +65,7 @@
                     <tbody>
                         @forelse($registers as $reg)
                             @php
-                                $cashSales = (float) $reg->orders->sum(fn ($order) => $order->paymentAmountFor('cash'));
+                                $cashSales = (float) $reg->orders->sum('total');
                                 $totalExpenses = (float) $reg->expenses->sum('amount');
                                 $expectedValue = $reg->status === 'closed'
                                     ? (float) ($reg->expected_amount ?? $reg->opening_amount)

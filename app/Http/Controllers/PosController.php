@@ -663,11 +663,8 @@ class PosController extends Controller
         }
 
         $request->validate([
-            'payment_method' => ['required', 'in:cash,card,transfer,yape,plin,mixed'],
+            'payment_method' => ['required', 'in:cash,card,transfer,yape,plin'],
             'received_amount' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
-            'mixed_cash_amount' => ['required_if:payment_method,mixed', 'nullable', 'numeric', 'min:0'],
-            'mixed_other_method' => ['required_if:payment_method,mixed', 'nullable', 'in:transfer,yape,plin'],
-            'mixed_other_amount' => ['required_if:payment_method,mixed', 'nullable', 'numeric', 'min:0'],
             'client_id' => ['nullable', 'integer', 'exists:bape_clients,id'],
             'client_name' => ['nullable', 'string', 'max:255'],
             'client_document' => ['nullable', 'string', 'max:20'],
@@ -675,37 +672,12 @@ class PosController extends Controller
         ]);
 
         $method = $request->input('payment_method');
-        if ($method === 'mixed' && $request->input('document_type') !== 'Ticket') {
-            $message = 'El pago mixto solo está disponible para Ticket Nota de Venta.';
-            return $request->expectsJson()
-                ? response()->json(['success' => false, 'message' => $message], 422)
-                : back()->with('error', $message);
-        }
         $totalToCollect = $this->posCheckoutService->totalForPayment((float) $order->total, $method);
-        $paymentDetails = null;
-        if ($method === 'mixed') {
-            $cashAmount = round((float) $request->input('mixed_cash_amount'), 2);
-            $otherAmount = round((float) $request->input('mixed_other_amount'), 2);
-            $otherMethod = (string) $request->input('mixed_other_method');
-            $mixedTotal = round($cashAmount + $otherAmount, 2);
-            if (abs($mixedTotal - round($totalToCollect, 2)) > 0.01) {
-                return $request->expectsJson()
-                    ? response()->json(['success' => false, 'message' => 'El efectivo y el otro método deben sumar el total de la venta.'], 422)
-                    : back()->with('error', 'El efectivo y el otro método deben sumar el total de la venta.');
-            }
-            $paymentDetails = [
-                ['method' => 'cash', 'amount' => $cashAmount],
-                ['method' => $otherMethod, 'amount' => $otherAmount],
-            ];
-            $received = $cashAmount;
-            $change = 0;
-        } else {
-            $received = $method === 'cash' ? (float) $request->input('received_amount') : $totalToCollect;
-            if ($method === 'cash' && $received < $totalToCollect) {
-                return back()->with('error', 'El monto recibido es insuficiente.');
-            }
-            $change = max(0, $received - $totalToCollect);
+        $received = $method === 'cash' ? (float) $request->input('received_amount') : $totalToCollect;
+        if ($method === 'cash' && $received < $totalToCollect) {
+            return back()->with('error', 'El monto recibido es insuficiente.');
         }
+        $change = max(0, $received - $totalToCollect);
         $clientId = $request->input('client_id');
         $client = $clientId ? Client::findOrFail($clientId) : null;
         $clientName = $client?->name ?: ($request->input('client_name') ?? 'Público');
@@ -756,7 +728,6 @@ class PosController extends Controller
 
         $order = $this->posCheckoutService->completeCheckout($order, [
             'payment_method' => $method,
-            'payment_details' => $paymentDetails,
             'received' => $received,
             'change' => $change,
             'client_id' => $clientId,

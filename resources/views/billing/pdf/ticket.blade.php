@@ -77,24 +77,6 @@
     <tr class="total"><td>TOTAL</td><td class="right">S/ {{ number_format($order->total, 2) }}</td></tr>
 </table>
 
-@if($order->payment_method === 'mixed' && is_array($order->payment_details))
-<hr>
-<table>
-    @foreach($order->payment_details as $payment)
-        <tr>
-            <td>{{ match ($payment['method'] ?? '') {
-                'cash' => 'EFECTIVO',
-                'transfer' => 'TRANSFERENCIA',
-                'yape' => 'YAPE',
-                'plin' => 'PLIN',
-                default => strtoupper((string) ($payment['method'] ?? '')),
-            } }}</td>
-            <td class="right">S/ {{ number_format((float) ($payment['amount'] ?? 0), 2) }}</td>
-        </tr>
-    @endforeach
-</table>
-@endif
-
 <hr>
 
 <div class="legend">
