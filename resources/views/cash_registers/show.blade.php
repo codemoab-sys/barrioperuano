@@ -10,9 +10,8 @@
             'yape' => 'Yape',
             'plin' => 'Plin',
         ];
-        $paymentTotals = $cashRegister->orders
-            ->groupBy('payment_method')
-            ->map(fn ($orders) => (float) $orders->sum('total'));
+        $paymentTotals = collect($paymentLabels)
+            ->map(fn ($label, $method) => (float) $cashRegister->orders->sum(fn ($order) => $order->paymentAmountFor($method)));
         $cashSales = $paymentTotals->get('cash', 0);
         $expensesTotal = (float) $cashRegister->expenses->sum('amount');
         $expectedValue = $cashRegister->status === 'closed'
@@ -66,7 +65,12 @@
                         <tr>
                             <td>{{ ($order->issued_at ?? $order->created_at)?->format('d/m/Y H:i') }}</td>
                             <td>{{ $order->document_type ?? 'Ticket' }} {{ $order->full_number ?? '#' . $order->id }}</td>
-                            <td>{{ $paymentLabels[$order->payment_method] ?? ucfirst((string) $order->payment_method) }}</td>
+                            <td>
+                                {{ $paymentLabels[$order->payment_method] ?? ($order->payment_method === 'mixed' ? 'Mixto' : ucfirst((string) $order->payment_method)) }}
+                                @if($order->payment_method === 'mixed' && is_array($order->payment_details))
+                                    ({{ collect($order->payment_details)->map(fn ($payment) => ($paymentLabels[$payment['method'] ?? ''] ?? ucfirst((string) ($payment['method'] ?? ''))).' '.$currencySymbol.' '.number_format((float) ($payment['amount'] ?? 0), 2))->implode(' + ') }})
+                                @endif
+                            </td>
                             <td>{{ $order->user?->name ?? '-' }}</td>
                             <td>{{ $order->issuedBy?->name ?? '-' }}</td>
                             <td class="text-end fw-bold">{{ $currencySymbol }} {{ number_format($order->total, 2) }}</td>

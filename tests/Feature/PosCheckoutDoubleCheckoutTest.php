@@ -19,7 +19,9 @@ use App\Models\Setting;
 use App\Models\Table;
 use App\Models\User;
 use App\Services\PosCheckoutService;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -133,6 +135,69 @@ class PosCheckoutDoubleCheckoutTest extends TestCase
         $this->assertSame(1, KitchenInventoryOperation::count());
         $this->assertSame(1, KitchenOrderConsumption::count());
         $this->assertSame(1, KitchenInventoryMovement::count());
+    }
+
+    public function test_mixed_ticket_payment_saves_cash_and_yape_amounts(): void
+    {
+        $order = $this->pendingOrder(4);
+        $this->actingAs($this->user)
+            ->postJson(route('pos.checkout', $order), [
+                'payment_method' => 'mixed',
+                'mixed_cash_amount' => 50.00,
+                'mixed_other_method' => 'yape',
+                'mixed_other_amount' => 10.00,
+                'document_type' => 'Ticket',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $completed = $order->fresh();
+        $this->assertSame('mixed', $completed->payment_method);
+        $this->assertEquals([
+            ['method' => 'cash', 'amount' => 50.0],
+            ['method' => 'yape', 'amount' => 10.0],
+        ], $completed->payment_details);
+        $this->assertSame(50.0, $completed->paymentAmountFor('cash'));
+        $this->assertSame(10.0, $completed->paymentAmountFor('yape'));
+
+        $this->actingAs($this->user)
+            ->get(route('sales.ticket', $completed))
+            ->assertOk()
+            ->assertSee('MIXTO')
+            ->assertSee('EFECTIVO')
+            ->assertSee('YAPE')
+            ->assertSee('10.00');
+    }
+
+    public function test_regular_checkout_still_works_before_payment_details_migration(): void
+    {
+        Schema::table('bape_orders', function (Blueprint $table) {
+            $table->dropColumn('payment_details');
+        });
+
+        $order = $this->pendingOrder(1);
+        $completed = $this->app->make(PosCheckoutService::class)->completeCheckout($order, $this->payload($order));
+
+        $this->assertSame('completed', $completed->status);
+        $this->assertSame('cash', $completed->payment_method);
+    }
+
+    public function test_mixed_payment_is_rejected_for_electronic_documents(): void
+    {
+        $order = $this->pendingOrder(4);
+
+        $this->actingAs($this->user)
+            ->postJson(route('pos.checkout', $order), [
+                'payment_method' => 'mixed',
+                'mixed_cash_amount' => 50.00,
+                'mixed_other_method' => 'yape',
+                'mixed_other_amount' => 10.00,
+                'document_type' => 'Boleta',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'El pago mixto solo está disponible para Ticket Nota de Venta.');
+
+        $this->assertSame('pending', $order->fresh()->status);
     }
 
     private function pendingOrder(int $quantity): Order

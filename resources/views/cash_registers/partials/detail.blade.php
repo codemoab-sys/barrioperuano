@@ -68,9 +68,8 @@
         'yape' => 'bi-phone',
         'plin' => 'bi-phone-fill',
     ];
-    $paymentTotals = $cashRegister->orders
-        ->groupBy('payment_method')
-        ->map(fn ($orders) => (float) $orders->sum('total'));
+    $paymentTotals = collect($paymentLabels)
+        ->map(fn ($label, $method) => (float) $cashRegister->orders->sum(fn ($order) => $order->paymentAmountFor($method)));
     $cashSales = $paymentTotals->get('cash', 0);
     $expensesTotal = (float) $cashRegister->expenses->sum('amount');
     $expectedValue = $cashRegister->status === 'closed'
@@ -117,7 +116,7 @@
                 <thead><tr><th>Fecha</th><th>Comprobante</th><th>Medio</th><th>Generó</th><th class="text-end">Total</th></tr></thead>
                 <tbody>
                     @forelse($cashRegister->orders as $order)
-                        <tr><td>{{ ($order->issued_at ?? $order->created_at)?->format('d/m/Y H:i') }}</td><td>{{ $order->document_type ?? 'Ticket' }} {{ $order->full_number ?? '#' . $order->id }}</td><td>{{ $paymentLabels[$order->payment_method] ?? ucfirst((string) $order->payment_method) }}</td><td>{{ $order->issuedBy?->name ?? $order->user?->name ?? '-' }}</td><td class="text-end fw-bold">{{ $currencySymbol }} {{ number_format($order->total, 2) }}</td></tr>
+                        <tr><td>{{ ($order->issued_at ?? $order->created_at)?->format('d/m/Y H:i') }}</td><td>{{ $order->document_type ?? 'Ticket' }} {{ $order->full_number ?? '#' . $order->id }}</td><td>{{ $paymentLabels[$order->payment_method] ?? ($order->payment_method === 'mixed' ? 'Mixto' : ucfirst((string) $order->payment_method)) }}@if($order->payment_method === 'mixed' && is_array($order->payment_details)) ({{ collect($order->payment_details)->map(fn ($payment) => ($paymentLabels[$payment['method'] ?? ''] ?? ucfirst((string) ($payment['method'] ?? ''))).' '.$currencySymbol.' '.number_format((float) ($payment['amount'] ?? 0), 2))->implode(' + ') }})@endif</td><td>{{ $order->issuedBy?->name ?? $order->user?->name ?? '-' }}</td><td class="text-end fw-bold">{{ $currencySymbol }} {{ number_format($order->total, 2) }}</td></tr>
                     @empty
                         <tr><td colspan="5" class="text-center text-muted py-3">No hay ventas en este turno.</td></tr>
                     @endforelse

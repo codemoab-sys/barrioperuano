@@ -191,6 +191,18 @@ class CashRegisterTest extends TestCase
             'total' => 200,
             'payment_method' => 'card',
         ]);
+        Order::create([
+            'table_id' => $table->id,
+            'user_id' => $user->id,
+            'cash_register_id' => $register->id,
+            'status' => 'completed',
+            'total' => 60,
+            'payment_method' => 'mixed',
+            'payment_details' => [
+                ['method' => 'cash', 'amount' => 50],
+                ['method' => 'plin', 'amount' => 10],
+            ],
+        ]);
         Expense::create([
             'description' => 'Compra de insumos',
             'amount' => 10,
@@ -199,16 +211,24 @@ class CashRegisterTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post(route('cash_registers.processClose'), [
-            'closing_amount' => 140,
+            'closing_amount' => 190,
         ]);
 
         $response->assertRedirect(route('cash_registers.create'));
         $this->assertDatabaseHas('bape_cash_registers', [
             'id' => $register->id,
-            'expected_amount' => 140,
+            'expected_amount' => 190,
             'difference' => 0,
             'status' => 'closed',
         ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)
+            ->get(route('cash_registers.show', $register))
+            ->assertOk()
+            ->assertSee('Mixto')
+            ->assertSee('S/ 50.00')
+            ->assertSee('S/ 10.00');
     }
 
     public function test_history_index_filters_turns_by_status_and_renders_admin_view(): void

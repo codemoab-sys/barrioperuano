@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CashRegisterController extends Controller
 {
@@ -20,12 +21,17 @@ class CashRegisterController extends Controller
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
+        $orderColumns = ['id', 'cash_register_id', 'total', 'payment_method', 'status'];
+        if (Schema::hasColumn('bape_orders', 'payment_details')) {
+            $orderColumns[] = 'payment_details';
+        }
+
         $query = CashRegister::query()
             ->with([
                 'user:id,name',
                 'orders' => fn ($query) => $query
                     ->where('status', 'completed')
-                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
+                    ->select($orderColumns),
                 'expenses' => fn ($query) => $query
                     ->select('id', 'cash_register_id', 'amount'),
             ]);
@@ -127,7 +133,14 @@ class CashRegisterController extends Controller
 
         // Calcular el esperado:
         // Monto inicial + Total ventas efectivo - Total gastos
-        $totalSalesCash = $cashRegister->orders()->where('payment_method', 'cash')->where('status', 'completed')->sum('total');
+        $orderColumns = ['total', 'payment_method'];
+        if (Schema::hasColumn('bape_orders', 'payment_details')) {
+            $orderColumns[] = 'payment_details';
+        }
+        $totalSalesCash = $cashRegister->orders()
+            ->where('status', 'completed')
+            ->get($orderColumns)
+            ->sum(fn ($order) => $order->paymentAmountFor('cash'));
         $totalExpenses = $cashRegister->expenses()->sum('amount');
         
         $expectedAmount = $cashRegister->opening_amount + $totalSalesCash - $totalExpenses;
@@ -151,13 +164,21 @@ class CashRegisterController extends Controller
 
         abort_unless($cashRegister->canBeClosedBy(auth()->user()), 403);
 
-        $difference = DB::transaction(function () use ($request, $cashRegister) {
+        $orderColumns = ['total', 'payment_method'];
+        if (Schema::hasColumn('bape_orders', 'payment_details')) {
+            $orderColumns[] = 'payment_details';
+        }
+
+        $difference = DB::transaction(function () use ($request, $cashRegister, $orderColumns) {
             $register = CashRegister::whereKey($cashRegister->id)->lockForUpdate()->firstOrFail();
             if ($register->status !== 'open') {
                 abort(409, 'La caja ya fue cerrada.');
             }
 
-            $totalSalesCash = $register->orders()->where('payment_method', 'cash')->where('status', 'completed')->sum('total');
+            $totalSalesCash = $register->orders()
+                ->where('status', 'completed')
+                ->get($orderColumns)
+                ->sum(fn ($order) => $order->paymentAmountFor('cash'));
             $totalExpenses = $register->expenses()->sum('amount');
             $expectedAmount = (float) $register->opening_amount + $totalSalesCash - $totalExpenses;
             $difference = (float) $request->closing_amount - $expectedAmount;

@@ -131,9 +131,24 @@
                 'transfer' => 'TRANSFERENCIA',
                 'yape' => 'YAPE',
                 'plin' => 'PLIN',
+                'mixed' => 'MIXTO',
                 default => strtoupper((string) $order->payment_method),
             } }}</span>
         </div>
+        @if($order->payment_method === 'mixed' && is_array($order->payment_details))
+            @foreach($order->payment_details as $payment)
+                <div class="row" style="font-size: {{ $fsSmall }}px;">
+                    <span>{{ match ($payment['method'] ?? '') {
+                        'cash' => 'EFECTIVO',
+                        'transfer' => 'TRANSFERENCIA',
+                        'yape' => 'YAPE',
+                        'plin' => 'PLIN',
+                        default => strtoupper((string) ($payment['method'] ?? '')),
+                    } }}:</span>
+                    <span>{{ $settings['currency_symbol'] ?? 'S/' }} {{ number_format((float) ($payment['amount'] ?? 0), 2) }}</span>
+                </div>
+            @endforeach
+        @endif
         <div class="row" style="font-size: {{ $fsSmall }}px;">
             <span>RECIBIDO: {{ number_format($order->received_amount, 2) }}</span>
             <span>VUELTO: {{ number_format($order->change_amount, 2) }}</span>

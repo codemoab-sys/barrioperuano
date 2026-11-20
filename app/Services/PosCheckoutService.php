@@ -53,6 +53,7 @@ class PosCheckoutService
         $order->load('details.product.ingredients');
 
         $method = $payload['payment_method'];
+        $paymentDetails = $payload['payment_details'] ?? null;
         $received = $payload['received'];
         $change = $payload['change'];
         $clientId = $payload['client_id'] ?? null;
@@ -61,7 +62,7 @@ class PosCheckoutService
         $clientDocument = $payload['client_document'] ?? null;
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        return DB::transaction(function () use ($order, $method, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
+        return DB::transaction(function () use ($order, $method, $paymentDetails, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
 
             // Revalidación bajo el lock: la verificación previa (fuera de la transacción)
@@ -102,7 +103,7 @@ class PosCheckoutService
                 $correlativo = $next['correlativo'];
             }
 
-            $order->update([
+            $updates = [
                 'status' => 'completed',
                 'issued_at' => now(),
                 'issued_by_user_id' => Auth::id(),
@@ -121,7 +122,12 @@ class PosCheckoutService
                 'igv' => $igv,
                 'total_gravada' => $totalGravada,
                 'sunat_status' => $isElectronic ? ($nubefactConfigured ? 'PENDING' : 'NO_ENVIADO') : 'NA',
-            ]);
+            ];
+            if ($paymentDetails !== null) {
+                $updates['payment_details'] = $paymentDetails;
+            }
+
+            $order->update($updates);
 
             $this->salesService->validateOrderForStock($order);
             $this->salesService->applyStockReductionForOrder($order, 'Venta POS');
