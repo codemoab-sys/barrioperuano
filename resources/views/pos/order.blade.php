@@ -1362,7 +1362,18 @@ foreach($categories as $cat) {
     .pos-product-card:hover .pos-add-overlay { opacity: 1; }
 
     .checkout-payment-option {
-        white-space: nowrap;
+        width: 100%;
+        min-width: 0;
+        margin: 0 !important;
+        padding: .5rem .25rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .checkout-payment-options {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+        gap: .5rem;
     }
 
     /* ── MOBILE: ≤900px ──────────────────────────────────────────── */
@@ -1433,16 +1444,6 @@ foreach($categories as $cat) {
 
         .pos-product-img-wrap {
             height: 90px;
-        }
-
-        .checkout-payment-options {
-            display: grid !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .checkout-payment-option {
-            border-radius: .375rem !important;
-            width: 100%;
         }
 
         .pos-cart-col {
