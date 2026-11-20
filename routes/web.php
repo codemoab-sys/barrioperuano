@@ -47,7 +47,7 @@ Route::get('/inicio', [App\Http\Controllers\LandingController::class, 'index'])-
 Route::get('/', fn() => redirect()->route('login'));
 
 // --- 2. SISTEMA INTERNO ---
-Route::middleware(['auth', 'password_change_required'])->group(function () {
+Route::middleware(['auth', 'active_account', 'password_change_required'])->group(function () {
     Route::get('/password/force-change', [App\Http\Controllers\PasswordChangeController::class, 'show'])
         ->name('password.force-change');
     Route::post('/password/force-change', [App\Http\Controllers\PasswordChangeController::class, 'update'])
@@ -230,7 +230,9 @@ Route::middleware(['auth', 'password_change_required'])->group(function () {
         })->name('inventory.logs');
 
         // Configuración y Usuarios
-        Route::resource('users', UserController::class);
+        Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+            ->name('users.toggleStatus');
+        Route::resource('users', UserController::class)->except(['destroy']);
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 

@@ -36,6 +36,9 @@
                                         </div>
                                         <div>
                                             <div class="fw-bold">{{ $user->name }}</div>
+                                            <span class="badge {{ $user->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                                {{ $user->is_active ? 'Activo' : 'Desactivado' }}
+                                            </span>
                                             @if($user->id === Auth::id())
                                                 <span class="badge bg-light text-dark border" style="font-size: 0.6rem;">TÚ</span>
                                             @endif
@@ -65,10 +68,13 @@
                                     </button>
 
                                     @if($user->id !== Auth::id())
-                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar a {{ $user->name }}?');">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-link text-danger p-0 border-0 bg-transparent" title="Eliminar">
-                                                <i class="bi bi-trash fs-5"></i>
+                                        <form action="{{ route('users.toggleStatus', $user->id) }}" method="POST" class="d-inline"
+                                            onsubmit="return confirm('¿Deseas {{ $user->is_active ? 'desactivar' : 'activar' }} a {{ $user->name }}?');">
+                                            @csrf @method('PATCH')
+                                            <button class="btn btn-sm {{ $user->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}"
+                                                title="{{ $user->is_active ? 'Desactivar usuario' : 'Activar usuario' }}">
+                                                <i class="bi {{ $user->is_active ? 'bi-person-slash' : 'bi-person-check' }} me-1"></i>
+                                                {{ $user->is_active ? 'Desactivar' : 'Activar' }}
                                             </button>
                                         </form>
                                     @endif

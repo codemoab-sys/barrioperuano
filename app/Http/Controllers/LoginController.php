@@ -32,6 +32,14 @@ class LoginController extends Controller
         $email = strtolower(trim($credentials['email']));
         $ipAddress = $request->ip();
         $user = User::where('email', $email)->first();
+        if ($user && !$user->is_active) {
+            $this->recordLoginAttempt($email, $ipAddress, $user, 'La cuenta está desactivada.');
+
+            return back()->withErrors([
+                'email' => 'Esta cuenta está desactivada. Comuníquese con el administrador.',
+            ])->onlyInput('email');
+        }
+
         $failedAttempts = LoginAudit::where('email', $email)
             ->where('success', false)
             ->where('created_at', '>=', now()->subMinutes($lockoutMinutes))

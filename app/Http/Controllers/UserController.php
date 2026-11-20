@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CashRegister;
 use App\Models\Area;
-use App\Models\Expense;
-use App\Models\LoginAudit;
-use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -87,23 +83,18 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Datos actualizados.');
     }
 
-    public function destroy(User $user)
+    public function toggleStatus(User $user)
     {
         if ($user->id === Auth::id()) {
-            return redirect()->back()->with('error', 'No puedes eliminar tu propia cuenta mientras estás conectado.');
+            return redirect()->back()->with('error', 'No puedes desactivar tu propia cuenta mientras estás conectado.');
         }
 
-        $hasSensitiveHistory = Order::where('user_id', $user->id)->exists()
-            || Expense::where('user_id', $user->id)->exists()
-            || CashRegister::where('user_id', $user->id)->exists()
-            || LoginAudit::where('user_id', $user->id)->exists();
+        $user->is_active = !$user->is_active;
+        $user->save();
 
-        if ($hasSensitiveHistory) {
-            return redirect()->back()->with('error', 'No se puede eliminar al usuario porque tiene historial operativo asociado: ventas, gastos, caja o auditoría de acceso.');
-        }
-
-        $user->delete();
-
-        return redirect()->back()->with('success', 'Usuario eliminado del sistema.');
+        return redirect()->back()->with(
+            'success',
+            $user->is_active ? 'Usuario activado correctamente.' : 'Usuario desactivado correctamente.'
+        );
     }
 }

@@ -15,7 +15,7 @@ class UserCategorySafetyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_with_sensitive_history_cannot_be_deleted(): void
+    public function test_user_with_sensitive_history_can_be_deactivated_without_losing_history(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $user = User::factory()->create(['role' => 'cashier']);
@@ -26,11 +26,12 @@ class UserCategorySafetyTest extends TestCase
             'status' => 'open',
         ]);
 
-        $response = $this->actingAs($admin)->delete(route('users.destroy', $user));
+        $response = $this->actingAs($admin)->patch(route('users.toggleStatus', $user));
 
         $response->assertRedirect();
-        $response->assertSessionHas('error');
-        $this->assertDatabaseHas('bape_users', ['id' => $user->id]);
+        $response->assertSessionHas('success', 'Usuario desactivado correctamente.');
+        $this->assertDatabaseHas('bape_users', ['id' => $user->id, 'is_active' => false]);
+        $this->assertDatabaseHas('bape_cash_registers', ['user_id' => $user->id]);
     }
 
     public function test_updating_user_without_password_keeps_the_existing_password(): void
