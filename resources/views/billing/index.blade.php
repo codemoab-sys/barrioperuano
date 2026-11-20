@@ -18,6 +18,22 @@
         </div>
     </div>
 
+    <div class="alert alert-info d-flex align-items-start gap-2 mb-4" role="status">
+        <i class="bi bi-info-circle-fill mt-1"></i>
+        <div>
+            <strong>Uso mensual de comprobantes</strong>
+            <div>{{ ucfirst($electronicDocumentMonth) }}: {{ $electronicDocumentsUsed }}/{{ $electronicDocumentLimit }} boletas y facturas.</div>
+            <div>Incluye hasta {{ $electronicDocumentLimit }} comprobantes al mes; cada documento adicional se calcula a S/ 0.50.</div>
+            @if($electronicDocumentOverage > 0)
+                <div class="fw-bold mt-1">
+                    Excedente: {{ $electronicDocumentOverage }} documento(s) ·
+                    adicional estimado: S/ {{ number_format($electronicDocumentOverageAmount, 2) }}.
+                </div>
+            @endif
+            <small class="d-block mt-1">El monto es informativo; este sistema no realiza el cobro automáticamente.</small>
+        </div>
+    </div>
+
     {{-- Stats por estado --}}
     <div class="row g-3 mb-4">
         @foreach([

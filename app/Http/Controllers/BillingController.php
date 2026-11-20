@@ -34,6 +34,17 @@ class BillingController extends Controller
     {
         [$query, $from, $to] = $this->filteredOrdersQuery($request);
         $orders = $query->with('user')->paginate(25)->withQueryString();
+        $monthStart = Carbon::now()->startOfMonth();
+        $nextMonthStart = $monthStart->copy()->addMonth();
+        $electronicDocumentsUsed = Order::query()
+            ->whereIn('document_type', ['Boleta', 'Factura'])
+            ->whereRaw('COALESCE(issued_at, created_at) >= ?', [$monthStart])
+            ->whereRaw('COALESCE(issued_at, created_at) < ?', [$nextMonthStart])
+            ->count();
+        $electronicDocumentLimit = 250;
+        $electronicDocumentOverage = max(0, $electronicDocumentsUsed - $electronicDocumentLimit);
+        $electronicDocumentOverageAmount = round($electronicDocumentOverage * 0.50, 2);
+        $electronicDocumentMonth = Carbon::now()->locale('es')->translatedFormat('F Y');
 
         // Totales rápidos por estado (sin filtros)
         $stats = Order::whereIn('document_type', ['Boleta', 'Factura'])
@@ -42,7 +53,17 @@ class BillingController extends Controller
             ->pluck('total', 'sunat_status')
             ->toArray();
 
-        return view('billing.index', compact('orders', 'stats', 'from', 'to'));
+        return view('billing.index', compact(
+            'orders',
+            'stats',
+            'from',
+            'to',
+            'electronicDocumentsUsed',
+            'electronicDocumentLimit',
+            'electronicDocumentOverage',
+            'electronicDocumentOverageAmount',
+            'electronicDocumentMonth'
+        ));
     }
 
     public function exportExcel(Request $request, BillingExcelExportService $exporter)

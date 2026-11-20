@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DocumentSeries;
 use App\Models\Area;
-use App\Models\Order;
 use App\Models\Setting;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -17,17 +15,6 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::pluck('value', 'key')->toArray();
-        $monthStart = now()->startOfMonth();
-        $nextMonthStart = $monthStart->copy()->addMonth();
-        $electronicDocumentsUsed = Order::query()
-            ->whereIn('document_type', ['Boleta', 'Factura'])
-            ->whereRaw('COALESCE(issued_at, created_at) >= ?', [$monthStart])
-            ->whereRaw('COALESCE(issued_at, created_at) < ?', [$nextMonthStart])
-            ->count();
-        $electronicDocumentLimit = 250;
-        $electronicDocumentOverage = max(0, $electronicDocumentsUsed - $electronicDocumentLimit);
-        $electronicDocumentOverageAmount = round($electronicDocumentOverage * 0.50, 2);
-        $electronicDocumentMonth = Carbon::now()->locale('es')->translatedFormat('F Y');
 
         $colorDefaults = [
             'color_primary'        => '#ff8c00',
