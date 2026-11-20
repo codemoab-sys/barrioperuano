@@ -381,6 +381,8 @@ foreach($categories as $cat) {
                         <label class="btn btn-outline-dark fw-bold checkout-payment-option" for="payYape">Yape</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payPlin" value="plin" onclick="toggleCashInput(false)">
                         <label class="btn btn-outline-warning fw-bold checkout-payment-option" for="payPlin">Plin</label>
+                        <input type="radio" class="btn-check mixed-payment-option d-none" name="payment_method" id="payMixed" value="mixed" onclick="toggleCashInput(false)">
+                        <label class="btn btn-outline-secondary fw-bold checkout-payment-option mixed-payment-option d-none" for="payMixed">Mixto</label>
                     </div>
                 </div>
                 <div id="cashInputGroup">
@@ -393,6 +395,30 @@ foreach($categories as $cat) {
                     <div class="d-flex justify-content-between">
                         <small>Cambio:</small>
                         <h4 class="fw-bold mb-0 text-secondary" id="changeAmount">0.00</h4>
+                    </div>
+                </div>
+                <div id="mixedInputGroup" class="d-none">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small" for="mixedCashAmount">Efectivo</label>
+                            <input type="number" step="0.01" min="0" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" oninput="calculateMixedPayment()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small" for="mixedOtherMethod">Otro método</label>
+                            <select name="mixed_other_method" id="mixedOtherMethod" class="form-select fw-bold" onchange="calculateMixedPayment()">
+                                <option value="yape">Yape</option>
+                                <option value="plin">Plin</option>
+                                <option value="transfer">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small" for="mixedOtherAmount">Monto del otro método</label>
+                            <input type="number" step="0.01" min="0" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small>Desglose:</small>
+                        <strong id="mixedSummary">S/ 0.00 + S/ 0.00</strong>
                     </div>
                 </div>
                 <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}" data-base-total="{{ number_format($order->total, 2, '.', '') }}" data-igv-factor="{{ $igvFactor ?? 0.18 }}">
@@ -783,6 +809,14 @@ foreach($categories as $cat) {
     // Cobro
     window.showSelectedSeries = function(select) {
         var label = document.getElementById('selectedSeries');
+        var mixedAllowed = select.value === 'Ticket';
+        document.querySelectorAll('.mixed-payment-option').forEach(function(option) {
+            option.classList.toggle('d-none', !mixedAllowed);
+        });
+        if (!mixedAllowed && document.getElementById('payMixed')?.checked) {
+            document.getElementById('payCash').checked = true;
+            toggleCashInput(true);
+        }
         if (!label || !select.value) return;
         if (select.value === 'Ticket') {
             label.innerHTML = '<span class="text-muted">Este documento no utiliza serie.</span>';
@@ -792,9 +826,11 @@ foreach($categories as $cat) {
         label.innerHTML = '<span class="text-muted">Serie asignada:</span> <span class="badge bg-light text-dark border fw-semibold">' + series + '</span>';
     }
     window.toggleCashInput = function(show) {
-        document.getElementById('cashInputGroup').style.display = show ? 'block' : 'none';
         var hiddenTotal = document.getElementById('hiddenTotal');
         var received = document.getElementById('receivedAmount');
+        var isMixed = document.getElementById('payMixed')?.checked;
+        document.getElementById('cashInputGroup').style.display = (show && !isMixed) ? 'block' : 'none';
+        document.getElementById('mixedInputGroup').classList.toggle('d-none', !isMixed);
         var baseTotal = parseFloat(hiddenTotal.dataset.baseTotal) || 0;
         var igvFactor = parseFloat(hiddenTotal.dataset.igvFactor) || 0.18;
         var total = show ? baseTotal : baseTotal;
@@ -803,7 +839,25 @@ foreach($categories as $cat) {
         }
         hiddenTotal.value = total.toFixed(2);
         if (received && !show) received.value = total.toFixed(2);
+        if (isMixed) {
+            var mixedCash = document.getElementById('mixedCashAmount');
+            if (mixedCash && parseFloat(mixedCash.value || 0) === 0) mixedCash.value = total.toFixed(2);
+            calculateMixedPayment();
+        }
         calculateChange();
+    }
+    window.calculateMixedPayment = function() {
+        var hiddenTotal = document.getElementById('hiddenTotal');
+        var total = parseFloat(hiddenTotal.value) || 0;
+        var cashInput = document.getElementById('mixedCashAmount');
+        var cash = Math.max(0, parseFloat(cashInput?.value || 0));
+        var other = Math.max(0, Math.round((total - cash) * 100) / 100);
+        var otherInput = document.getElementById('mixedOtherAmount');
+        if (otherInput) otherInput.value = other.toFixed(2);
+        var method = document.getElementById('mixedOtherMethod')?.value || 'yape';
+        var labels = { yape: 'Yape', plin: 'Plin', transfer: 'Transferencia' };
+        var summary = document.getElementById('mixedSummary');
+        if (summary) summary.textContent = 'S/ ' + cash.toFixed(2) + ' efectivo + S/ ' + other.toFixed(2) + ' ' + labels[method];
     }
     window.calculateChange = function() {
         var total = parseFloat(document.getElementById('hiddenTotal').value) || 0;

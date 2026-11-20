@@ -38,6 +38,8 @@
                         <label class="btn btn-outline-dark fw-bold" for="payYape">Yape</label>
                         <input type="radio" class="btn-check" name="payment_method" id="payPlin" value="plin" onclick="toggleCashInput(false)">
                         <label class="btn btn-outline-warning fw-bold" for="payPlin">Plin</label>
+                        <input type="radio" class="btn-check mixed-payment-option d-none" name="payment_method" id="payMixed" value="mixed" onclick="toggleCashInput(false)">
+                        <label class="btn btn-outline-secondary fw-bold mixed-payment-option d-none" for="payMixed">Mixto</label>
                     </div>
                 </div>
                 <div id="cashInputGroup">
@@ -48,6 +50,30 @@
                     <div class="d-flex justify-content-between">
                         <small>Cambio:</small>
                         <h4 class="fw-bold mb-0 text-secondary" id="changeAmount">0.00</h4>
+                    </div>
+                </div>
+                <div id="mixedInputGroup" class="d-none">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small" for="mixedCashAmount">Efectivo</label>
+                            <input type="number" step="0.01" min="0" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" oninput="calculateMixedPayment()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small" for="mixedOtherMethod">Otro método</label>
+                            <select name="mixed_other_method" id="mixedOtherMethod" class="form-select fw-bold" onchange="calculateMixedPayment()">
+                                <option value="yape">Yape</option>
+                                <option value="plin">Plin</option>
+                                <option value="transfer">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small" for="mixedOtherAmount">Monto del otro método</label>
+                            <input type="number" step="0.01" min="0" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small>Desglose:</small>
+                        <strong id="mixedSummary">S/ 0.00 + S/ 0.00</strong>
                     </div>
                 </div>
                 <input type="hidden" id="hiddenTotal" value="{{ number_format($order->total, 2, '.', '') }}" data-base-total="{{ number_format($order->total, 2, '.', '') }}" data-igv-factor="{{ $igvFactor ?? 0.18 }}">

@@ -135,6 +135,30 @@ class PosCheckoutDoubleCheckoutTest extends TestCase
         $this->assertSame(1, KitchenInventoryMovement::count());
     }
 
+    public function test_mixed_payment_details_are_saved_and_order_is_completed(): void
+    {
+        $order = $this->pendingOrder(1);
+        $service = $this->app->make(PosCheckoutService::class);
+
+        $completed = $service->completeCheckout($order, [
+            'payment_method' => 'mixed',
+            'payment_details' => [
+                ['method' => 'cash', 'amount' => 50.00],
+                ['method' => 'plin', 'amount' => 10.00],
+            ],
+            'received' => 50.00,
+            'change' => 0.0,
+            'client_name' => 'Público',
+            'document_type' => 'Ticket',
+        ]);
+
+        $this->assertSame('mixed', $completed->payment_method);
+        $this->assertEquals([
+            ['method' => 'cash', 'amount' => 50.0],
+            ['method' => 'plin', 'amount' => 10.0],
+        ], $completed->payment_details);
+    }
+
     private function pendingOrder(int $quantity): Order
     {
         $order = Order::create([

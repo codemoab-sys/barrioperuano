@@ -125,15 +125,33 @@
         </div>
 
         <div class="row" style="margin-top: 5px; font-size: {{ $fsSmall }}px;">
-            <span>F. PAGO: {{ match ($order->payment_method) {
+            @php
+                $paymentLabel = match ($order->payment_method) {
                 'cash' => 'EFECTIVO',
                 'card' => 'TARJETA',
                 'transfer' => 'TRANSFERENCIA',
                 'yape' => 'YAPE',
                 'plin' => 'PLIN',
+                'mixed' => 'MIXTO',
                 default => strtoupper((string) $order->payment_method),
-            } }}</span>
+                };
+            @endphp
+            <span>F. PAGO: {{ $paymentLabel }}</span>
         </div>
+        @if($order->payment_method === 'mixed' && is_array($order->payment_details))
+            @foreach($order->payment_details as $payment)
+                <div class="row" style="font-size: {{ $fsSmall }}px;">
+                    <span>{{ match ($payment['method'] ?? '') {
+                        'cash' => 'EFECTIVO',
+                        'transfer' => 'TRANSFERENCIA',
+                        'yape' => 'YAPE',
+                        'plin' => 'PLIN',
+                        default => strtoupper((string) ($payment['method'] ?? '')),
+                    } }}:</span>
+                    <span>{{ $settings['currency_symbol'] ?? 'S/' }} {{ number_format((float) ($payment['amount'] ?? 0), 2) }}</span>
+                </div>
+            @endforeach
+        @endif
         <div class="row" style="font-size: {{ $fsSmall }}px;">
             <span>RECIBIDO: {{ number_format($order->received_amount, 2) }}</span>
             <span>VUELTO: {{ number_format($order->change_amount, 2) }}</span>

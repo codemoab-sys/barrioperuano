@@ -53,6 +53,7 @@ class PosCheckoutService
         $order->load('details.product.ingredients');
 
         $method = $payload['payment_method'];
+        $paymentDetails = $payload['payment_details'] ?? null;
         $received = $payload['received'];
         $change = $payload['change'];
         $clientId = $payload['client_id'] ?? null;
@@ -61,7 +62,7 @@ class PosCheckoutService
         $clientDocument = $payload['client_document'] ?? null;
         $nubefactConfigured = (new SunatConfig())->isNubefactConfigured();
 
-        return DB::transaction(function () use ($order, $method, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
+        return DB::transaction(function () use ($order, $method, $paymentDetails, $received, $change, $clientId, $clientName, $documentType, $clientDocument, $nubefactConfigured, $cashRegister) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
 
             // Revalidación bajo el lock: la verificación previa (fuera de la transacción)
@@ -107,6 +108,7 @@ class PosCheckoutService
                 'issued_at' => now(),
                 'issued_by_user_id' => Auth::id(),
                 'payment_method' => $method,
+                'payment_details' => $paymentDetails,
                 'total' => $finalTotal,
                 'received_amount' => $received,
                 'change_amount' => $change,

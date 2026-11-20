@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashRegister;
+use App\Models\Order;
 use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -25,7 +26,7 @@ class CashRegisterController extends Controller
                 'user:id,name',
                 'orders' => fn ($query) => $query
                     ->where('status', 'completed')
-                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'status'),
+                    ->select('id', 'cash_register_id', 'total', 'payment_method', 'payment_details', 'status'),
                 'expenses' => fn ($query) => $query
                     ->select('id', 'cash_register_id', 'amount'),
             ]);
@@ -127,7 +128,10 @@ class CashRegisterController extends Controller
 
         // Calcular el esperado:
         // Monto inicial + Total ventas efectivo - Total gastos
-        $totalSalesCash = $cashRegister->orders()->where('payment_method', 'cash')->where('status', 'completed')->sum('total');
+        $totalSalesCash = $cashRegister->orders()
+            ->where('status', 'completed')
+            ->get(['total', 'payment_method', 'payment_details'])
+            ->sum(fn (Order $order) => $order->paymentAmountFor('cash'));
         $totalExpenses = $cashRegister->expenses()->sum('amount');
         
         $expectedAmount = $cashRegister->opening_amount + $totalSalesCash - $totalExpenses;
@@ -157,7 +161,10 @@ class CashRegisterController extends Controller
                 abort(409, 'La caja ya fue cerrada.');
             }
 
-            $totalSalesCash = $register->orders()->where('payment_method', 'cash')->where('status', 'completed')->sum('total');
+            $totalSalesCash = $register->orders()
+                ->where('status', 'completed')
+                ->get(['total', 'payment_method', 'payment_details'])
+                ->sum(fn (Order $order) => $order->paymentAmountFor('cash'));
             $totalExpenses = $register->expenses()->sum('amount');
             $expectedAmount = (float) $register->opening_amount + $totalSalesCash - $totalExpenses;
             $difference = (float) $request->closing_amount - $expectedAmount;

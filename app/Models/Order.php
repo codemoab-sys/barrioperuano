@@ -15,6 +15,7 @@ protected $fillable = [
         'status',
         'total',
         'payment_method',
+        'payment_details',
         'received_amount',
         'change_amount',
         'document_type',
@@ -54,6 +55,7 @@ protected $fillable = [
         'issued_at' => 'datetime',
         'anulacion_sent_at' => 'datetime',
         'sent_at' => 'datetime',
+        'payment_details' => 'array',
         'subtotal' => 'decimal:2',
         'igv' => 'decimal:2',
         'total' => 'decimal:2',
@@ -137,5 +139,19 @@ protected $fillable = [
     public function isElectronic(): bool
     {
         return in_array($this->document_type, ['Boleta', 'Factura'], true);
+    }
+
+    public function paymentAmountFor(string $method): float
+    {
+        if ($this->payment_method === 'mixed') {
+            return round(
+                collect($this->payment_details ?? [])
+                    ->where('method', $method)
+                    ->sum(fn (array $payment) => (float) ($payment['amount'] ?? 0)),
+                2
+            );
+        }
+
+        return $this->payment_method === $method ? (float) $this->total : 0.0;
     }
 }
