@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'cash_register' => \App\Http\Middleware\RequireOpenCashRegister::class,
+            'password_change_required' => \App\Http\Middleware\RequirePasswordChange::class,
         ]);
 
     })

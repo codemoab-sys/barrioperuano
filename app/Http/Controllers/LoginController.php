@@ -12,6 +12,10 @@ class LoginController extends Controller
     public function show()
     {
         if (Auth::check()) {
+            if (Auth::user()->password_change_required) {
+                return redirect()->route('password.force-change');
+            }
+
             return $this->redirectUser();
         }
         return view('auth.login');
@@ -57,6 +61,11 @@ class LoginController extends Controller
             $user->update(['failed_login_attempts' => 0, 'locked_at' => null]);
             $this->recordLoginAttempt($email, $ipAddress, $user, null, true);
             $request->session()->regenerate();
+
+            if ($user->password_change_required) {
+                return redirect()->route('password.force-change');
+            }
+
             return $this->redirectUser();
         }
 

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'password_change_required',
         'role', // <--- IMPORTANTE: Agregamos esto para permitir guardar el rol
         'all_areas',
         'failed_login_attempts',
@@ -49,6 +50,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'password_change_required' => 'boolean',
         'locked_at' => 'datetime',
         'all_areas' => 'boolean',
     ];

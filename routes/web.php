@@ -47,7 +47,11 @@ Route::get('/inicio', [App\Http\Controllers\LandingController::class, 'index'])-
 Route::get('/', fn() => redirect()->route('login'));
 
 // --- 2. SISTEMA INTERNO ---
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'password_change_required'])->group(function () {
+    Route::get('/password/force-change', [App\Http\Controllers\PasswordChangeController::class, 'show'])
+        ->name('password.force-change');
+    Route::post('/password/force-change', [App\Http\Controllers\PasswordChangeController::class, 'update'])
+        ->name('password.force-change.update');
 
     // =========================================================
     // ZONA OPERATIVA (Accesible para Mozo, Cajero, Admin)

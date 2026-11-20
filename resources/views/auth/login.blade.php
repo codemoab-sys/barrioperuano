@@ -429,6 +429,11 @@
                 {{ session('error') }}
             </div>
         @endif
+        @if(session('status'))
+            <div class="alert alert-success" role="status">
+                {{ session('status') }}
+            </div>
+        @endif
 
         <!-- Form -->
         <form action="{{ route('login.perform') }}" method="POST" novalidate>

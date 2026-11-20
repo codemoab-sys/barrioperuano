@@ -12,6 +12,7 @@ class LoginLockoutTest extends TestCase
         $user = User::factory()->create([
             'email' => 'locked@example.com',
             'role' => 'cashier',
+            'password_change_required' => false,
             'locked_at' => now()->subMinutes(16),
             'failed_login_attempts' => 5,
         ]);
@@ -34,6 +35,7 @@ class LoginLockoutTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'active-lock@example.com',
+            'password_change_required' => false,
             'locked_at' => now()->subMinutes(5),
             'failed_login_attempts' => 5,
         ]);
