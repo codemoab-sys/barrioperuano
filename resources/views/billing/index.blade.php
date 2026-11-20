@@ -30,7 +30,6 @@
                     adicional estimado: S/ {{ number_format($electronicDocumentOverageAmount, 2) }}.
                 </div>
             @endif
-            <small class="d-block mt-1">El monto es informativo; este sistema no realiza el cobro automáticamente.</small>
         </div>
     </div>
 
