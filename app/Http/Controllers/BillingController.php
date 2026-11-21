@@ -221,7 +221,7 @@ class BillingController extends Controller
         }
 
         try {
-            $response = (new NubeFactService())->voidDocument(
+            $response = app(NubeFactService::class)->voidDocument(
                 $order->document_type === 'Factura' ? '1' : '2',
                 $order->serie,
                 (int) $order->correlativo,
@@ -254,7 +254,7 @@ class BillingController extends Controller
         }
 
         try {
-            $response = (new NubeFactService())->queryCancellation(
+            $response = app(NubeFactService::class)->queryCancellation(
                 $order->document_type === 'Factura' ? '1' : '2',
                 $order->serie,
                 (int) $order->correlativo
@@ -287,6 +287,7 @@ class BillingController extends Controller
 
         if ($accepted) {
             $order->sunat_status = 'VOIDED';
+            $order->status = 'cancelled';
         }
 
         $order->save();
