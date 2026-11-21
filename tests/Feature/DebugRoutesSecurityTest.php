@@ -10,24 +10,20 @@ class DebugRoutesSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_debug_routes_require_an_admin_and_mutations_use_post(): void
+    public function test_debug_routes_are_removed_and_return_not_found(): void
     {
-        $this->get(route('debug.last.invoice.json'))
-            ->assertRedirect(route('login'));
+        $this->get('/debug/ultima-factura-json')->assertNotFound();
+        $this->get('/debug/todas-facturas-json')->assertNotFound();
 
         $cashier = User::factory()->create(['role' => 'cashier']);
         $this->actingAs($cashier)
-            ->get(route('debug.all.invoice.json'))
-            ->assertForbidden();
+            ->get('/debug/todas-facturas-json')
+            ->assertNotFound();
 
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)
-            ->get(route('debug.sync.last.invoice.status'))
-            ->assertMethodNotAllowed();
-
-        $this->actingAs($admin)
-            ->get(route('debug.manual.send.ultima.factura'))
-            ->assertMethodNotAllowed();
+            ->post('/debug/sync-ultima-factura-status')
+            ->assertNotFound();
     }
 
     public function test_cashier_roles_cannot_access_or_see_the_dashboard(): void

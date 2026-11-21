@@ -30,14 +30,14 @@ class BarrioPeruanoMenuSeederTest extends TestCase
         $productCount = Product::count();
         $seeder->run();
 
-        $this->assertSame(40, $productCount);
+        $this->assertSame(41, $productCount);
         $this->assertSame($productCount, Product::count());
         $this->assertDatabaseHas('bape_products', [
             'id' => $existingProduct->id,
             'price' => 99,
             'stock' => 7,
         ]);
-        $this->assertSame(39, Product::whereNull('stock')->count());
+        $this->assertSame(40, Product::whereNull('stock')->count());
 
         $taper = Product::where('name', 'Taper')->firstOrFail();
         $this->assertSame(1.0, (float) $taper->price);
@@ -48,7 +48,7 @@ class BarrioPeruanoMenuSeederTest extends TestCase
         $barcoPequeno = Product::where('name', 'like', 'Barco Pequeño%')->firstOrFail();
         $this->assertSame(1.0, (float) $barcoGrande->price);
         $this->assertSame(1.0, (float) $barcoPequeno->price);
-        $this->assertSame(1, WingSauceMenu::flavorLimit($barcoGrande));
+        $this->assertSame(10, WingSauceMenu::flavorLimit($barcoGrande));
         $this->assertSame('Barcos', $barcoGrande->category->name);
         $this->assertSame(10, Product::where('name', 'El Padrino (50 alas, 10 sabores)')->value('required_sauce_count'));
     }

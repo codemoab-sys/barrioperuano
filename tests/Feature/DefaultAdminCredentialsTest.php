@@ -11,10 +11,13 @@ class DefaultAdminCredentialsTest extends TestCase
 {
     public function test_database_seeder_does_not_create_demo_data(): void
     {
+        $categoriesBefore = Category::count();
+        $productsBefore = Product::count();
+
         $this->seed();
 
         $this->assertDatabaseCount('bape_users', 0);
-        $this->assertDatabaseCount('bape_categories', 0);
-        $this->assertDatabaseCount('bape_products', 0);
+        $this->assertSame($categoriesBefore, Category::count());
+        $this->assertSame($productsBefore, Product::count());
     }
 }

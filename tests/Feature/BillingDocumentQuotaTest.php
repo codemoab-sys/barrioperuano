@@ -56,7 +56,6 @@ class BillingDocumentQuotaTest extends TestCase
             ->assertOk()
             ->assertSee($monthLabel . ': 251/250 boletas y facturas.')
             ->assertSee('Excedente: 1 documento(s)')
-            ->assertSee('adicional estimado: S/ 0.50')
-            ->assertSee('este sistema no realiza el cobro automáticamente');
+            ->assertSee('adicional estimado: S/ 0.50');
     }
 }

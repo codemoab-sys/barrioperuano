@@ -30,7 +30,7 @@ class SettingsSecurityTest extends TestCase
             ]);
 
         $response->assertRedirect(route('settings.index'));
-        $response->assertSessionHasErrors(['sunat_environment']);
+        $response->assertSessionHasErrors(['serie_factura']);
         $this->assertDatabaseHas('bape_settings', ['key' => 'company_name', 'value' => 'Restaurante antes']);
     }
 

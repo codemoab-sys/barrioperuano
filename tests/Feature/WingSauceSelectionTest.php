@@ -106,7 +106,7 @@ class WingSauceSelectionTest extends TestCase
             'client_name' => 'Cliente Delivery',
             'client_phone' => '999111222',
             'address' => 'Calle Principal 123',
-            'payment_method' => 'cash',
+            'payment_method' => 'transfer',
             'products' => [['id' => $product->id, 'qty' => 1]],
         ];
 
@@ -155,7 +155,7 @@ class WingSauceSelectionTest extends TestCase
             'client_name' => 'Cliente Delivery',
             'client_phone' => '999111222',
             'address' => 'Calle Principal 123',
-            'payment_method' => 'cash',
+            'payment_method' => 'transfer',
             'products' => [
                 ['id' => $product->id, 'qty' => 3, 'sauce_choices' => ['BBQ', 'Original']],
                 ['id' => $product->id, 'qty' => 3, 'sauce_choices' => ['Ajo', 'Parrillera']],

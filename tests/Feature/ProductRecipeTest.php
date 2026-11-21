@@ -496,7 +496,7 @@ class ProductRecipeTest extends TestCase
             'client_name' => 'Cliente test',
             'client_phone' => '987654321',
             'address' => 'Av. Principal 123',
-            'payment_method' => 'cash',
+            'payment_method' => 'transfer',
             'products' => [[
                 'id' => $product->id,
                 'qty' => 1,
