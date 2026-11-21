@@ -56,7 +56,7 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="form-label fw-bold small" for="mixedCashAmount">Efectivo</label>
-                            <input type="number" step="0.01" min="0.01" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" oninput="calculateMixedPayment()">
+                            <input type="number" step="0.01" min="0" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" oninput="calculateMixedPayment()">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-bold small" for="mixedOtherMethod">Otro método</label>
@@ -68,7 +68,7 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold small" for="mixedOtherAmount">Monto del otro método</label>
-                            <input type="number" step="0.01" min="0.01" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly>
+                            <input type="number" step="0.01" min="0" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-2">
