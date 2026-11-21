@@ -401,11 +401,11 @@ foreach($categories as $cat) {
                     <div class="row g-2">
                         <div class="col-6">
                             <label class="form-label fw-bold small" for="mixedCashAmount">Efectivo</label>
-                            <input type="number" step="0.01" min="0" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" oninput="calculateMixedPayment()">
+                            <input type="number" step="0.01" min="0" name="mixed_cash_amount" id="mixedCashAmount" class="form-control text-center fw-bold" value="0.00" disabled oninput="calculateMixedPayment()">
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-bold small" for="mixedOtherMethod">Otro método</label>
-                            <select name="mixed_other_method" id="mixedOtherMethod" class="form-select fw-bold" onchange="calculateMixedPayment()">
+                            <select name="mixed_other_method" id="mixedOtherMethod" class="form-select fw-bold" onchange="calculateMixedPayment()" disabled>
                                 <option value="yape">Yape</option>
                                 <option value="plin">Plin</option>
                                 <option value="transfer">Transferencia</option>
@@ -413,7 +413,7 @@ foreach($categories as $cat) {
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold small" for="mixedOtherAmount">Monto del otro método</label>
-                            <input type="number" step="0.01" min="0" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly>
+                            <input type="number" step="0.01" min="0" name="mixed_other_amount" id="mixedOtherAmount" class="form-control text-center fw-bold" value="0.00" readonly disabled>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mt-2">
@@ -831,6 +831,10 @@ foreach($categories as $cat) {
         var isMixed = document.getElementById('payMixed')?.checked;
         document.getElementById('cashInputGroup').style.display = (show && !isMixed) ? 'block' : 'none';
         document.getElementById('mixedInputGroup').classList.toggle('d-none', !isMixed);
+        ['mixedCashAmount', 'mixedOtherMethod', 'mixedOtherAmount'].forEach(function(id) {
+            var field = document.getElementById(id);
+            if (field) field.disabled = !isMixed;
+        });
         var baseTotal = parseFloat(hiddenTotal.dataset.baseTotal) || 0;
         var igvFactor = parseFloat(hiddenTotal.dataset.igvFactor) || 0.18;
         var total = show ? baseTotal : baseTotal;
